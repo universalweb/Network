@@ -8,22 +8,22 @@
  * exists to show. A column that declares a min track width (`minmax(…)`) pushes
  * the grid past the wrap and scrolls here rather than truncating.
  */
-.table-wrap {
+.stat-table-wrap {
 	background: rgba(255, 255, 255, 0.02);
 	border: 1px solid rgba(255, 255, 255, 0.08);
 	border-radius: var(--radius-md);
 	overflow-x: auto;
 	overflow-y: hidden;
 }
-.table-head {
+.stat-table-head {
 	padding: var(--space-3) var(--space-4) var(--space-2);
 	border-block-end: 1px solid rgba(255, 255, 255, 0.06);
 	background: rgba(255, 255, 255, 0.02);
 }
-.table-head.is-empty {
+.stat-table-head.is-empty {
 	display: none;
 }
-.table-head h3 {
+.stat-table-head h3 {
 	margin: 0;
 	font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
 	font-size: 12px;
@@ -31,17 +31,17 @@
 	letter-spacing: 0.1em;
 	color: rgba(255, 255, 255, 0.85);
 }
-.table-head .hint {
+.stat-table-head .hint {
 	margin: var(--space-1) 0 0;
 	font-size: 10px;
 	color: rgba(255, 255, 255, 0.4);
 	font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
-.grid-table {
+.stat-table-grid {
 	display: grid;
 	font-size: 11px;
 }
-.cell {
+.stat-table-cell {
 	padding: var(--space-2) var(--space-4);
 	display: block;
 	color: rgba(255, 255, 255, 0.85);
@@ -51,7 +51,7 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-.cell.head-cell {
+.stat-table-cell.stat-table-head-cell {
 	background: rgba(255, 255, 255, 0.03);
 	color: rgba(255, 255, 255, 0.45);
 	text-transform: uppercase;
@@ -65,4 +65,22 @@
 	text-align: center;
 	color: rgba(255, 255, 255, 0.35);
 	grid-column: 1 / -1;
+}
+:host([data-density='compact']) .stat-table-cell,
+.stat-table-wrap[data-density='compact'] .stat-table-cell {
+	padding-block: 0.2rem;
+	padding-inline: 0.45rem;
+	font-size: 0.6875rem;
+}
+:host([data-density='compact']) .stat-table-cell.stat-table-head-cell,
+.stat-table-wrap[data-density='compact'] .stat-table-cell.stat-table-head-cell {
+	padding-block: 0.25rem;
+	font-size: 0.5625rem;
+}
+.stat-table-cell[data-tone='success'],
+.stat-table-cell[data-tone='danger'],
+.stat-table-cell[data-tone='warning'],
+.stat-table-cell[data-tone='accent'],
+.stat-table-cell[data-tone='info'] {
+	color: var(--tone-fill, currentColor);
 }

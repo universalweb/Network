@@ -24,6 +24,7 @@
  * cannot reach a shadow root from the document level.
  */
 import { collectClassChain } from '../attrs/staticConfig.js';
+import { resolveStyle } from '../styles/styleApi.js';
 import { hasOwn, isArray } from '../utilities.js';
 const THEME_KEY_PREFIX = 'theme:';
 /*
@@ -94,6 +95,43 @@ export function handleThemeChange(domEvent) {
 	return this.syncThemeStyles(nextId);
 }
 /**
+ * Warm this component's sheets for a theme WITHOUT adopting them.
+ *
+ * `resolveStyle` populates the same URL-keyed cache `addStyle` reads, so the
+ * later adoption resolves from memory instead of the network. That is what lets
+ * the swap happen inside one task rather than across a fetch.
+ * @param {string} themeId - Theme about to become active.
+ * @returns {Promise<void>} Resolves once every themed layer is cached.
+ */
+export async function preloadThemeStyles(themeId) {
+	const layers = themedLayers(this.constructor);
+	const layersLength = layers.length;
+	for (let layerIndex = 0; layerIndex < layersLength; layerIndex++) {
+		const { layerClass } = layers[layerIndex];
+		if (themeId && layerClass.themes.includes(themeId)) {
+			await resolveStyle(`./themes/${themeId}.css`, layerClass.url);
+		}
+	}
+}
+/*
+ * `theme:preload` handler. The theme manager loads the GLOBAL token sheet before
+ * swapping it in, so the page never drops to unstyled base — but per-component
+ * theme sub-modules were fetched only AFTER the attribute flip, which left a
+ * window painting NEW tokens against OLD component rules. That window is the
+ * theme-change flash.
+ *
+ * Components now enlist their warm-up promise on the event, the same shape as
+ * ExtendableEvent.waitUntil, so the manager can await every component before it
+ * flips anything. Adoption then happens from cache in the same task.
+ */
+export function handleThemePreload(domEvent) {
+	const data = domEvent?.detail?.data;
+	if (!isArray(data?.pending)) {
+		return;
+	}
+	data.pending.push(this.preloadThemeStyles(data.id));
+}
+/**
  * Opt a component into per-theme sub-modules. Call once in `onConnect` and await
  * it — `onConnect` runs before first paint, so the active theme's rules land
  * pre-render with no FOUC. Adopts the active theme now and re-swaps on every
@@ -106,6 +144,7 @@ export function applyThemeStyles() {
 	if (!themedLayers(this.constructor).length) {
 		return null;
 	}
+	this.delegate('theme:preload', this.handleThemePreload);
 	this.delegate('theme:change', this.handleThemeChange);
 	return this.syncThemeStyles(activeThemeId());
 }

@@ -63,28 +63,22 @@ export class UILegend extends WebComponent {
 	 * toggle (item.muted) — no per-row CE.
 	 */
 	legendItemRow(item) {
-		const tip = item?.tip || '';
-		const detail = item?.detail || '';
-		const color = item?.color || 'currentColor';
-		const label = item?.label || '';
-		const swatchStyle = `background:${color}`;
-		const pressed = item?.muted === true ? 'false' : 'true';
 		if (item?.interactive === true) {
 			return this.partial`
-				<button type="button" class="lg-item"
-					aria-pressed=${pressed}
-					tooltip=${tip}
+				<button type="button" class="legend-item" data-hover=${'ink'}
+					aria-pressed=${item?.muted === true ? 'false' : 'true'}
+					tooltip=${item?.tip || ''}
 					@click=${this.handleItemClick}>
-					<span class="lg-swatch" style=${swatchStyle}></span>
-					<span class="lg-label">${label}</span>
-					<span class="lg-detail" ?hidden=${!detail}>${detail}</span>
+					<span class="legend-swatch" style=${`background:${item?.color || 'currentColor'}`}></span>
+					<span class="legend-label">${item?.label || ''}</span>
+					<span class="legend-detail" ?hidden=${!item?.detail}>${item?.detail || ''}</span>
 				</button>`;
 		}
 		return this.partial`
-			<span class="lg-item" role="listitem" tooltip=${tip}>
-				<span class="lg-swatch" style=${swatchStyle}></span>
-				<span class="lg-label">${label}</span>
-				<span class="lg-detail" ?hidden=${!detail}>${detail}</span>
+			<span class="legend-item" role="listitem" tooltip=${item?.tip || ''}>
+				<span class="legend-swatch" style=${`background:${item?.color || 'currentColor'}`}></span>
+				<span class="legend-label">${item?.label || ''}</span>
+				<span class="legend-detail" ?hidden=${!item?.detail}>${item?.detail || ''}</span>
 			</span>`;
 	}
 	handleItemClick(_domEvent, item) {
@@ -121,7 +115,7 @@ export class UILegend extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="lg" role="list"
+			<div class="legend" role="list"
 				data-orientation=${this.legendOrientation}
 				data-align=${this.legendAlign}>
 				${this.list('items', this.legendItemRow)}

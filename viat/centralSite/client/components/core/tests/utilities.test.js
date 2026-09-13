@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { parsePath, setValueAtPath, syncSubsByDiff } from '../utilities.js';
+import {
+	isFalse,
+	isNumber,
+	isTrue,
+	parsePath,
+	setValueAtPath,
+	syncSubsByDiff,
+} from '../utilities.js';
 /*
  * Pure-node suite for the two reactive hot-path primitives (X6 setValueAtPath,
  * KNOWN-3 syncSubsByDiff). No happy-dom — both functions are DOM-free. The
@@ -156,4 +163,30 @@ test('syncSubsByDiff: shrinking deps dispose the removed keys, add nothing', () 
 	assert.deepEqual([...current.keys()], ['a']);
 	assert.equal(counters.disposeCount, 2, 'both removed keys disposed');
 	assert.equal(counters.subCount, 3, 'no new subscriptions on shrink');
+});
+test('isTrue: strict true only', () => {
+	assert.equal(isTrue(true), true);
+	assert.equal(isTrue(false), false);
+	assert.equal(isTrue(1), false);
+	assert.equal(isTrue('true'), false);
+	assert.equal(isTrue(null), false);
+	assert.equal(isTrue(undefined), false);
+});
+test('isFalse: strict false only', () => {
+	assert.equal(isFalse(false), true);
+	assert.equal(isFalse(true), false);
+	assert.equal(isFalse(0), false);
+	assert.equal(isFalse(''), false);
+	assert.equal(isFalse(null), false);
+	assert.equal(isFalse(undefined), false);
+});
+test('isNumber: native typeof number (NaN is a number)', () => {
+	assert.equal(isNumber(0), true);
+	assert.equal(isNumber(1.5), true);
+	assert.equal(isNumber(Number.NaN), true);
+	assert.equal(isNumber(Infinity), true);
+	assert.equal(isNumber('1'), false);
+	assert.equal(isNumber(null), false);
+	assert.equal(isNumber(undefined), false);
+	assert.equal(isNumber(true), false);
 });

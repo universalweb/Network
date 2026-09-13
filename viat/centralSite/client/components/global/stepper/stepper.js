@@ -1,5 +1,5 @@
 /*
-	DESCRIPTION: ui-stepper — a multi-step WIZARD progress indicator (MUI "Stepper").
+	DESCRIPTION: ui-stepper — a multi-step WIZARD progress indicator.
 	DISTINCT from ui-number-stepper (the ± amount control). Renders numbered nodes +
 	connectors with done/active/error states; in `linear` mode you can only step back
 	to completed nodes, never jump ahead. Indicator only — the consumer owns the step
@@ -101,15 +101,15 @@ export class UIStepper extends WebComponent {
 	stepRow(item) {
 		const optionalLabel = item.optional ? 'Optional' : '';
 		const description = item.description || '';
-		return html`<li class="st-item" data-status=${item.status || 'upcoming'} data-connector=${item.connectorDone ? 'done' : 'upcoming'}>
-			<button type="button" class="st-step" data-step=${item.stepIndex}
+		return html`<li class="stepper-item" data-status=${item.status || 'upcoming'} data-connector=${item.connectorDone ? 'done' : 'upcoming'}>
+			<button type="button" class="stepper-step" data-step=${item.stepIndex}
 				?disabled=${!item.canClick}
 				aria-current=${item.status === 'active' ? 'step' : false}>
-				<span class="st-node" aria-hidden="true">${item.glyph}</span>
-				<span class="st-text">
-					<span class="st-label">${item.label}</span>
-					<span class="st-optional" ?hidden=${!optionalLabel}>${optionalLabel}</span>
-					<span class="st-desc" ?hidden=${!description}>${description}</span>
+				<span class="stepper-node" aria-hidden="true">${item.glyph}</span>
+				<span class="stepper-text">
+					<span class="stepper-label">${item.label}</span>
+					<span class="stepper-optional" ?hidden=${!optionalLabel}>${optionalLabel}</span>
+					<span class="stepper-desc" ?hidden=${!description}>${description}</span>
 				</span>
 			</button>
 		</li>`;

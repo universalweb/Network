@@ -9,6 +9,8 @@ export class UIBadge extends WebComponent {
 		label: '',
 		size: 'md',
 		tone: 'neutral',
+		// solid = tone fill. glass = --popup-glass-bg / --popup-glass-blur + shadow.
+		surface: 'solid',
 	};
 	/* One-shot guard: the entrance animation plays on first paint only. Removed on
 	   its animationend so the resting badge carries no animation (see badge.css). */
@@ -55,6 +57,7 @@ export class UIBadge extends WebComponent {
 				})}
 				data-tone=${this.state.tone}
 				data-size=${this.state.size}
+				data-surface=${this.state.surface || 'solid'}
 				role="status" @animationend=${this.handleAnimationEnd}>
 				<span class="badge-dot" aria-hidden="true"></span>
 				<span class="badge-label">${this.state.label}</span>

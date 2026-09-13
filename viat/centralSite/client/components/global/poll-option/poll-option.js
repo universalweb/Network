@@ -28,19 +28,19 @@ export class UIPollOption extends WebComponent {
 	render() {
 		this.html`
 			<button
-				class="opt" type="button"
+				class="poll-option" type="button"
 				?data-selected=${this.state.selected}
 				?data-revealed=${this.state.revealed}
 				aria-pressed=${this.state.selected}
 				@click=${this.handleClick}>
-				<span class="opt-bar" style=${this.barStyle} aria-hidden="true"></span>
-				<span class="opt-face">
-					<span class="opt-mark" aria-hidden="true"></span>
-					<span class="opt-text">
-						<span class="opt-label">${this.state.label}</span>
-						<span class="opt-desc" ?hidden=${!this.state.description}>${this.state.description}</span>
+				<span class="poll-option-bar" style=${this.barStyle} aria-hidden="true"></span>
+				<span class="poll-option-face">
+					<span class="poll-option-mark" aria-hidden="true"></span>
+					<span class="poll-option-text">
+						<span class="poll-option-label">${this.state.label}</span>
+						<span class="poll-option-desc" ?hidden=${!this.state.description}>${this.state.description}</span>
 					</span>
-					<span class="opt-pct" ?hidden=${!this.state.revealed}>${this.state.percentage}%</span>
+					<span class="poll-option-pct" ?hidden=${!this.state.revealed}>${this.state.percentage}%</span>
 				</span>
 			</button>
 		`;

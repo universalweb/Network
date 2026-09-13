@@ -61,23 +61,23 @@ export class UIAiUsage extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="aius" ?hidden=${this.isEmpty}>
-				<ui-icon class="aius-icon" .state.name=${'activity'} .state.size=${'xs'}></ui-icon>
-				<span class="aius-title" ?hidden=${!this.state.label}>${this.state.label}</span>
-				<span class="aius-stat" ?hidden=${!this.promptLabel} tooltip="Prompt tokens">
-					<span class="aius-k">in</span>
-					<span class="aius-v">${this.promptLabel}</span>
+			<div class="ai-usage" ?hidden=${this.isEmpty}>
+				<ui-icon class="ai-usage-icon" .state.name=${'activity'} .state.size=${'xs'}></ui-icon>
+				<span class="ai-usage-title" ?hidden=${!this.state.label}>${this.state.label}</span>
+				<span class="ai-usage-stat" ?hidden=${!this.promptLabel} tooltip="Prompt tokens">
+					<span class="ai-usage-k">in</span>
+					<span class="ai-usage-v">${this.promptLabel}</span>
 				</span>
-				<span class="aius-stat" ?hidden=${!this.completionLabel} tooltip="Completion tokens">
-					<span class="aius-k">out</span>
-					<span class="aius-v">${this.completionLabel}</span>
+				<span class="ai-usage-stat" ?hidden=${!this.completionLabel} tooltip="Completion tokens">
+					<span class="ai-usage-k">out</span>
+					<span class="ai-usage-v">${this.completionLabel}</span>
 				</span>
-				<span class="aius-stat" ?hidden=${!this.totalLabel} tooltip="Total tokens">
-					<span class="aius-k">Σ</span>
-					<span class="aius-v">${this.totalLabel}</span>
+				<span class="ai-usage-stat" ?hidden=${!this.totalLabel} tooltip="Total tokens">
+					<span class="ai-usage-k">Σ</span>
+					<span class="ai-usage-v">${this.totalLabel}</span>
 				</span>
-				<span class="aius-stat aius-cost" ?hidden=${!this.costLabel} tooltip="Estimated cost">
-					<span class="aius-v">${this.costLabel}</span>
+				<span class="ai-usage-stat ai-usage-cost" ?hidden=${!this.costLabel} tooltip="Estimated cost">
+					<span class="ai-usage-v">${this.costLabel}</span>
 				</span>
 			</div>
 		`;

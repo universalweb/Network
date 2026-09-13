@@ -23,6 +23,23 @@ function seed(store, initial) {
 	store.set(initial);
 	store.bus.flush();
 }
+test('StoreRealm.readReactive is an alias of read (already the store proxy)', () => {
+	const store = Store.create();
+	seed(store, {
+		items: [
+			{
+				id: 1,
+			},
+		],
+	});
+	const realm = storeRealm(store);
+	const viaRead = realm.read('items');
+	const viaReactive = realm.readReactive('items');
+	assert.equal(viaRead, viaReactive, 'readReactive aliases read');
+	assert.equal(viaReactive, store.proxy.items, 'both return the store proxy array');
+	assert.equal(viaReactive[0], store.proxy.items[0], 'child items match the store proxy');
+	assert.notEqual(viaRead, store.STATE.items, 'store read is the proxy, not raw STATE');
+});
 test('replaceState preserves STATE and proxy identity (the render-proxy memo invariant)', () => {
 	const store = Store.create();
 	seed(store, {

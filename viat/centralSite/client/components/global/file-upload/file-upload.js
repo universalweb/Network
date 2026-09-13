@@ -1,34 +1,17 @@
 /*
-	DESCRIPTION: ui-file-upload — choose + drag/drop file list (PrimeVue FileUpload
-	basic mode). Files live on a plain instance field (identity); `fileItems` is
-	the reactive render buffer. Emits file-upload:select {files},
-	file-upload:remove {file,files}, file-upload:clear {files}.
+	DESCRIPTION: ui-file-upload — choose + drag/drop file list. Files live on a
+	plain instance field (identity); `fileItems` is the reactive render buffer
+	of `{ id, file }` (File by reference). Rows are `ui-file-upload-item`.
+	Emits file-upload:select {files}, file-upload:remove {file,files},
+	file-upload:clear {files}.
 	── USAGE ────────────────────────────────────────────────────────────
 	  <ui-file-upload .state.accept=${'image/*'} .state.multiple=${true}
 	    @file-upload:select=${this.onFiles}></ui-file-upload>
 	─────────────────────────────────────────────────────────────────────
 */
 import '../icon/icon.js';
-import { isString } from '@universalweb/utilitylib';
-import { WebComponent } from 'webcomponent';
-/**
- * Human-readable byte size.
- * @param {number} bytes - File size in bytes.
- * @returns {string} Formatted size.
- */
-function formatFileSize(bytes) {
-	const size = Number(bytes);
-	if (!Number.isFinite(size) || size < 0) {
-		return '';
-	}
-	if (size < 1024) {
-		return `${size} B`;
-	}
-	if (size < 1048576) {
-		return `${(size / 1024).toFixed(1)} KB`;
-	}
-	return `${(size / 1048576).toFixed(1)} MB`;
-}
+import { isString, WebComponent } from 'webcomponent';
+import { UIFileUploadItem } from '../file-upload-item/file-upload-item.js';
 /**
  * Stable id for a File (name + size + lastModified).
  * @param {File} file - Browser File.
@@ -102,7 +85,11 @@ export class UIFileUpload extends WebComponent {
 	currentFiles() {
 		return this.liveFiles.slice();
 	}
-	/** Content-stable id (name:size:lastModified) — used for row keys AND dedupe. */
+	/**
+	 * Content-stable id — used for row keys AND dedupe.
+	 * @param {File} file - Browser File.
+	 * @returns {string} `name:size:lastModified`.
+	 */
 	idFor(file) {
 		return fileId(file);
 	}
@@ -112,22 +99,28 @@ export class UIFileUpload extends WebComponent {
 		const fileCount = files.length;
 		for (let index = 0; index < fileCount; index += 1) {
 			const file = files[index];
-			const id = this.idFor(file);
 			items[index] = {
-				id,
-				label: file.name,
-				value: id,
-				sizeLabel: formatFileSize(file.size),
+				id: this.idFor(file),
+				file,
 			};
 		}
 		this.state.fileItems = items;
 	}
-	hasFile(file) {
+	/**
+	 * Whether `file`'s content id is already present.
+	 * @param {File} file - Browser File to look for.
+	 * @param {Array} [files] - List to search; defaults to the live selection.
+	 * The batch add passes the array it is BUILDING, because dedupe has to
+	 * consider files already accepted from the same drop and not just the ones
+	 * that were there beforehand.
+	 * @returns {boolean} True when an equal-id file is already in the list.
+	 */
+	hasFile(file, files) {
+		const list = files || this.liveFiles;
 		const probe = this.idFor(file);
-		const files = this.liveFiles;
-		const fileCount = files.length;
+		const fileCount = list.length;
 		for (let index = 0; index < fileCount; index += 1) {
-			if (this.idFor(files[index]) === probe) {
+			if (this.idFor(list[index]) === probe) {
 				return true;
 			}
 		}
@@ -155,7 +148,13 @@ export class UIFileUpload extends WebComponent {
 			const incomingCount = incoming.length;
 			for (let index = 0; index < incomingCount; index += 1) {
 				const file = incoming[index];
-				if (!this.hasFile(file)) {
+				/*
+				 * Against `next`, not the pre-batch list: two copies of one file
+				 * (same name/size/lastModified, different folders) ride in on a
+				 * single multi-file drop, and checking only what was there before
+				 * let both land — duplicate ids in a keyed list.
+				 */
+				if (!this.hasFile(file, next)) {
 					next.push(file);
 				}
 			}
@@ -251,20 +250,8 @@ export class UIFileUpload extends WebComponent {
 		}
 		this.addFileList(domEvent.dataTransfer?.files);
 	}
-	handleRemoveClick(_domEvent, item) {
-		this.removeFile(item?.id);
-	}
-	fileRow(item) {
-		return this.partial`
-			<li class="fu-row">
-				<span class="fu-name">${item?.label}</span>
-				<span class="fu-size">${item?.sizeLabel}</span>
-				<button type="button" class="fu-remove" aria-label="Remove"
-					@click=${this.handleRemoveClick}>×</button>
-			</li>`;
-	}
-	fileKey(item) {
-		return item.id;
+	handleItemRemove(domEvent) {
+		this.removeFile(domEvent.detail?.data?.id);
 	}
 	hasFiles() {
 		return this.state.fileItems.length > 0;
@@ -274,30 +261,31 @@ export class UIFileUpload extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="fu" ?data-disabled=${this.state.disabled} ?data-over=${this.state.over}>
-				<input #input class="fu-input" type="file"
+			<div class="file-upload" ?data-disabled=${this.state.disabled} ?data-over=${this.state.over}>
+				<input #input class="file-upload-input" type="file"
 					accept=${this.state.accept}
 					?multiple=${this.state.multiple}
 					?disabled=${this.state.disabled}
 					@change=${this.handleInputChange}>
-				<div class="fu-zone"
+				<div class="file-upload-zone"
 					@click=${this.openPicker}
 					@dragenter=${this.handleDragEnter}
 					@dragover=${this.handleDragOver}
 					@dragleave=${this.handleDragLeave}
 					@drop=${this.handleDrop}>
-					<ui-icon class="fu-icon" .state=${this.state.uploadIcon}></ui-icon>
-					<span class="fu-drop">${this.state.dropLabel}</span>
-					<button type="button" class="fu-choose" data-variant="outline" data-tone="neutral" data-size="sm"
+					<ui-icon class="file-upload-icon" .state=${this.state.uploadIcon}></ui-icon>
+					<span class="file-upload-drop">${this.state.dropLabel}</span>
+					<button type="button" class="file-upload-choose" data-variant="outline" data-tone="neutral" data-size="sm"
 						?disabled=${this.state.disabled}
 						@click=${this.handleChooseClick}>${this.state.chooseLabel}</button>
 				</div>
-				<ul class="fu-list" ?hidden=${this.isFileListEmpty}>
-					${this.list('fileItems', this.fileRow, this.fileKey)}
-				</ul>
-				<div class="fu-empty" ?hidden=${this.hasFiles}>${this.state.emptyMessage}</div>
-				<div class="fu-actions" ?hidden=${this.isFileListEmpty}>
-					<button type="button" class="fu-clear" data-variant="ghost" data-tone="neutral" data-size="sm"
+				<div class="file-upload-list" ?hidden=${this.isFileListEmpty}
+					@file-upload-item:remove=${this.handleItemRemove}>
+					${this.list('fileItems', UIFileUploadItem)}
+				</div>
+				<div class="file-upload-empty" ?hidden=${this.hasFiles}>${this.state.emptyMessage}</div>
+				<div class="file-upload-actions" ?hidden=${this.isFileListEmpty}>
+					<button type="button" class="file-upload-clear" data-variant="ghost" data-tone="neutral" data-size="sm"
 						?disabled=${this.state.disabled}
 						@click=${this.clearFiles}>Clear</button>
 				</div>

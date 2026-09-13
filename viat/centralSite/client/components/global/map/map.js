@@ -25,7 +25,14 @@ import '../map-leaflet/map-leaflet.js';
 import '../map-openlayers/map-openlayers.js';
 import '../map-opensky/map-opensky.js';
 import '../map-openstreetmap/map-openstreetmap.js';
-import { html, plainEqual, WebComponent } from 'webcomponent';
+import {
+	armLazy,
+	html,
+	onLazyVisible,
+	plainEqual,
+	syncLazy,
+	WebComponent,
+} from 'webcomponent';
 import {
 	isFiniteNumber,
 	normalizeBounds,
@@ -582,6 +589,8 @@ export class UIMap extends WebComponent {
 		lastUpdated: 0,
 		// Default false — viewport list/markers own framing; fit-all fights goTo on OL.
 		fitItems: false,
+		lazy: true,
+		loaded: false,
 	};
 	pollTimer = null;
 	loadGeneration = 0;
@@ -610,6 +619,14 @@ export class UIMap extends WebComponent {
 			'viewBounds',
 		], this.syncDerivedViews);
 		this.observe(['mapProvider'], this.onMapProviderChange);
+		this.observe('lazy', this.onLazyFlag);
+		armLazy(this);
+	}
+	onVisible() {
+		onLazyVisible(this);
+	}
+	onLazyFlag() {
+		syncLazy(this);
 	}
 	onMount() {
 		this.syncDerivedViews();
@@ -1249,14 +1266,11 @@ export class UIMap extends WebComponent {
 	}
 	/* Feature-light list row — @click on host, no nested map-item-row shadow. */
 	listItemRow(item) {
-		const label = item?.label || item?.id || 'Item';
-		const kind = item?.kindLabel || item?.kind || '';
-		const meta = item?.meta || '';
 		return this.partial`
-			<button type="button" class="mi-row" ?data-active=${item?.active} @click=${this.handleListItemClick}>
-				<span class="mi-row-label">${label}</span>
-				<span class="mi-row-kind" ?hidden=${!kind}>${kind}</span>
-				<span class="mi-row-meta" ?hidden=${!meta}>${meta}</span>
+			<button type="button" class="map-item-row" ?data-active=${item?.active} @click=${this.handleListItemClick}>
+				<span class="map-item-row-label">${item?.label || item?.id || 'Item'}</span>
+				<span class="map-item-row-kind" ?hidden=${!(item?.kindLabel || item?.kind)}>${item?.kindLabel || item?.kind || ''}</span>
+				<span class="map-item-row-meta" ?hidden=${!item?.meta}>${item?.meta || ''}</span>
 			</button>`;
 	}
 	handleListItemClick(_domEvent, item) {
@@ -1383,11 +1397,11 @@ export class UIMap extends WebComponent {
 		const kindDef = this.kindDef(item.kind);
 		const custom = Boolean(kindDef.detailTag);
 		return this.htmlElement`
-			<div class="mp-detail">
-				<div class="mp-detail-kind">${kindDef.label || item.kind}</div>
-				<div class="mp-detail-title">${item.label}</div>
-				<div class="mp-detail-custom" #detail_custom ?hidden=${!custom}></div>
-				<div class="mp-detail-grid" ?hidden=${custom}>
+			<div class="map-detail">
+				<div class="map-detail-kind">${kindDef.label || item.kind}</div>
+				<div class="map-detail-title">${item.label}</div>
+				<div class="map-detail-custom" #detail_custom ?hidden=${!custom}></div>
+				<div class="map-detail-grid" ?hidden=${custom}>
 					${this.list('detailPairs', this.detailPairRow, this.detailPairKey)}
 				</div>
 			</div>
@@ -1395,9 +1409,9 @@ export class UIMap extends WebComponent {
 	}
 	detailPairRow(pair) {
 		return html`
-			<div class="mp-detail-pair">
-				<span class="mp-pair-k">${pair.label}</span>
-				<span class="mp-pair-v">${pair.value}</span>
+			<div class="map-detail-pair">
+				<span class="map-pair-k">${pair.label}</span>
+				<span class="map-pair-v">${pair.value}</span>
 			</div>
 		`;
 	}
@@ -1408,9 +1422,10 @@ export class UIMap extends WebComponent {
 		const center = this.hostCenter();
 		const zoom = this.hostZoom();
 		return this.htmlElement`
-			<div class="mp-pane mp-pane-map" data-map-provider="google">
-				<div class="mp-map-host">
+			<div class="map-pane map-pane-map" data-map-provider="google">
+				<div class="map-map-host">
 					<ui-map-google
+						.state.lazy=${false}
 						.state.apiKey=${this.state.apiKey}
 						.state.mapId=${this.state.mapId}
 						.state.center=${center}
@@ -1431,9 +1446,10 @@ export class UIMap extends WebComponent {
 		const center = this.hostCenter();
 		const zoom = this.hostZoom();
 		return this.htmlElement`
-			<div class="mp-pane mp-pane-map" data-map-provider="openstreetmap">
-				<div class="mp-map-host">
+			<div class="map-pane map-pane-map" data-map-provider="openstreetmap">
+				<div class="map-map-host">
 					<ui-map-openstreetmap
+						.state.lazy=${false}
 						.state.center=${center}
 						.state.zoom=${zoom}
 						.state.layer=${this.state.mapLayer || 'standard'}
@@ -1455,9 +1471,10 @@ export class UIMap extends WebComponent {
 		const center = this.hostCenter();
 		const zoom = this.hostZoom();
 		return this.htmlElement`
-			<div class="mp-pane mp-pane-map" data-map-provider="leaflet">
-				<div class="mp-map-host">
+			<div class="map-pane map-pane-map" data-map-provider="leaflet">
+				<div class="map-map-host">
 					<ui-map-leaflet
+						.state.lazy=${false}
 						.state.center=${center}
 						.state.zoom=${zoom}
 						.state.tileUrl=${tileUrl}
@@ -1480,9 +1497,10 @@ export class UIMap extends WebComponent {
 		const center = this.hostCenter();
 		const zoom = this.hostZoom();
 		return this.htmlElement`
-			<div class="mp-pane mp-pane-map" data-map-provider="openlayers">
-				<div class="mp-map-host">
+			<div class="map-pane map-pane-map" data-map-provider="openlayers">
+				<div class="map-map-host">
 					<ui-map-openlayers
+						.state.lazy=${false}
 						.state.center=${center}
 						.state.zoom=${zoom}
 						.state.tileUrl=${tileUrl}
@@ -1506,9 +1524,10 @@ export class UIMap extends WebComponent {
 		const center = this.hostCenter();
 		const zoom = this.hostZoom();
 		return this.htmlElement`
-			<div class="mp-pane mp-pane-map" data-map-provider="opensky">
-				<div class="mp-map-host">
+			<div class="map-pane map-pane-map" data-map-provider="opensky">
+				<div class="map-map-host">
 					<ui-map-opensky
+						.state.lazy=${false}
 						.state.center=${center}
 						.state.zoom=${zoom}
 						.state.items=${this.state.userMapItems}
@@ -1537,6 +1556,9 @@ export class UIMap extends WebComponent {
 		this.state.errorMessage = message;
 	}
 	mapFragment() {
+		if (this.state.loaded !== true) {
+			return this.htmlElement`<div class="map-pane map-pane-map map-placeholder" aria-hidden="true"></div>`;
+		}
 		const provider = this.resolvedMapProvider();
 		if (provider === 'google') {
 			return this.googleMapFragment();
@@ -1557,10 +1579,10 @@ export class UIMap extends WebComponent {
 			return '';
 		}
 		return this.htmlElement`
-			<aside class="mp-pane mp-side">
-				<h3 class="mp-side-heading">${this.state.listHeading || 'Items'}</h3>
-				<div class="mp-list" ?hidden=${!this.state.showList}>
-					<div class="mp-empty" ?hidden=${this.hasItems}>${this.emptyListMessage}</div>
+			<aside class="map-pane map-side">
+				<h3 class="map-side-heading">${this.state.listHeading || 'Items'}</h3>
+				<div class="map-list" ?hidden=${!this.state.showList}>
+					<div class="map-empty" ?hidden=${this.hasItems}>${this.emptyListMessage}</div>
 					${this.list('listItems', this.listItemRow)}
 				</div>
 				${this.detailFragment}
@@ -1572,16 +1594,14 @@ export class UIMap extends WebComponent {
 		return showSide ? 'split' : 'single';
 	}
 	render() {
-		const layout = this.layoutMode();
-		const mapProvider = this.resolvedMapProvider();
 		this.html`
-			<div class="mp" data-layout=${layout} data-map-provider=${mapProvider}>
-				<div class="mp-toolbar">
-					<h2 class="mp-heading">${this.state.heading || 'Map'}</h2>
-					<span class="mp-meta">${this.metaLine}</span>
-					<span class="mp-meta" data-tone="danger" ?hidden=${!this.state.errorMessage}>${this.state.errorMessage}</span>
+			<div class="map" data-layout=${this.layoutMode()} data-map-provider=${this.resolvedMapProvider()}>
+				<div class="map-toolbar">
+					<h2 class="map-heading">${this.state.heading || 'Map'}</h2>
+					<span class="map-meta">${this.metaLine}</span>
+					<span class="map-meta" data-tone="danger" ?hidden=${!this.state.errorMessage}>${this.state.errorMessage}</span>
 				</div>
-				<div class="mp-body">
+				<div class="map-body">
 					${this.mapFragment}
 					${this.sideFragment}
 				</div>

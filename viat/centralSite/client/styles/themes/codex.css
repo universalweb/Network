@@ -1,240 +1,258 @@
 /* ── Codex Theme ──────────────────────────────────────
-   Hybrid: Codex STRUCTURE (square, hairline, whitespace)
-   + PrimeVue Aura-light COLOR (off-white ground, white
-   cards, dark-gray body text). EXACTLY ONE hue:
-   ultramarine — spent ONLY on active marks (dock bar,
-   active tab, panel dots, bar fills). Body text is ink,
-   never cyan/blue. Hover/focus chrome is ink and slate.
+   Rebuilt against the docs.x.ai LIGHT surface (sampled
+   live, not eyeballed): pure-white page, warm off-white
+   cards a step DARKER than the ground, near-black ink,
+   cool grey hairlines, and soft radii — pill controls,
+   generous card corners.
+
+   Ink is the accent. x.ai spends no hue on chrome: the
+   primary action is a black pill with paper text, hover
+   lifts the ink a step, and colour is reserved for
+   status. --cyan / --teal stay INK here (they are the
+   accent slots, not hues) so nothing turns blue.
+
+   Sampled reference values:
+     page      #ffffff        card      #f9f8f6
+     ink       #0a0a0a        muted     #7d8187
+     hairline  hsl(222 19% 86% / .55)
+     card radius 24px · controls pill
 ─────────────────────────────────────────────────────── */
 :root {
   color-scheme: light;
 
-  /* ── Base Palette — Aura-like off-white ground, white
-     cards. --cyan is INK (not a hue). --teal is the sole
-     ultramarine accent for active marks. --navy is the
-     chip/stamp fill and pairs with --text-light (ink)
-     on field-addon chips — they flip together. ── */
-  --bg-body: #f4f5f7;
-  --bg-panel: #ffffff;
-  --bg-dark: #eceef1;
-  --bg-dark-mid: #f0f1f3;
-  --navy: #e8eaee;
-  --navy-light: #5d7ce6;
-  --teal: #1a3fd6;
-  --teal-dim: rgba(26, 63, 214, 0.08);
-  --cyan: #3a4048;
-  --cyan-dim: rgba(58, 64, 72, 0.07);
-  --magenta: #2f3640;
-  --magenta-dim: rgba(47, 54, 64, 0.07);
-  --grey-solid: #8b939f;
-  --grey-mid: #d9dce1;
+  /* ── Base Palette — white ground, warm off-white cards.
+     Note the INVERSION vs a typical dark theme: the card
+     is darker than the page, which is what gives x.ai its
+     flat, papery look. --navy is the chip/stamp fill and
+     pairs with --text-light on field-addon chips. ── */
+  --bg-body: #ffffff;
+  --bg-panel: #f9f8f6;
+  --bg-dark: #f0efec;
+  --bg-dark-mid: #f5f4f1;
+  --navy: #ebe9e4;
+  --navy-light: #57534e;
+  --teal: #0a0a0a;
+  --teal-dim: rgba(10, 10, 10, 0.08);
+  --cyan: #0a0a0a;
+  --cyan-dim: rgba(10, 10, 10, 0.07);
+  --magenta: #1c1917;
+  --magenta-dim: rgba(28, 25, 23, 0.07);
+  --grey-solid: #7d8187;
+  --grey-mid: #d5d9e2;
 
-  /* ── Text — dark gray body (Aura slate), NEVER blue ── */
-  --text-main: #2a2f36;
-  --text-muted: #5c6570;
-  --text-light: #2a2f36;
-  --text-offwhite: #4a525c;
+  /* ── Text — near-black ink, cool grey mute ───────── */
+  --text-main: #0a0a0a;
+  --text-muted: #7d8187;
+  --text-light: #0a0a0a;
+  --text-offwhite: #57534e;
 
   /* ── Fonts ───────────────────────────────────────── */
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-display: 'Inter', sans-serif;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', monospace;
+  --font-display: 'Inter', system-ui, sans-serif;
 
-  /* ── Border Colors (the fine lines) ──────────────── */
-  --border-light-color: rgba(30, 35, 41, 0.12);
+  /* ── Border Colors (the fine lines) — cool grey, the
+     one place x.ai is cooler than its warm surfaces ── */
+  --border-light-color: rgba(213, 217, 226, 0.55);
 
   /* ── Borders ─────────────────────────────────────── */
-  --border-main: 1px solid rgba(30, 35, 41, 0.18);
+  --border-main: 1px solid rgba(213, 217, 226, 0.9);
   --border-light: 1px solid var(--border-light-color);
   --border-dark: 1px solid var(--dark-divider-accent);
 
-  /* ── Surface Tints (slate wash) ──────────────────── */
-  --surface-tint-heavy: rgba(30, 35, 41, 0.08);
-  --surface-tint: rgba(30, 35, 41, 0.05);
-  --surface-tint-soft: rgba(30, 35, 41, 0.035);
-  --surface-tint-faint: rgba(30, 35, 41, 0.022);
-  --surface-tint-ghost: rgba(30, 35, 41, 0.014);
-  --surface-tint-whisper: rgba(30, 35, 41, 0.009);
-  --watermark-text: rgba(30, 35, 41, 0.045);
+  /* ── Surface Tints (warm ink wash) ───────────────── */
+  --surface-tint-heavy: rgba(10, 10, 10, 0.07);
+  --surface-tint: rgba(10, 10, 10, 0.045);
+  --surface-tint-soft: rgba(10, 10, 10, 0.03);
+  --surface-tint-faint: rgba(10, 10, 10, 0.02);
+  --surface-tint-ghost: rgba(10, 10, 10, 0.012);
+  --surface-tint-whisper: rgba(10, 10, 10, 0.008);
+  --watermark-text: rgba(10, 10, 10, 0.04);
 
-  /* ── "Dark surface" text family — slate-alphas; every
+  /* ── "Dark surface" text family — ink alphas; every
      surface is light in Codex ── */
-  --dark-text: rgba(30, 35, 41, 0.55);
-  --dark-text-dim: rgba(30, 35, 41, 0.45);
-  --dark-text-medium: rgba(30, 35, 41, 0.72);
-  --dark-text-bright: rgba(30, 35, 41, 0.86);
-  --dark-heading: rgba(30, 35, 41, 0.42);
-  --dark-heading-sep: rgba(30, 35, 41, 0.16);
-  --dark-text-faint: rgba(30, 35, 41, 0.30);
-  --text-subtle: rgba(30, 35, 41, 0.42);
+  --dark-text: rgba(10, 10, 10, 0.55);
+  --dark-text-dim: rgba(10, 10, 10, 0.45);
+  --dark-text-medium: rgba(10, 10, 10, 0.72);
+  --dark-text-bright: rgba(10, 10, 10, 0.88);
+  --dark-heading: rgba(10, 10, 10, 0.55);
+  --dark-heading-sep: rgba(10, 10, 10, 0.52);
+  --dark-text-faint: rgba(10, 10, 10, 0.28);
+  --text-subtle: #7d8187;
 
-  /* ── Dividers — slate hairlines ──────────────────── */
-  --dark-divider: rgba(30, 35, 41, 0.11);
-  --dark-divider-subtle: rgba(30, 35, 41, 0.08);
-  --dark-divider-faint: rgba(30, 35, 41, 0.055);
-  --dark-divider-accent: rgba(30, 35, 41, 0.095);
-  --dark-highlight: rgba(30, 35, 41, 0.035);
+  /* ── Dividers — cool hairlines (the x.ai rule line) ─ */
+  --dark-divider: rgba(213, 217, 226, 0.55);
+  --dark-divider-subtle: rgba(213, 217, 226, 0.4);
+  --dark-divider-faint: rgba(213, 217, 226, 0.28);
+  --dark-divider-accent: rgba(213, 217, 226, 0.5);
+  --dark-highlight: rgba(10, 10, 10, 0.03);
 
-  /* ── Accent Scale — ultramarine, kept quiet ──────── */
-  --cyan-glow-strong: rgba(26, 63, 214, 0.30);
-  --cyan-glow: rgba(26, 63, 214, 0.22);
-  --cyan-glow-medium: rgba(26, 63, 214, 0.16);
-  --cyan-glow-soft: rgba(26, 63, 214, 0.11);
-  --cyan-glow-faint: rgba(26, 63, 214, 0.07);
-  --cyan-tint: rgba(26, 63, 214, 0.045);
-  --cyan-tint-faint: rgba(26, 63, 214, 0.028);
+  /* ── Accent Scale — ink, kept quiet. No hue, no glow:
+     x.ai separates surfaces with a hairline and a tint,
+     never with a halo. ── */
+  --cyan-glow-strong: rgba(10, 10, 10, 0.28);
+  --cyan-glow: rgba(10, 10, 10, 0.2);
+  --cyan-glow-medium: rgba(10, 10, 10, 0.14);
+  --cyan-glow-soft: rgba(10, 10, 10, 0.1);
+  --cyan-glow-faint: rgba(10, 10, 10, 0.06);
+  --cyan-tint: rgba(10, 10, 10, 0.04);
+  --cyan-tint-faint: rgba(10, 10, 10, 0.025);
   --cyan-scanline: transparent;
-  --cyan-timestamp: rgba(30, 35, 41, 0.50);
+  --cyan-timestamp: rgba(10, 10, 10, 0.5);
 
-  /* ── Teal/Ultramarine Accent Scale ───────────────── */
-  --teal-glow: rgba(26, 63, 214, 0.22);
-  --teal-glow-soft: rgba(26, 63, 214, 0.11);
-  --teal-glow-faint: rgba(26, 63, 214, 0.07);
+  /* ── Teal/Ink Accent Scale ───────────────────────── */
+  --teal-glow: rgba(10, 10, 10, 0.2);
+  --teal-glow-soft: rgba(10, 10, 10, 0.1);
+  --teal-glow-faint: rgba(10, 10, 10, 0.06);
 
-  /* ── Scrollbar (slate on paper) ──────────────────── */
-  --scrollbar-thumb: rgba(30, 35, 41, 0.18);
-  --scrollbar-thumb-hover: rgba(30, 35, 41, 0.30);
+  /* ── Scrollbar (grey on paper, thin) ─────────────── */
+  --scrollbar-thumb: rgba(10, 10, 10, 0.18);
+  --scrollbar-thumb-hover: rgba(10, 10, 10, 0.3);
 
-  /* ── Status Colors (functional, desaturated) ─────── */
-  --color-success: #2f7d4f;
+  /* ── Status Colors — the only hues in the theme ──── */
+  --color-success: #15803d;
   --color-success-glow: transparent;
-  --color-success-text: #2f7d4f;
-  --color-danger: #c4453d;
+  --color-success-text: #15803d;
+  --color-danger: #b91c1c;
   --color-danger-glow: transparent;
-  --color-warning: #9a7b2d;
-  --color-info: #1a3fd6;
-  --color-warn-text: #c4453d;
+  --color-warning: #b45309;
+  --color-info: #57534e;
+  --color-warn-text: #b91c1c;
 
   /* ═══════════════════════════════════════════════════
      COMPONENT THEME TOKENS
   ═══════════════════════════════════════════════════ */
 
-  /* ── Shape — SQUARE. Fine lines, right angles. ──── */
-  --radius: 0;
-  --radius-lg: 0;
-  --stat-bar-radius: 0;
-  --indicator-radius: 0;
-  --indicator-warn-radius: 0;
+  /* ── Shape — SOFT. x.ai rounds generously: big card
+     corners, pill controls, small radius on inline bits.
+     (This is the deliberate break from the old square
+     Codex — the reference is round.) ── */
+  --radius: 0.5rem;
+  --radius-lg: 0.875rem;
+  --stat-bar-radius: 999px;
+  --indicator-radius: 999px;
+  --indicator-warn-radius: 999px;
 
-  /* ── Input — white field, ink hairline (Aura off-white
-     page, not a translucent white-on-dark wash) ────── */
-  --input-radius: 0;
-  --input-accent-border: 1px solid rgba(42, 47, 54, 0.16);
+  /* ── Input — white field on the off-white card, cool
+     hairline; rounded, never square ── */
+  --input-radius: 0.625rem;
+  --input-accent-border: 1px solid rgba(10, 10, 10, 0.15);
   --input-accent-shadow: none;
   --field-border-style: solid;
   --input-bg: #ffffff;
-  --input-bg-hover: #f7f8f9;
+  --input-bg-hover: #fbfaf9;
   --input-bg-focus: #ffffff;
-  --input-bg-readonly: #f4f5f6;
-  --input-border: rgba(42, 47, 54, 0.16);
-  --input-border-hover: rgba(42, 47, 54, 0.34);
+  --input-bg-readonly: #f5f4f1;
+  --input-border: rgba(10, 10, 10, 0.15);
+  --input-border-hover: rgba(10, 10, 10, 0.3);
 
-  /* ── Surfaces — white cards, hairline borders ────── */
-  --panel-bg: #ffffff;
-  --surface-border: rgba(30, 35, 41, 0.12);
+  /* ── Surfaces — warm off-white cards on a white page ─ */
+  --panel-bg: #f9f8f6;
+  --surface-border: rgba(213, 217, 226, 0.55);
 
   /* ── Panel — FLAT; the hairline is the structure ─── */
   --panel-shadow: none;
   --panel-hover-shadow: none;
-  --panel-hover-border: rgba(30, 35, 41, 0.32);
+  --panel-hover-border: rgba(10, 10, 10, 0.22);
   /* Center toolbar: ruled band, not a levitating plate. */
   --toolbar-shadow: none;
   --toolbar-hover-lift: 0;
-  --panel-header-accent: rgba(26, 63, 214, 0.0);
+  --panel-header-accent: rgba(10, 10, 10, 0);
   --panel-header-left-border: none;
   --panel-header-bg: transparent;
   --panel-header-left-accent-width: 0px;
-  --panel-header-border-bottom: 1px solid rgba(30, 35, 41, 0.10);
-  --panel-header-padding: 11px 14px;
-  --panel-header-font-size: 0.62rem;
-  --panel-header-letter-spacing: 0.26em;
-  --panel-header-color: rgba(30, 35, 41, 0.82);
-  --ph-cursor-display: none;
-  --ph-id-opacity: 0.55;
-  --ph-id-letter-spacing: 0.16em;
+  --panel-header-border-bottom: 1px solid rgba(213, 217, 226, 0.55);
+  --panel-header-padding: 0.75rem 0.875rem;
+  --panel-header-font-size: 0.8125rem;
+  --panel-header-letter-spacing: 0.1em;
+  --panel-header-color: #0a0a0a;
+  --panel-header-id-opacity: 0.55;
+  --panel-header-id-letter-spacing: 0.02em;
 
   /* ── Buttons — white + hairline; hover = INK inversion
      (print negative, same ink as the masthead). Color is
      reserved for ACTIVE marks, never hover chrome. ── */
   --btn-bg: #ffffff;
-  --btn-border: rgba(30, 35, 41, 0.16);
+  --btn-border: rgba(10, 10, 10, 0.15);
   --btn-inset: none;
-  --btn-hover-bg: #14171b;
-  --btn-hover-border: #14171b;
+  --btn-hover-bg: #f9f8f6;
+  --btn-hover-border: rgba(10, 10, 10, 0.28);
   --btn-hover-inset: none;
   --btn-hover-glow: none;
-  --btn-hover-color: #ffffff;
-  /* Keyboard/input focus = thin dark slate line, no halo. */
-  --focus-ring-color: rgba(30, 35, 41, 0.55);
+  --btn-hover-color: #0a0a0a;
+  /* Keyboard/input focus = thin ink line, no halo. */
+  --focus-ring-color: rgba(10, 10, 10, 0.55);
   --focus-ring-glow: transparent;
-  --green-hover: #2f7d4f;
-  /* Primary solid = ink block with paper text; hover lifts
-     the ink a step — never to color. */
-  --btn-primary-bg: #14171b;
-  --btn-primary-border: #14171b;
-  --btn-primary-color: #ffffff;
-  --btn-primary-hover-bg: #262b31;
-  --btn-primary-hover-border: #262b31;
-  --btn-primary-hover-color: #ffffff;
+  --green-hover: #15803d;
+  /* Primary solid = ink pill with paper text; hover lifts
+     the ink a step — never to colour. Sampled: bg #0a0a0a
+     on text #f9f8f6 (card tone, not pure white). Hover #262626
+     is a real delta — the 90% mix fallback lands at #1d1d1d. */
+  --btn-primary-bg: #0a0a0a;
+  --btn-primary-color: #f9f8f6;
+  --btn-primary-hover-bg: #262626;
 
-  /* ── Icons (slate; active = ultramarine) ─────────── */
-  --icon-color: #525a66;
-  --icon-color-hover: #1e2329;
-  --icon-color-active: #1a3fd6;
-  --icon-color-disabled: rgba(30, 35, 41, 0.28);
+  /* ── Icons (grey at rest, ink on hover/active) ───── */
+  --icon-color: #7d8187;
+  --icon-color-hover: #0a0a0a;
+  --icon-color-active: #0a0a0a;
+  --icon-color-disabled: rgba(10, 10, 10, 0.25);
 
   /* ── Flyout ──────────────────────────────────────── */
   --flyout-bg: #ffffff;
-  --flyout-border: rgba(30, 35, 41, 0.14);
-  --flyout-radius: 0;
-  /* No shadow — overlays separate by a crisp hairline ring. */
-  --flyout-shadow: 0 0 0 1px rgba(30, 35, 41, 0.18);
+  --flyout-border: rgba(213, 217, 226, 0.8);
+  --flyout-radius: 0.875rem;
+  /* Soft, low shadow instead of a hard ring — x.ai floats
+     overlays gently rather than outlining them. */
+  --flyout-shadow: 0 8px 24px rgba(10, 10, 10, 0.08), 0 0 0 1px rgba(213, 217, 226, 0.55);
 
   /* ── Inputs / Interactive ────────────────────────── */
-  --input-hover-border: rgba(30, 35, 41, 0.34);
+  --input-hover-border: rgba(10, 10, 10, 0.3);
   --input-hover-glow: transparent;
-  --input-copied-bg: rgba(26, 63, 214, 0.06);
-  --input-copied-border: rgba(26, 63, 214, 0.38);
+  --input-copied-bg: rgba(10, 10, 10, 0.05);
+  --input-copied-border: rgba(10, 10, 10, 0.35);
 
   /* ── Top Bar (white glass, one hairline) ─────────── */
-  --topbar-bg: rgba(255, 255, 255, 0.82);
-  --topbar-border: rgba(30, 35, 41, 0.12);
-  --topbar-accent: #1a3fd6;
-  --topbar-bottom-border: 1px solid rgba(30, 35, 41, 0.10);
-  --tb-badge-radius: 0;
+  --topbar-bg: rgba(255, 255, 255, 0.85);
+  --topbar-border: rgba(213, 217, 226, 0.55);
+  --topbar-accent: #0a0a0a;
+  --topbar-bottom-border: 1px solid rgba(213, 217, 226, 0.55);
+  --theme-select-chip-radius: 999px;
   --logo-mark-pattern: none;
 
   /* ── Popups (white leaf) ─────────────────────────── */
   --popup-bg: #ffffff;
-  --popup-bg-hover: #f5f6f8;
-  --popup-glass-bg: rgba(255, 255, 255, 0.82);
-  --popup-glass-blur: blur(0.625rem) saturate(1.2);
-  --popup-border: rgba(30, 35, 41, 0.14);
-  --popup-border-hover: rgba(30, 35, 41, 0.28);
-  --popup-accent: #1a3fd6;
-  --popup-shadow: 0 0 0 1px rgba(30, 35, 41, 0.18);
-  --popup-shadow-hover: 0 0 0 1px rgba(30, 35, 41, 0.28);
-  --popup-text: #1e2329;
+  --popup-bg-hover: #f9f8f6;
+  --popup-glass-color: rgb(255, 255, 255);
+  --popup-glass-saturate: 1.3;
+  --popup-border: rgba(213, 217, 226, 0.8);
+  --popup-border-hover: rgba(10, 10, 10, 0.22);
+  --popup-accent: #0a0a0a;
+  --popup-shadow: 0 8px 24px rgba(10, 10, 10, 0.08), 0 0 0 1px rgba(213, 217, 226, 0.55);
+  --popup-shadow-hover: 0 10px 28px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.14);
+  --popup-text: #0a0a0a;
 
-  /* ── Overlays — hairline rings instead of depth ──── */
-  --modal-shadow: 0 0 0 1px rgba(30, 35, 41, 0.18);
+  /* ── Overlays — soft low depth over a light ground ─ */
+  --modal-shadow: 0 16px 48px rgba(10, 10, 10, 0.12), 0 0 0 1px rgba(213, 217, 226, 0.55);
   --modal-bar-shadow: none;
   --sidebar-shadow-left: none;
   --sidebar-shadow-right: none;
   --pulldown-shadow: none;
 
-  /* ── Surface elevation scale — rings, not depth ──── */
+  /* ── Surface elevation scale — a hairline, then the
+     faintest lift. Defined as literals (no --surface-lift
+     alias) so every step resolves inside this theme. ── */
   --elev-1: none;
-  --elev-2: 0 0 0 1px rgba(30, 35, 41, 0.14);
-  --elev-3: 0 0 0 1px rgba(30, 35, 41, 0.20);
-  --elev-hover: 0 0 0 1px rgba(30, 35, 41, 0.28);
+  --elev-2: 0 1px 2px rgba(10, 10, 10, 0.04), 0 0 0 1px rgba(213, 217, 226, 0.55);
+  --elev-3: 0 4px 12px rgba(10, 10, 10, 0.06), 0 0 0 1px rgba(213, 217, 226, 0.55);
+  --elev-hover: 0 6px 16px rgba(10, 10, 10, 0.08), 0 0 0 1px rgba(10, 10, 10, 0.14);
   --input-error-glow: transparent;
 
   /* ── Stats — counts read as ink, not accent ──────── */
-  --stat-good-color: #1e2329;
+  --stat-good-color: #0a0a0a;
 
   /* ── Glow Kills (print has no glow) ──────────────── */
   --tab-indicator-shadow: none;
-  --ph-dot-shadow: none;
+  --panel-header-dot-shadow: none;
   --logo-mark-text-shadow: none;
   --subtitle-text-shadow: none;
   --indicator-on-shadow: none;

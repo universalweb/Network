@@ -1,7 +1,7 @@
 :host {
 	display: block;
 }
-.jr {
+.json-row {
 	display: flex;
 	align-items: center;
 	gap: 0.375rem;
@@ -13,13 +13,13 @@
 	border-radius: var(--radius-sm, 0.25rem);
 	cursor: default;
 }
-.jr:hover {
+.json-row:hover {
 	background: var(--json-row-hover, color-mix(in oklab, currentColor 7%, transparent));
 }
-.jr[data-matched] {
+.json-row[data-matched] {
 	background: var(--json-match-bg, color-mix(in oklab, gold 24%, transparent));
 }
-.jr-caret {
+.json-row-caret {
 	flex: none;
 	inline-size: 1rem;
 	block-size: 1rem;
@@ -34,46 +34,46 @@
 	font-size: 0.7rem;
 	cursor: pointer;
 }
-.jr-caret:disabled {
+.json-row-caret:disabled {
 	visibility: hidden;
 	cursor: default;
 }
-.jr-key {
+.json-row-key {
 	color: var(--json-key, currentColor);
 }
-.jr-key[data-index] {
+.json-row-key[data-index] {
 	color: var(--json-index, var(--text-muted));
 }
-.jr-sep {
+.json-row-sep {
 	margin-inline-start: -0.25rem;
 	color: var(--text-muted);
 }
-.jr-value {
+.json-row-value {
 	min-inline-size: 0;
 	overflow: hidden;
 	color: var(--json-value, currentColor);
 	white-space: pre;
 	text-overflow: ellipsis;
 }
-.jr-value[data-type='string'] {
+.json-row-value[data-type='string'] {
 	color: var(--json-string);
 }
-.jr-value[data-type='number'] {
+.json-row-value[data-type='number'] {
 	color: var(--json-number);
 }
-.jr-value[data-type='boolean'] {
+.json-row-value[data-type='boolean'] {
 	color: var(--json-boolean);
 }
-.jr-value[data-type='null'],
-.jr-value[data-type='undefined'] {
+.json-row-value[data-type='null'],
+.json-row-value[data-type='undefined'] {
 	color: var(--json-null);
 	font-style: italic;
 }
-.jr-value[data-type='object'],
-.jr-value[data-type='array'] {
+.json-row-value[data-type='object'],
+.json-row-value[data-type='array'] {
 	color: var(--text-muted);
 }
-.jr-copy {
+.json-row-copy {
 	flex: none;
 	margin: 0;
 	margin-inline-start: auto;
@@ -86,16 +86,16 @@
 	opacity: 0;
 	transition: opacity var(--dur-fast, 0.15s) var(--ease-out, ease);
 }
-.jr:hover .jr-copy,
-.jr-copy:focus-visible {
+.json-row:hover .json-row-copy,
+.json-row-copy:focus-visible {
 	opacity: 1;
 }
-.jr-copy[data-copied] {
+.json-row-copy[data-copied] {
 	color: var(--success, oklch(0.72 0.17 150));
 	opacity: 1;
 }
 @media (prefers-reduced-motion: reduce) {
-	.jr-copy {
+	.json-row-copy {
 		transition: none;
 	}
 }

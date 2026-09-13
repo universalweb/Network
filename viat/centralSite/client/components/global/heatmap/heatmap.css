@@ -3,38 +3,38 @@
 	/* Two props retheme the whole ramp; cell size + gap tune density. */
 	--heat-color: var(--teal, oklch(0.72 0.13 220));
 	--heat-track: var(--surface-sunken, color-mix(in oklab, currentColor 8%, transparent));
-	--hm-cell: 0.85rem;
-	--hm-gap: 0.18rem;
-	--hm-radius: 0.18rem;
+	--heatmap-cell: 0.85rem;
+	--heatmap-gap: 0.18rem;
+	--heatmap-radius: 0.18rem;
 }
-.hm {
+.heatmap {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-2, 0.5rem);
 }
 /* Matrix cells default larger than the GitHub-calendar squares so text column
    headers + optional in-cell values fit without colliding (pure-colour matrices
-   can shrink --hm-cell back down). */
-.hm[data-mode='matrix'] {
-	--hm-cell: 1.6rem;
+   can shrink --heatmap-cell back down). */
+.heatmap[data-mode='matrix'] {
+	--heatmap-cell: 1.6rem;
 }
-.hm-scroll {
+.heatmap-scroll {
 	overflow-x: auto;
 	padding-block-end: 0.25rem;
 }
-.hm-grid {
+.heatmap-grid {
 	position: relative;
 	display: grid;
-	gap: var(--hm-gap);
+	gap: var(--heatmap-gap);
 	inline-size: max-content;
 	justify-content: start;
 	align-items: center;
 }
-.hm-cell {
-	inline-size: var(--hm-cell);
-	block-size: var(--hm-cell);
+.heatmap-cell {
+	inline-size: var(--heatmap-cell);
+	block-size: var(--heatmap-cell);
 	aspect-ratio: 1;
-	border-radius: var(--hm-radius);
+	border-radius: var(--heatmap-radius);
 	background: var(--heat-track);
 	cursor: pointer;
 	display: flex;
@@ -46,61 +46,61 @@
 		box-shadow var(--dur-fast, 0.12s) ease,
 		transform var(--dur-fast, 0.12s) ease;
 }
-.hm-cell.is-empty {
+.heatmap-cell.is-empty {
 	cursor: default;
 	box-shadow: inset 0 0 0 1px color-mix(in oklab, currentColor 6%, transparent);
 }
-.hm-cell:hover:not(.is-empty) {
+.heatmap-cell:hover:not(.is-empty) {
 	transform: scale(1.12);
 	box-shadow: 0 0 0 1.5px color-mix(in oklab, var(--heat-color) 75%, white);
 	z-index: 1;
 }
-.hm-cell[data-active='true'] {
+.heatmap-cell[data-active='true'] {
 	transform: scale(1.08);
 	box-shadow:
 		0 0 0 2px var(--heat-color),
 		0 0 0 3px var(--bg-panel, Canvas);
 	z-index: 2;
 }
-.hm-val {
+.heatmap-val {
 	pointer-events: none;
 	font-size: 0.5rem;
 	line-height: 1;
 	color: color-mix(in oklab, currentColor 75%, transparent);
 }
-.hm-label {
+.heatmap-label {
 	font-size: 0.6875rem;
 	color: var(--text-muted);
 	white-space: nowrap;
 }
-.hm-col-label,
-.hm-month-label {
+.heatmap-col-label,
+.heatmap-month-label {
 	text-align: start;
 	align-self: end;
 	padding-block-end: 0.15rem;
 }
-.hm-row-label,
-.hm-weekday-label {
+.heatmap-row-label,
+.heatmap-weekday-label {
 	justify-self: end;
 	padding-inline-end: 0.3rem;
 }
-.hm-legend {
+.heatmap-legend {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.4rem;
 	font-size: 0.6875rem;
 	color: var(--text-muted);
 }
-.hm-legend-ramp {
+.heatmap-legend-ramp {
 	inline-size: 4.5rem;
 	block-size: 0.5rem;
 	border-radius: 999px;
 	background: linear-gradient(to right, var(--heat-track), var(--heat-color));
 }
 @media (prefers-reduced-motion: reduce) {
-	.hm-cell,
-	.hm-cell:hover:not(.is-empty),
-	.hm-cell[data-active='true'] {
+	.heatmap-cell,
+	.heatmap-cell:hover:not(.is-empty),
+	.heatmap-cell[data-active='true'] {
 		transition: none;
 		transform: none;
 	}

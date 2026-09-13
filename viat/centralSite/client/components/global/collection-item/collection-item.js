@@ -3,7 +3,8 @@
 	Renders label (+ optional description) with an optional <ui-checkbox> at the
 	start or end. Position comes from the parent collection via inherited CSS
 	custom properties (`--uic-check-order` / `--uic-body-order`). The whole row
-	highlights when `checked` is true.
+	highlights when `checked` is true. When the parent collection has
+	`reorder: true`, a grip handle emits `collection-item:drag`.
 	── USAGE ────────────────────────────────────────────────────────────
 	  // Automatic when ui-collection has no renderRow:
 	  <ui-collection .state.selectable=${true}
@@ -11,9 +12,11 @@
 	    .state.loader=${loader}></ui-collection>
 	  // Item shape: { id, label, description?, checked?, disabled? }
 	  // Emits: collection-item:change { id, item, checked }
+	  //         collection-item:drag   { id, clientX, clientY, pointerId }
 	─────────────────────────────────────────────────────────────────────
 */
 import '../checkbox/checkbox.js';
+import '../icon/icon.js';
 import { WebComponent } from '../../core/index.js';
 export class UICollectionItem extends WebComponent {
 	static url = import.meta.url;
@@ -63,11 +66,43 @@ export class UICollectionItem extends WebComponent {
 	checkboxHidden() {
 		return !this.showCheckbox();
 	}
-	handleCheckChange(domEvent) {
-		if (this.state.disabled || !this.showCheckbox()) {
+	/**
+	 * Grip visible when the parent collection is in reorder mode.
+	 * @returns {boolean} Whether the handle should paint.
+	 */
+	showReorder() {
+		const host = this.parentComponent;
+		if (host && host.localName === 'ui-collection') {
+			return host.state.reorder === true;
+		}
+		return false;
+	}
+	handleHidden() {
+		return !this.showReorder();
+	}
+	handleDragStart(domEvent) {
+		if (this.state.disabled === true || this.showReorder() !== true) {
 			return;
 		}
-		const checked = Boolean(domEvent.detail?.data?.checked);
+		domEvent.preventDefault();
+		domEvent.stopPropagation();
+		if (domEvent.currentTarget?.setPointerCapture && domEvent.pointerId != null) {
+			domEvent.currentTarget.setPointerCapture(domEvent.pointerId);
+		}
+		this.emit('collection-item:drag', {
+			id: this.state.id,
+			clientX: domEvent.clientX,
+			clientY: domEvent.clientY,
+			pointerId: domEvent.pointerId,
+		});
+	}
+	/*
+	 * ONE payload shape for both toggle paths. The checkbox and the row click
+	 * used to build this object separately and identically, which is two places
+	 * to keep in step every time the item shape gains a field — and a consumer
+	 * cannot tell which path produced the event it received.
+	 */
+	setChecked(checked) {
 		this.state.checked = checked;
 		const itemId = this.state.id;
 		this.emit('collection-item:change', {
@@ -81,6 +116,12 @@ export class UICollectionItem extends WebComponent {
 				disabled: this.state.disabled,
 			},
 		});
+	}
+	handleCheckChange(domEvent) {
+		if (this.state.disabled || !this.showCheckbox()) {
+			return;
+		}
+		this.setChecked(Boolean(domEvent.detail?.data?.checked));
 	}
 	/* Whole-row click toggles when selectable — checkbox still owns the native
 	   control for a11y; stopPropagation on the checkbox change path is enough
@@ -98,38 +139,35 @@ export class UICollectionItem extends WebComponent {
 			if (node?.localName === 'ui-checkbox') {
 				return;
 			}
+			if (node?.classList?.contains('collection-item-handle')) {
+				return;
+			}
 		}
-		const checked = !this.state.checked;
-		this.state.checked = checked;
-		const itemId = this.state.id;
-		this.emit('collection-item:change', {
-			id: itemId,
-			checked,
-			item: {
-				id: itemId,
-				label: this.state.label,
-				description: this.state.description,
-				checked,
-				disabled: this.state.disabled,
-			},
-		});
+		this.setChecked(!this.state.checked);
 	}
 	render() {
 		this.html`
-			<div class="ci-row"
+			<div class="collection-item-row"
 				?data-checked=${this.state.checked}
 				?data-disabled=${this.state.disabled}
 				?data-selectable=${this.showCheckbox}
+				?data-reorder=${this.showReorder}
 				@click=${this.handleRowActivate}>
-				<div class="ci-check" ?hidden=${this.checkboxHidden}>
+				<button type="button" class="collection-item-handle" aria-label="Drag to reorder"
+					?hidden=${this.handleHidden}
+					?disabled=${this.state.disabled}
+					@pointerdown=${this.handleDragStart}>
+					<ui-icon .state.name=${'grip-vertical'} .state.size=${'sm'}></ui-icon>
+				</button>
+				<div class="collection-item-check" ?hidden=${this.checkboxHidden}>
 					<ui-checkbox
 						.state.checked=${this.state.checked}
 						.state.disabled=${this.state.disabled}
 						@checkbox:change=${this.handleCheckChange}></ui-checkbox>
 				</div>
-				<div class="ci-body">
-					<span class="ci-label">${this.state.label}</span>
-					<span class="ci-desc" ?hidden=${!this.state.description}>${this.state.description}</span>
+				<div class="collection-item-body">
+					<span class="collection-item-label">${this.state.label}</span>
+					<span class="collection-item-desc" ?hidden=${!this.state.description}>${this.state.description}</span>
 				</div>
 			</div>
 		`;

@@ -3,7 +3,7 @@
 	--osm-badge: oklch(0.55 0.12 145);
 }
 
-.lf-root::after {
+.map-root::after {
 	content: 'OSM';
 	position: absolute;
 	inset-block-end: 0.4rem;

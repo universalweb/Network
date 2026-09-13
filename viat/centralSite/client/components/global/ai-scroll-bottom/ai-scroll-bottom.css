@@ -1,7 +1,7 @@
 :host {
 	display: contents;
 }
-.aisb {
+.ai-scroll-bottom {
 	position: absolute;
 	inset-block-end: var(--space-3);
 	inset-inline-end: var(--space-3);
@@ -11,23 +11,23 @@
 	transform: translateY(0.35rem);
 	transition: opacity 0.18s ease, transform 0.18s ease;
 }
-.aisb[data-position='static'] {
+.ai-scroll-bottom[data-position='static'] {
 	position: static;
 	inset: auto;
 	opacity: 1;
 	pointer-events: auto;
 	transform: none;
 }
-.aisb[data-visible] {
+.ai-scroll-bottom[data-visible] {
 	opacity: 1;
 	pointer-events: auto;
 	transform: none;
 }
-.aisb[aria-hidden='true'] {
+.ai-scroll-bottom[aria-hidden='true'] {
 	visibility: hidden;
 }
 @media (prefers-reduced-motion: reduce) {
-	.aisb {
+	.ai-scroll-bottom {
 		transition: none;
 	}
 }

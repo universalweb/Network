@@ -1,0 +1,46 @@
+:host {
+	display: inline-flex;
+	flex: 0 0 auto;
+}
+.swatch-button {
+	appearance: none;
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+	padding: 0;
+	inline-size: var(--swatch-size, 1.5rem);
+	block-size: var(--swatch-size, 1.5rem);
+	border-radius: 50%;
+	border: 2px solid transparent;
+	background: var(--swatch-color, var(--text-muted, oklch(0.7 0 0)));
+	box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.22);
+	cursor: pointer;
+	transition:
+		transform var(--dur-fast, 0.18s) var(--ease-out, ease),
+		border-color var(--dur-fast, 0.18s) var(--ease-out, ease),
+		box-shadow var(--dur-fast, 0.18s) var(--ease-out, ease);
+}
+.swatch-button:hover:not(:disabled):not([aria-pressed='true']) {
+	transform: scale(1.08);
+}
+.swatch-button[aria-pressed='true'] {
+	border-color: var(--text-primary, currentColor);
+	box-shadow:
+		0 0 0 2px var(--bg-panel, oklch(0.18 0 0)),
+		0 0 0 4px var(--text-primary, currentColor);
+}
+.swatch-button:focus-visible {
+	outline: 2px solid var(--color-info, currentColor);
+	outline-offset: 2px;
+}
+.swatch-button:disabled {
+	cursor: not-allowed;
+	opacity: 0.4;
+}
+@media (prefers-reduced-motion: reduce) {
+	.swatch-button {
+		transition: none;
+	}
+}

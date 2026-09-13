@@ -116,12 +116,12 @@ export class UIAiExport extends WebComponent {
 	render() {
 		this.html`
 			<button type="button"
-				class="aiex"
+				class="ai-export"
 				?disabled=${this.isDisabled}
 				tooltip=${this.state.label}
 				@click=${this.handleClick}>
 				<ui-icon .state.name=${'download'} .state.size=${'xs'}></ui-icon>
-				<span class="aiex-label">${this.state.label}</span>
+				<span class="ai-export-label">${this.state.label}</span>
 			</button>
 		`;
 	}

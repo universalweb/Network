@@ -15,7 +15,7 @@ import { WebComponent } from '../../core/index.js';
  */
 export function optionIdFor(item) {
 	const raw = item?.value ?? item?.label ?? '';
-	return `cmd-opt-${String(raw).replace(/[^\w-]+/g, '-')}`;
+	return `command-item-opt-${String(raw).replace(/[^\w-]+/g, '-')}`;
 }
 /**
  * Normalize a menu-style `kbd` string (or token array) into ui-kbd `values`.
@@ -121,19 +121,19 @@ export class UICommandItem extends WebComponent {
 	}
 	render() {
 		if (this.state.separator) {
-			this.html`<div class="cmd-sep" role="separator"></div>`;
+			this.html`<div class="command-item-sep" role="separator"></div>`;
 			return;
 		}
 		this.html`
 			<div
-				class="cmd-option"
+				class="command-item-option"
 				tabindex="-1"
 				?data-active=${this.state.active}
 				?data-disabled=${this.state.disabled}
 				@click=${this.handleClick}>
-				<ui-icon class="cmd-icon" ?hidden=${this.iconHidden} .state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>
-				<span class="cmd-label">${this.state.label || this.state.value}</span>
-				<ui-kbd class="cmd-kbd" ?hidden=${this.kbdHidden} .state.values=${this.state.kbdTokens}></ui-kbd>
+				<ui-icon class="command-item-icon" ?hidden=${this.iconHidden} .state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>
+				<span class="command-item-label">${this.state.label || this.state.value}</span>
+				<ui-kbd class="command-item-kbd" ?hidden=${this.kbdHidden} .state.values=${this.state.kbdTokens}></ui-kbd>
 			</div>
 		`;
 	}

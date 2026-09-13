@@ -202,6 +202,136 @@ export function areaPath(points, baselineY) {
 	path += `L ${points[last].x.toFixed(2)},${baselineY.toFixed(2)} Z`;
 	return path;
 }
+function clampOhlcBar(openValue, highValue, lowValue, closeValue) {
+	return {
+		open: openValue,
+		high: Math.max(highValue, openValue, closeValue),
+		low: Math.min(lowValue, openValue, closeValue),
+		close: closeValue,
+	};
+}
+function ohlcBarFromTuple(raw) {
+	const openValue = toNumber(raw[0], 0);
+	const highValue = toNumber(raw[1], openValue);
+	const lowValue = toNumber(raw[2], openValue);
+	const closeValue = toNumber(raw[3], openValue);
+	return clampOhlcBar(openValue, highValue, lowValue, closeValue);
+}
+function ohlcBarFromObject(raw) {
+	const openValue = toNumber(raw.open ?? raw.o, 0);
+	const closeValue = toNumber(raw.close ?? raw.c, openValue);
+	const highValue = toNumber(raw.high ?? raw.h, Math.max(openValue, closeValue));
+	const lowValue = toNumber(raw.low ?? raw.l, Math.min(openValue, closeValue));
+	return clampOhlcBar(openValue, highValue, lowValue, closeValue);
+}
+/**
+ * One OHLC bar. Accepts { open, high, low, close } (or o/h/l/c) or [o,h,l,c].
+ * A bare number is a doji (all four equal).
+ */
+export function readOhlcBar(raw) {
+	if (Array.isArray(raw) && raw.length >= 4) {
+		return ohlcBarFromTuple(raw);
+	}
+	if (raw && typeof raw === 'object') {
+		return ohlcBarFromObject(raw);
+	}
+	const numberValue = toNumber(raw, 0);
+	return clampOhlcBar(numberValue, numberValue, numberValue, numberValue);
+}
+function barsFromRaw(raw) {
+	const list = Array.isArray(raw) ? raw : [];
+	const bars = [];
+	const barCount = list.length;
+	for (let barIndex = 0; barIndex < barCount; barIndex += 1) {
+		bars.push(readOhlcBar(list[barIndex]));
+	}
+	return bars;
+}
+function isNamedOhlcRow(row) {
+	if (!row || typeof row !== 'object' || Array.isArray(row)) {
+		return false;
+	}
+	return Array.isArray(row.ohlc) || Array.isArray(row.values) || Array.isArray(row.data);
+}
+function rawBarsFromRow(row) {
+	if (Array.isArray(row.ohlc)) {
+		return row.ohlc;
+	}
+	if (Array.isArray(row.values)) {
+		return row.values;
+	}
+	if (Array.isArray(row.data)) {
+		return row.data;
+	}
+	return [];
+}
+/**
+ * Normalize candle series: `{ label, ohlc|values: bar[] }[]` or a bare bar[].
+ */
+export function normalizeOhlcSeries(series) {
+	if (!Array.isArray(series) || series.length === 0) {
+		return [];
+	}
+	if (isNamedOhlcRow(series[0])) {
+		const out = [];
+		const seriesCount = series.length;
+		for (let index = 0; index < seriesCount; index += 1) {
+			const row = series[index];
+			if (!row || typeof row !== 'object') {
+				continue;
+			}
+			out.push({
+				id: String(row.id ?? row.label ?? index),
+				label: String(row.label || row.id || `Series ${index + 1}`),
+				color: row.color || seriesColor(index),
+				ohlc: barsFromRaw(rawBarsFromRow(row)),
+			});
+		}
+		return out;
+	}
+	return [
+		{
+			id: 's0',
+			label: '',
+			color: '',
+			ohlc: barsFromRaw(series),
+		},
+	];
+}
+/**
+ * High/low domain of a normalized OHLC series. Ticks must read TARGET bars,
+ * not a mid-tween paint snapshot.
+ */
+export function ohlcSeriesExtent(series) {
+	const list = Array.isArray(series) ? series : [];
+	const highs = [];
+	const lows = [];
+	const seriesCount = list.length;
+	for (let seriesIndex = 0; seriesIndex < seriesCount; seriesIndex += 1) {
+		const bars = list[seriesIndex]?.ohlc;
+		if (!Array.isArray(bars)) {
+			continue;
+		}
+		const barCount = bars.length;
+		for (let barIndex = 0; barIndex < barCount; barIndex += 1) {
+			const bar = bars[barIndex];
+			if (!bar) {
+				continue;
+			}
+			highs.push(bar.high);
+			lows.push(bar.low);
+		}
+	}
+	const highExtent = extentOf(highs);
+	const lowExtent = extentOf(lows);
+	return {
+		min: lowExtent.min,
+		max: highExtent.max,
+	};
+}
+export function isCandleVariant(variant) {
+	return variant === 'candle' || variant === 'candlestick';
+}
 /**
  * Normalize series input:
  * - number[] → one series { id:'s0', values }

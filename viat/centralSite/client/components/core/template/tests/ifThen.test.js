@@ -122,3 +122,42 @@ test('each() shares the source array copy-on-write — imperative mutation never
 		4,
 	], 'LiveList sees the mutation');
 });
+class NestedLabelPanel extends WebComponent {
+	render() {
+		this.html`${() => {
+			return this.htmlElement`<p class="lab">${this.global.flag || 'none'}</p>`;
+		}}`;
+	}
+}
+customElements.define('ifthen-nested-label', NestedLabelPanel);
+class IfThenRemountHost extends WebComponent {
+	static state = {
+		on: true,
+	};
+	render() {
+		this.html`<div class="branch">${ifThen('on', NestedLabelPanel)}</div>`;
+	}
+}
+customElements.define('ifthen-remount-host', IfThenRemountHost);
+test('ifThen remount after nested computed drain does not throw insertBefore on a detached range', async () => {
+	const host = new IfThenRemountHost();
+	host.global.flag = 'alpha';
+	document.body.appendChild(host);
+	await host.pendingConnect;
+	await settle();
+	host.global.flag = 'beta';
+	host.state.on = false;
+	await settle();
+	host.global.flag = 'stale';
+	await settle();
+	host.state.on = true;
+	await settle();
+	host.global.flag = 'gamma';
+	await settle();
+	const nested = host.shadowRoot.querySelector('ifthen-nested-label');
+	assert.ok(nested, 'nested panel remounted');
+	const label = nested.shadowRoot.querySelector('.lab');
+	assert.ok(label, 'computed label painted');
+	assert.equal(label.textContent, 'gamma');
+	host.remove();
+});

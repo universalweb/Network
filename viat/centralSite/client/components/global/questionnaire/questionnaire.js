@@ -12,10 +12,10 @@
 	    @questionnaire:change=${this.onPick}></ui-questionnaire>
 	─────────────────────────────────────────────────────────────────────
 */
+import '../progress/progress.js';
 import '../radio-group/radio-group.js';
 import '../stepper/stepper.js';
-import { isArray } from '@universalweb/utilitylib';
-import { WebComponent } from 'webcomponent';
+import { isArray, WebComponent } from 'webcomponent';
 import { UICheckbox } from '../checkbox/checkbox.js';
 const VARIANTS = new Set([
 	'single',
@@ -33,9 +33,10 @@ export class UIQuestionnaire extends WebComponent {
 	static state = {
 		variant: 'single',
 		heading: '',
+		description: '',
 		// Options for single / multi: [{ value, label, description? }]
 		items: [],
-		// Step questions: [{ id, label, items: [{ value, label }] }]
+		// Step questions: [{ id, label, description?, items: [{ value, label }] }]
 		questions: [],
 		value: '',
 		values: [],
@@ -43,6 +44,7 @@ export class UIQuestionnaire extends WebComponent {
 		stepItems: [],
 		currentItems: [],
 		answers: [],
+		progressValue: 0,
 	};
 	onConnect() {
 		this.observe([
@@ -59,11 +61,13 @@ export class UIQuestionnaire extends WebComponent {
 		if (variant === 'multi') {
 			this.state.stepItems = [];
 			this.state.currentItems = this.checksFor(this.state.items);
+			this.state.progressValue = 0;
 			return;
 		}
 		if (variant !== 'step') {
 			this.state.currentItems = isArray(this.state.items) ? this.state.items : [];
 			this.state.stepItems = [];
+			this.state.progressValue = 0;
 			return;
 		}
 		const questions = isArray(this.state.questions) ? this.state.questions : [];
@@ -80,6 +84,7 @@ export class UIQuestionnaire extends WebComponent {
 		const active = Math.max(0, Math.min(count - 1, Number(this.state.activeIndex) || 0));
 		const current = questions[active];
 		this.state.currentItems = isArray(current?.items) ? current.items : [];
+		this.state.progressValue = count > 0 ? Math.round(((active + 1) / count) * 100) : 0;
 	}
 	checksFor(source) {
 		const items = isArray(source) ? source : [];
@@ -95,6 +100,7 @@ export class UIQuestionnaire extends WebComponent {
 				label: item.label || String(value),
 				description: item.description || '',
 				checked: values.includes(value),
+				layout: 'item',
 			});
 		}
 		return next;
@@ -133,6 +139,17 @@ export class UIQuestionnaire extends WebComponent {
 	}
 	hideHeading() {
 		return !this.currentHeading();
+	}
+	currentDescription() {
+		if (this.isStep()) {
+			const questions = this.state.questions;
+			const active = Number(this.state.activeIndex) || 0;
+			return questions[active]?.description || this.state.description;
+		}
+		return this.state.description;
+	}
+	hideDescription() {
+		return !this.currentDescription();
 	}
 	handleRadioChange(domEvent) {
 		const value = domEvent.detail?.data?.value ?? '';
@@ -213,8 +230,16 @@ export class UIQuestionnaire extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="qn" data-variant=${this.variantFlag}>
-				<div class="qn-head" ?hidden=${this.hideHeading}>${this.currentHeading}</div>
+			<div class="questionnaire" data-variant=${this.variantFlag}>
+				<div class="questionnaire-head" ?hidden=${this.hideHeading}>${this.currentHeading}</div>
+				<div class="questionnaire-desc" ?hidden=${this.hideDescription}>${this.currentDescription}</div>
+				<ui-progress
+					?hidden=${this.hideStepper}
+					.state.value=${this.state.progressValue}
+					.state.max=${100}
+					.state.size=${'sm'}
+					.state.showValue=${false}
+					.state.trackFit=${'fill'}></ui-progress>
 				<ui-stepper
 					?hidden=${this.hideStepper}
 					.state.items=${this.state.stepItems}
@@ -225,12 +250,12 @@ export class UIQuestionnaire extends WebComponent {
 					.state.items=${this.state.currentItems}
 					.state.value=${this.state.value}
 					@radio-group:change=${this.handleRadioChange}></ui-radio-group>
-				<div class="qn-multi" ?hidden=${this.hideChecks} @checkbox:change=${this.handleCheckChange}>
+				<div class="questionnaire-multi" ?hidden=${this.hideChecks} @checkbox:change=${this.handleCheckChange}>
 					${this.list('currentItems', UICheckbox)}
 				</div>
-				<div class="qn-pager" ?hidden=${this.hidePager}>
-					<button type="button" class="qn-btn" ?disabled=${this.backDisabled} @click=${this.handleBack}>Back</button>
-					<button type="button" class="qn-btn qn-next" @click=${this.handleNext}>${this.nextLabel}</button>
+				<div class="questionnaire-pager" ?hidden=${this.hidePager}>
+					<button type="button" class="questionnaire-btn" ?disabled=${this.backDisabled} @click=${this.handleBack}>Back</button>
+					<button type="button" class="questionnaire-btn questionnaire-next" @click=${this.handleNext}>${this.nextLabel}</button>
 				</div>
 			</div>
 		`;

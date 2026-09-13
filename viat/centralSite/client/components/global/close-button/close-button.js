@@ -12,6 +12,7 @@ export class UICloseButton extends WebComponent {
 	static state = {
 		label: 'Close',
 		size: 'md',
+		icon: 'x',
 	};
 	handleClick() {
 		this.emit('close-button:click', {});
@@ -22,11 +23,14 @@ export class UICloseButton extends WebComponent {
 	render() {
 		this.html`
 			<button
-				class="cb"
+				class="close-button"
+				part="close"
 				data-size=${this.state.size || 'md'}
 				@click=${this.handleClick}
 				aria-label=${this.state.label}>
-				<ui-icon class="cb-icon" .state.name=${'x'} .state.size=${this.iconSize}></ui-icon>
+				<span class="close-button-face">
+					<ui-icon class="close-button-icon" .state.name=${this.state.icon || 'x'} .state.size=${this.iconSize}></ui-icon>
+				</span>
 			</button>
 		`;
 	}

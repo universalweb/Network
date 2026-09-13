@@ -10,8 +10,23 @@
 	pointer-events: none;
 }
 
+:host(:not([data-open]):not([data-closing])) {
+	/* Closed overlay must not occupy the viewport. A PE-none inset:0 layer
+	   still intercepts hits in Chromium (fall-through lands on body).
+	   `data-closing` keeps the host painted through the snap-out. */
+	display: none;
+}
+
 :host([data-open]) {
 	pointer-events: auto;
+}
+
+:host([data-open]:not([data-modal])) {
+	pointer-events: none;
+}
+
+:host([data-closing]) {
+	pointer-events: none;
 }
 
 .slideout {
@@ -24,7 +39,15 @@
 	pointer-events: auto;
 }
 
-.sl-backdrop {
+:host(:not([data-modal])) .slideout {
+	pointer-events: none;
+}
+
+:host(:not([data-modal])) .slideout-panel {
+	pointer-events: auto;
+}
+
+.slideout-backdrop {
 	position: absolute;
 	inset: 0;
 	background: transparent;
@@ -36,17 +59,17 @@
 		backdrop-filter 0.32s ease;
 }
 
-.sl-backdrop[hidden] {
+.slideout-backdrop[hidden] {
 	display: none;
 }
 
-.slideout[data-open] .sl-backdrop {
+.slideout[data-open] .slideout-backdrop {
 	opacity: 1;
-	backdrop-filter: blur(6px) saturate(1.1);
-	-webkit-backdrop-filter: blur(6px) saturate(1.1);
+	backdrop-filter: var(--popup-glass-blur);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
 }
 
-.sl-panel {
+.slideout-panel {
 	position: absolute;
 	inset-block: var(--space-4);
 	display: flex;
@@ -54,9 +77,6 @@
 	inline-size: min(24rem, calc(100dvw - var(--space-8)));
 	border-radius: var(--radius-xl, 1.125rem);
 	border: 1px solid color-mix(in oklab, var(--dark-divider, rgba(255, 255, 255, 0.12)) 90%, transparent);
-	background: color-mix(in oklab, var(--bg-body, #0a0c12) 62%, transparent);
-	backdrop-filter: blur(28px) saturate(1.35);
-	-webkit-backdrop-filter: blur(28px) saturate(1.35);
 	box-shadow:
 		0 24px 64px rgba(0, 0, 0, 0.45),
 		inset 0 1px 0 color-mix(in oklab, white 8%, transparent);
@@ -65,39 +85,40 @@
 		transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
 		opacity 0.28s ease;
 	overflow: hidden;
-	pointer-events: auto;
+	pointer-events: none;
 	/* Vertical scroll stays with the browser; horizontal is dismiss. */
 	touch-action: pan-y;
 	cursor: grab;
 }
 
 /* Default: inline-end (right in LTR). */
-.slideout[data-side='end'] .sl-panel,
-.slideout:not([data-side]) .sl-panel {
+.slideout[data-side='end'] .slideout-panel,
+.slideout:not([data-side]) .slideout-panel {
 	inset-inline-end: var(--space-4);
 	transform: translateX(calc(100% + var(--space-6)));
 }
 
-.slideout[data-side='start'] .sl-panel {
+.slideout[data-side='start'] .slideout-panel {
 	inset-inline-start: var(--space-4);
 	transform: translateX(calc(-100% - var(--space-6)));
 }
 
-.slideout[data-open] .sl-panel {
-	transform: translateX(0);
+.slideout[data-open] .slideout-panel {
+	transform: none;
 	opacity: 1;
+	pointer-events: auto;
 }
 
-.sl-panel.is-dragging {
+.slideout-panel.is-dragging {
 	transition: none;
 	cursor: grabbing;
 }
 
-.sl-panel :is(button, a, [role='button']) {
+.slideout-panel :is(button, a, [role='button']) {
 	cursor: pointer;
 }
 
-.sl-body {
+.slideout-body {
 	display: flex;
 	flex-direction: column;
 	min-block-size: 0;
@@ -105,9 +126,77 @@
 	overflow: hidden;
 }
 
+.slideout-foot {
+	flex: 0 0 auto;
+	padding-inline: var(--space-4);
+	padding-block: var(--space-3);
+	border-block-start: 1px solid color-mix(in oklab, var(--dark-divider, oklch(1 0 0 / 0.14)) 100%, transparent);
+}
+
+.slideout-foot[hidden] {
+	display: none;
+}
+
+/*
+ * Floor plan — the panel is a hit/drag column, not a filled card. Header and
+ * slotted body (search, cards) paint themselves. Padding is the grab gutter
+ * so dragToClose isn't trapped on the header chrome.
+ */
+.slideout[data-skin='floor'] .slideout-panel {
+	gap: var(--space-4);
+	padding: var(--space-4);
+	border: 0;
+	background: transparent;
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	box-shadow: none;
+	opacity: 1;
+	overflow: visible;
+}
+
+.slideout[data-skin='floor'] .slideout-head {
+	padding: 0.75rem;
+	border: 1px solid color-mix(in oklab, var(--dark-divider, oklch(1 0 0 / 0.14)) 100%, transparent);
+	border-radius: var(--radius-lg, 0.75rem);
+	background: var(--popup-glass-bg);
+	backdrop-filter: var(--popup-glass-blur);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
+}
+
+.slideout[data-skin='floor'] .slideout-body {
+	gap: var(--space-4);
+	overflow: visible;
+}
+
+.slideout[data-skin='floor'] .slideout-foot {
+	padding: 0;
+	border-block-start: 0;
+}
+
+:host([data-vw='xs']) .slideout[data-skin='floor'] .slideout-panel,
+:host([data-vw='sm']) .slideout[data-skin='floor'] .slideout-panel {
+	background: var(--popup-light-glass-bg);
+	backdrop-filter: var(--popup-glass-blur);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
+	border: 1px solid color-mix(in oklab, var(--dark-divider, oklch(1 0 0 / 0.14)) 100%, transparent);
+	border-radius: var(--radius-lg, 0.75rem);
+	overflow: hidden;
+}
+
+@media (max-width: 47.9375em) {
+	.slideout[data-skin='floor'] .slideout-panel {
+		background: var(--popup-light-glass-bg);
+		backdrop-filter: var(--popup-glass-blur);
+		-webkit-backdrop-filter: var(--popup-glass-blur);
+		border: 1px solid color-mix(in oklab, var(--dark-divider, oklch(1 0 0 / 0.14)) 100%, transparent);
+		border-radius: var(--radius-lg, 0.75rem);
+		overflow: hidden;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
-	.sl-backdrop,
-	.sl-panel {
+	.slideout-backdrop,
+	.slideout-panel {
 		transition-duration: 0.01ms;
 	}
 }

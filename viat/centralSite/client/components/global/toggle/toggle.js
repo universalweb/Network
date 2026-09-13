@@ -30,15 +30,15 @@ export class UIToggle extends WebComponent {
 	}
 	render() {
 		this.html`
-			<button class="tg" type="button"
+			<button class="toggle" type="button"
 				data-variant=${this.state.variant}
 				data-size=${this.state.size}
 				aria-pressed=${this.state.pressed ? 'true' : 'false'}
 				?disabled=${this.state.disabled}
 				@click=${this.handleClick}>
-				<ui-icon class="tg-icon" ?hidden=${!this.state.icon}
+				<ui-icon class="toggle-icon" ?hidden=${!this.state.icon}
 					.state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>
-				<span class="tg-label" ?hidden=${!this.state.label}>${this.state.label}</span>
+				<span class="toggle-label" ?hidden=${!this.state.label}>${this.state.label}</span>
 				<slot></slot>
 			</button>
 		`;

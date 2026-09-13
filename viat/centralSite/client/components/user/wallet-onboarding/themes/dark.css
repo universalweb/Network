@@ -11,14 +11,14 @@
 	letter-spacing: normal;
 }
 .wo-btn-primary {
-	background: var(--btn-primary-bg);
-	border-color: var(--btn-primary-border);
-	color: var(--btn-primary-color);
+	background: var(--btn-primary-bg, var(--text-light, #fff));
+	border-color: var(--btn-primary-border, var(--btn-primary-bg, var(--text-light, #fff)));
+	color: var(--btn-primary-color, var(--bg-body, #000));
 }
 .wo-btn-primary:hover {
-	background: var(--btn-primary-hover-bg);
-	border-color: var(--btn-primary-hover-border);
-	color: var(--btn-primary-hover-color);
+	background: var(--btn-primary-hover-bg, color-mix(in oklab, var(--btn-primary-bg, var(--text-light, #fff)) 90%, var(--bg-body, #000)));
+	border-color: var(--btn-primary-hover-border, var(--btn-primary-hover-bg, color-mix(in oklab, var(--btn-primary-bg, var(--text-light, #fff)) 90%, var(--bg-body, #000))));
+	color: var(--btn-primary-color, var(--bg-body, #000));
 }
 .wo-readmore {
 	font-family: var(--font-display);

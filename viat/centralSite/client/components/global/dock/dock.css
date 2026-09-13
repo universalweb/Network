@@ -6,11 +6,10 @@
 	display: flex;
 	flex-direction: column;
 	flex: 0 0 auto;
-	width: 100%;
 	position: relative;
 	overflow: visible;
 	background: var(--topbar-bg);
-	border-radius: var(--radius-lg, 10px);
+	border-radius: var(--radius-lg);
 	border: 1px solid var(--dark-divider);
 	box-shadow:
 		var(--panel-shadow),
@@ -25,6 +24,15 @@
    (0,2,0) would silently out-rank it and re-enable motion for those users. */
 :host(:where([data-orientation='horizontal'])) {
 	animation: dock-slide-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* Vertical rail hugs the icon column. Horizontal bar spans its container
+   (the mobile bottom dock). */
+:host([data-orientation='vertical']) {
+	inline-size: fit-content;
+	max-inline-size: 100%;
+}
+:host([data-orientation='horizontal']) {
+	inline-size: 100%;
 }
 @keyframes dock-slide-in {
 	from {
@@ -54,14 +62,14 @@
 .dock {
 	--bar-padding: 0;
 	--bar-gap: 0;
-	width: 100%;
+	inline-size: 100%;
 }
 /* The rail — the active-bar's positioning context and the item flex line. */
 .dock-rail {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	width: 100%;
+	inline-size: 100%;
 	/* Symmetric inline padding insets the icon column from the panel's rounded
 	   edges (the vertical desktop rail). The horizontal rule below re-sets it. */
 	padding: var(--space-3);
@@ -81,27 +89,29 @@
 :host([data-orientation='horizontal']) ui-icon-button {
 	display: flex;
 	justify-content: center;
-	color: var(--icon-color, var(--text-main));
+	color: var(--icon-color);
 	transition: color 0.18s ease;
 }
 :host([data-orientation='vertical']) ui-icon-button {
-	width: 100%;
+	inline-size: 100%;
 }
 :host([data-orientation='horizontal']) ui-icon-button {
-	width: auto;
+	inline-size: auto;
 	flex: 0 0 auto;
 	/* Bottom-docked = touch context. 44px floor is the WCAG target minimum —
 	   the fluid root is 14px on small viewports, so bare 2.75rem (38.5px)
-	   would undershoot; max() keeps rem-scaling for larger user font sizes. */
-	--btn-hit: max(2.75rem, 44px);
+	   would undershoot; --hit-min keeps rem-scaling for larger user font sizes. */
+	--btn-hit: var(--hit-min, max(2.75rem, 44px));
+	--btn-face: var(--hit-min, max(2.75rem, 44px));
+	--btn-face-clip: border-box;
 }
 :host([data-orientation='vertical']) ui-icon-button:hover,
 :host([data-orientation='horizontal']) ui-icon-button:hover {
-	color: var(--icon-color-hover, var(--cyan));
+	color: var(--icon-color-hover);
 }
 :host([data-orientation='vertical']) ui-icon-button[data-active],
 :host([data-orientation='horizontal']) ui-icon-button[data-active] {
-	color: var(--icon-color-active, var(--cyan));
+	color: var(--icon-color-active);
 }
 /* The sliding active-bar. movingIndicator writes --bar-x/-y/-w/-h on both
    axes; each orientation honours its own pair, exactly like the tab strip. */

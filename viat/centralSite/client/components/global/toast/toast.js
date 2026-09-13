@@ -6,6 +6,7 @@
 	Events: toast:show | toast:dismiss | toast:action
 */
 import { WebComponent } from 'webcomponent';
+import { normalizeNoticeType, stampStackDepth } from '../notice-stack.js';
 import { UIToastItem } from '../toast-item/toast-item.js';
 const DEFAULT_TIMEOUT = 4000;
 const POSITIONS = new Set([
@@ -15,9 +16,6 @@ const POSITIONS = new Set([
 	'top-center',
 	'top-end',
 	'top-start',
-]);
-const ITEM_TYPES = new Set([
-	'default', 'success', 'info', 'warning', 'error', 'loading',
 ]);
 export class UIToast extends WebComponent {
 	static url = import.meta.url;
@@ -33,16 +31,7 @@ export class UIToast extends WebComponent {
 	};
 	nextId = 0;
 	onConnect() {
-		/*
-		 * Top-layer so toasts sit above dialogs / drawers. Manual popover —
-		 * same pattern as ui-notification.
-		 */
-		if (typeof this.showPopover === 'function' && !this.hasAttribute('popover')) {
-			this.setAttribute('popover', 'manual');
-		}
-		if (typeof this.showPopover === 'function' && !this.matches(':popover-open')) {
-			this.showPopover();
-		}
+		this.ensureManualPopover();
 		this.observe('position', this.syncPositionAttr);
 		this.syncPositionAttr(this.state.position);
 		this.observe('items', this.queueStampStack);
@@ -79,8 +68,7 @@ export class UIToast extends WebComponent {
 		if (!title && !description) {
 			return null;
 		}
-		const rawKind = spec.itemType ?? spec.type ?? 'default';
-		const itemType = ITEM_TYPES.has(rawKind) ? rawKind : 'default';
+		const itemType = normalizeNoticeType(spec.itemType ?? spec.type ?? 'default');
 		let timeout = spec.timeout;
 		if (timeout === undefined) {
 			timeout = itemType === 'loading' ? 0 : DEFAULT_TIMEOUT;
@@ -103,7 +91,7 @@ export class UIToast extends WebComponent {
 		const items = [next, ...this.state.items];
 		const limit = Math.max(1, Number(this.state.limit) || 5);
 		this.state.items = items.length > limit ? items.slice(0, limit) : items;
-		this.repromotePopover();
+		this.repromoteManualPopover();
 		// After the list patches, stamp deck indices for stacked CSS.
 		this.nextFrame?.().then?.(() => {
 			if (!this.isDisconnected) {
@@ -162,19 +150,6 @@ export class UIToast extends WebComponent {
 	clear() {
 		this.state.items = [];
 	}
-	repromotePopover() {
-		if (typeof this.hidePopover !== 'function' || typeof this.showPopover !== 'function') {
-			return;
-		}
-		try {
-			if (this.matches?.(':popover-open')) {
-				this.hidePopover();
-			}
-			this.showPopover();
-		} catch (error) {
-			console.warn('[toast] re-promote failed', error);
-		}
-	}
 	handleDismiss(domEvent) {
 		const toastId = domEvent.detail?.data?.id;
 		if (toastId !== undefined) {
@@ -199,24 +174,7 @@ export class UIToast extends WebComponent {
 	 * Called after list paint — list() owns the children; we only set a CSS var.
 	 */
 	stampStackIndexes() {
-		const items = this.state.items;
-		const count = items.length;
-		const hostList = this.findComponents('ui-toast-item') || [];
-		const hostCount = hostList.length;
-		for (let index = 0; index < hostCount; index += 1) {
-			const host = hostList[index];
-			const toastId = host?.state?.toastId ?? host?.state?.id;
-			let stackIndex = index;
-			for (let itemIndex = 0; itemIndex < count; itemIndex += 1) {
-				const item = items[itemIndex];
-				if ((item.toastId ?? item.id) === toastId) {
-					stackIndex = itemIndex;
-					break;
-				}
-			}
-			host.style.setProperty('--toast-i', String(stackIndex));
-			host.dataset.stack = String(stackIndex);
-		}
+		stampStackDepth(this, 'ui-toast-item');
 	}
 	onRender() {
 		this.stampStackIndexes();

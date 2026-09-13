@@ -13,7 +13,7 @@
 	/* No neon underline — a single hairline border carries the separation. */
 	display: none;
 }
-.panel-header .ph-id {
+.panel-header .panel-header-id {
 	font-family: var(--font-mono);
 	font-weight: 400;
 }

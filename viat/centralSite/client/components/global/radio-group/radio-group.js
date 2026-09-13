@@ -11,6 +11,8 @@
 	── EVENTS ───────────────────────────────────────────────────────────
 	  radio-group:change { value }
 	── USAGE ────────────────────────────────────────────────────────────
+	  size / tone ride as host data-* (never class tokens). `--radio-size` is the
+	  glyph; `--radio-hit` is the 44px tap floor. Consumers override either.
 	  <ui-radio-group .state.legend=${'Plan'} .state.value=${'pro'} .state.items=${[
 	    { value: 'free', label: 'Free' },
 	    { value: 'pro',  label: 'Pro', description: 'Everything in Free, plus…' },
@@ -20,7 +22,6 @@
 */
 import { WebComponent } from 'webcomponent';
 import { UIRadioOption } from '../radio-option/radio-option.js';
-
 export class UIRadioGroup extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -32,7 +33,20 @@ export class UIRadioGroup extends WebComponent {
 		legend: '',
 		orientation: 'vertical',
 		disabled: false,
+		size: 'md',
+		tone: 'info',
 	};
+	onConnect() {
+		this.observe([
+			'size',
+			'tone',
+		], this.syncHostAttrs);
+		this.syncHostAttrs();
+	}
+	syncHostAttrs() {
+		this.dataset.size = this.state.size || 'md';
+		this.dataset.tone = this.state.tone || 'info';
+	}
 	onMount() {
 		this.syncChecked();
 		/*
@@ -71,6 +85,8 @@ export class UIRadioGroup extends WebComponent {
 		this.html`
 			<fieldset #group class="radio-group"
 				data-orientation=${this.state.orientation}
+				data-size=${this.state.size || 'md'}
+				data-tone=${this.state.tone || 'info'}
 				?disabled=${this.state.disabled}
 				@change=${this.handleChange}>
 				${this.renderLegend}

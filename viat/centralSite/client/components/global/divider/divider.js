@@ -1,5 +1,5 @@
 /*
-	DESCRIPTION: ui-divider — a separator rule (the MUI "Divider" gap). Horizontal
+	DESCRIPTION: ui-divider — a separator rule with a built-in gap. Horizontal
 	or vertical, solid/dashed, optional inset, and an optional centred LABEL
 	("…  OR  …"). The label/line structure is always rendered; CSS collapses it to a
 	bare rule when there's no label, so the same element serves both modes without a
@@ -33,13 +33,12 @@ export class UIDivider extends WebComponent {
 	render() {
 		// A label only lays out on the horizontal axis; a vertical divider is always a
 		// bare rule. `?data-labeled` flips the inner layout from rule → flex-with-text.
-		const labeled = this.state.orientation === 'horizontal' && this.state.label !== '';
 		this.html`
 			<div class="divider"
 				data-orientation=${this.state.orientation}
 				data-variant=${this.state.variant}
 				data-inset=${this.state.inset}
-				?data-labeled=${labeled}
+				?data-labeled=${this.state.orientation === 'horizontal' && this.state.label !== ''}
 				?data-decorative=${this.state.decorative}
 				role=${this.separatorRole}
 				aria-orientation=${this.state.orientation}

@@ -16,6 +16,7 @@
 	  // closeFromScroll() { this.refs.surface?.hidePopover(); }
 	─────────────────────────────────────────────────────────────────────
 */
+import { isFunction } from '../utilities.js';
 import { findScrollableAncestor } from './scrollRoot.js';
 /**
  * Window + each overflow ancestor of `owner`, walking through shadow hosts.
@@ -54,7 +55,7 @@ export function scrollEventInside(keepOpen, domEvent) {
 	if (!keepOpen) {
 		return false;
 	}
-	const path = typeof domEvent.composedPath === 'function' ? domEvent.composedPath() : [];
+	const path = isFunction(domEvent.composedPath) ? domEvent.composedPath() : [];
 	const pathCount = path.length;
 	for (let index = 0; index < pathCount; index += 1) {
 		if (path[index] === keepOpen) {
@@ -78,7 +79,7 @@ export class HideOnScroll {
 	constructor(owner, methodName, options = {}) {
 		this.owner = owner;
 		this.methodName = methodName;
-		this.resolveKeepOpen = typeof options.keepOpen === 'function' ? options.keepOpen : null;
+		this.resolveKeepOpen = isFunction(options.keepOpen) ? options.keepOpen : null;
 		this.attached = false;
 		this.targets = [];
 	}

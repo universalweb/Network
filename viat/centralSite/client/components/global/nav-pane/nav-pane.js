@@ -6,6 +6,7 @@
 	  nav-pane:select { id, item, index, href }  (forwarded from nav-link:select)
 */
 import { WebComponent } from 'webcomponent';
+import { applySlideFlags } from '../../core/dom/paneTrack.js';
 import { UINavLink } from '../nav-link/nav-link.js';
 export class UINavPane extends WebComponent {
 	static url = import.meta.url;
@@ -30,6 +31,11 @@ export class UINavPane extends WebComponent {
 		// Distance from the open panel in panel-track units (0 = active).
 		slideOffset: 0,
 	};
+	onConnect() {
+		this.classList.add('slide-pane');
+		this.observe('links', this.stampLinks);
+		this.stampLinks();
+	}
 	onMount() {
 		// Host decoration for CSS slide — a component can't ?attr its own host.
 		this.observe('active', this.reflectActive, {
@@ -40,15 +46,10 @@ export class UINavPane extends WebComponent {
 		});
 	}
 	reflectActive(next) {
-		const isActive = Boolean(next);
-		this.toggleAttribute('data-active', isActive);
-		this.setAttribute('aria-hidden', isActive ? 'false' : 'true');
-		// Off-screen panes must not trap focus (aria-hidden + focusable = a11y fail).
-		this.inert = !isActive;
+		applySlideFlags(this, next, this.state.slideOffset);
 	}
 	reflectOffset(next) {
-		const offset = Number(next) || 0;
-		this.style.setProperty('--nav-slide', String(offset));
+		applySlideFlags(this, this.state.active, next);
 	}
 	/* Stamp itemIndex onto each link so rows can report their index. */
 	stampLinks() {
@@ -64,10 +65,6 @@ export class UINavPane extends WebComponent {
 				link.itemIndex = index;
 			}
 		}
-	}
-	onConnect() {
-		this.observe('links', this.stampLinks);
-		this.stampLinks();
 	}
 	handleLinkSelect(domEvent) {
 		domEvent.stopPropagation();

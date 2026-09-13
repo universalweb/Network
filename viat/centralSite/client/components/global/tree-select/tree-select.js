@@ -8,6 +8,10 @@
 	  tree-select:change { value, item }
 	  tree-select:open { open }
 	  tree-select:close { open }
+	Value is a DOTTED id-path (`root.branch.leaf`) — the framework's object-access
+	shape, not labels. Display uses ` / ` (presentational; not the value). `pathFor`
+	/ `nodeAt` round-trip by node identity. A stored path whose hop is gone fails
+	soft to no-selection (never throws). Labels may contain `.`; ids must not.
 	── USAGE ────────────────────────────────────────────────────────────
 	  <ui-tree-select .state.items=${nodes} .state.placeholder=${'Pick a file'}
 	    @tree-select:change=${this.onPick}></ui-tree-select>
@@ -15,9 +19,15 @@
 */
 import '../icon/icon.js';
 import { WebComponent } from 'webcomponent';
-import { positionOverlay } from '../../core/dom/anchor.js';
+import { hideOverlay, positionOverlayWhenReady } from '../../core/dom/anchor.js';
 import { HideOnScroll } from '../../core/dom/hideOnScroll.js';
-import { findTreeItem, treeItemLabel, treeItemValue } from '../tree/tree.js';
+import {
+	displayPath,
+	findTreeItem,
+	nodeAt,
+	pathFor,
+	treeItemValue,
+} from '../tree/tree.js';
 export class UITreeSelect extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -34,27 +44,13 @@ export class UITreeSelect extends WebComponent {
 		emptyMessage: 'No matches.',
 	};
 	onConnect() {
-		this.observe('open', this.syncPopoverFromState);
+		this.observe('open', this.syncOpen);
 	}
 	onRendered() {
-		this.syncPopoverFromState(this.state.open);
+		this.syncOpen(this.state.open);
 	}
 	onDisconnect() {
 		this.scrollHide?.detach();
-	}
-	syncPopoverFromState(isOpen) {
-		const surface = this.refs.surface;
-		if (!surface || typeof surface.showPopover !== 'function') {
-			return;
-		}
-		const showing = surface.matches(':popover-open');
-		if (isOpen && !showing) {
-			surface.showPopover();
-			return;
-		}
-		if (!isOpen && showing) {
-			surface.hidePopover();
-		}
 	}
 	ensureScrollHide() {
 		this.scrollHide ??= new HideOnScroll(this, 'closeFromScroll', {
@@ -68,7 +64,7 @@ export class UITreeSelect extends WebComponent {
 		this.closeList();
 	}
 	positionPanel() {
-		positionOverlay(this.refs.surface, this.refs.trigger, {
+		positionOverlayWhenReady(this.refs.surface, this.refs.trigger, {
 			placement: 'bottom-start',
 			offset: 6,
 			matchWidth: true,
@@ -96,10 +92,19 @@ export class UITreeSelect extends WebComponent {
 		if (this.state.disabled === true) {
 			return;
 		}
-		this.refs.surface?.showPopover?.();
+		hideOverlay(this.refs.surface);
+		this.showSurfacePopover(this.refs.surface);
 	}
 	closeList() {
-		this.refs.surface?.hidePopover?.();
+		this.hideSurfacePopover(this.refs.surface);
+	}
+	syncOpen(isOpen) {
+		if (isOpen) {
+			hideOverlay(this.refs.surface);
+			this.showSurfacePopover(this.refs.surface);
+			return;
+		}
+		this.hideSurfacePopover(this.refs.surface);
 	}
 	handleQuery(domEvent) {
 		domEvent.stopPropagation();
@@ -114,43 +119,64 @@ export class UITreeSelect extends WebComponent {
 		if (!data || data.item?.disabled === true) {
 			return;
 		}
-		this.state.value = data.value;
+		const item = data.item;
+		const path = this.pathFor(item);
+		if (!path) {
+			return;
+		}
+		this.state.value = path;
 		this.closeList();
 		this.emit('tree-select:change', {
-			value: data.value,
-			item: data.item,
+			value: path,
+			item,
 		});
 	}
+	pathFor(node) {
+		return pathFor(this.state.items, node);
+	}
+	nodeAt(path) {
+		return nodeAt(this.state.items, path);
+	}
+	resolvedItem() {
+		const path = this.state.value;
+		const fromPath = this.nodeAt(path);
+		if (fromPath) {
+			return fromPath;
+		}
+		if (path && !String(path).includes('.')) {
+			return findTreeItem(this.state.items, path);
+		}
+		return null;
+	}
 	selectedLabel() {
-		const item = findTreeItem(this.state.items, this.state.value);
+		const item = this.resolvedItem();
 		if (!item) {
 			return this.state.placeholder;
 		}
-		return treeItemLabel(item);
+		return displayPath(this.state.items, item);
 	}
 	isPlaceholder() {
-		const item = findTreeItem(this.state.items, this.state.value);
-		return !item;
+		return !this.resolvedItem();
 	}
 	caretName() {
 		return this.state.open ? 'chevron-up' : 'chevron-down';
 	}
 	treeValue() {
-		const item = findTreeItem(this.state.items, this.state.value);
-		return item ? treeItemValue(item) : this.state.value;
+		const item = this.resolvedItem();
+		return item ? treeItemValue(item) : '';
 	}
 	render() {
 		this.html`
-			<div class="ts" ?data-disabled=${this.state.disabled} ?data-open=${this.state.open}>
-				<button type="button" class="ts-trigger" #trigger popovertarget="ts-pop"
+			<div class="tree-select" ?data-disabled=${this.state.disabled} ?data-open=${this.state.open}>
+				<button type="button" class="tree-select-trigger" data-hover=${'hairline'} #trigger popovertarget="tree-select-pop"
 					?disabled=${this.state.disabled}
 					aria-haspopup="tree" aria-expanded=${this.state.open ? 'true' : 'false'}>
-					<span class="ts-label" ?data-placeholder=${this.isPlaceholder}>${this.selectedLabel}</span>
-					<ui-icon class="ts-caret" .state.name=${this.caretName} .state.size=${'sm'}></ui-icon>
+					<span class="tree-select-label" ?data-placeholder=${this.isPlaceholder}>${this.selectedLabel}</span>
+					<ui-icon class="tree-select-caret" .state.name=${this.caretName} .state.size=${'sm'}></ui-icon>
 				</button>
-				<div class="ts-panel" #surface id="ts-pop" popover="auto" role="dialog"
+				<div class="tree-select-panel glass" #surface id="tree-select-pop" popover="auto" role="dialog"
 					@toggle=${this.handleToggle}>
-					<input #query class="ts-query" type="search" placeholder="Filter…" aria-label="Filter options"
+					<input #query class="tree-select-query" type="search" placeholder="Filter…" aria-label="Filter options"
 						$value="query" @input=${this.handleQuery}>
 					<ui-tree
 						.state.items=${this.state.items}

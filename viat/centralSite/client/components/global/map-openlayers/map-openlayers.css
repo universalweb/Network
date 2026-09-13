@@ -8,12 +8,12 @@
 	color: var(--text-main);
 }
 
-/* ?hidden must beat .ol-overlay { display: grid } — same footgun as poll/ai-inquire. */
+/* ?hidden must beat .map-overlay { display: grid } — same footgun as poll/ai-inquire. */
 [hidden] {
 	display: none !important;
 }
 
-.ol-root {
+.map-root {
 	position: relative;
 	inline-size: 100%;
 	block-size: 100%;
@@ -24,7 +24,7 @@
 	border: 1px solid color-mix(in oklab, var(--border-color, currentColor) 40%, transparent);
 }
 
-.ol-canvas {
+.map-canvas {
 	position: absolute;
 	inset: 0;
 	inline-size: 100%;
@@ -32,13 +32,13 @@
 	z-index: 0;
 }
 
-.ol-canvas .ol-attribution {
+.map-canvas .ol-attribution {
 	background: color-mix(in oklab, var(--bg-body) 85%, transparent);
 	color: var(--text-muted, var(--text-main));
 	font-size: var(--text-xs, 0.75rem);
 }
 
-.ol-overlay {
+.map-overlay {
 	position: absolute;
 	inset: 0;
 	z-index: 2;
@@ -51,28 +51,28 @@
 	pointer-events: none;
 }
 
-.ol-overlay[data-interactive] {
+.map-overlay[data-interactive] {
 	pointer-events: auto;
 }
 
-.ol-status {
+.map-status {
 	display: grid;
 	gap: var(--space-2, 0.5rem);
 	justify-items: center;
 	max-inline-size: 28rem;
 }
 
-.ol-status-label {
+.map-status-label {
 	font-size: var(--text-sm, 0.875rem);
 	font-weight: var(--weight-semibold, 600);
 }
 
-.ol-status-msg {
+.map-status-msg {
 	font-size: var(--text-xs, 0.75rem);
 	color: var(--text-muted, var(--text-main));
 	line-height: 1.4;
 }
 
-.ol-status[data-tone='danger'] .ol-status-label {
+.map-status[data-tone='danger'] .map-status-label {
 	color: var(--color-danger, oklch(0.62 0.2 25));
 }

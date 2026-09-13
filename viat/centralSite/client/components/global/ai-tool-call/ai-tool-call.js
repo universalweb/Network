@@ -72,23 +72,23 @@ export class UIAiToolCall extends WebComponent {
 	}
 	render() {
 		this.html`
-			<details class="atc" data-status=${this.state.status} ?open=${this.state.expanded} @toggle=${this.handleToggle}>
-				<summary class="atc-summary">
-					<ui-icon class="atc-tool" .state.name=${'wrench'} .state.size=${'sm'}></ui-icon>
-					<code class="atc-name">${this.state.name}</code>
-					<span class="atc-status">
-						<ui-icon class="atc-status-icon" .state.name=${this.statusIcon} .state.size=${'xs'} ?spin=${this.state.status === 'running'}></ui-icon>
-						<span class="atc-status-label">${this.statusLabel}</span>
+			<details class="ai-tool-call" data-status=${this.state.status} ?open=${this.state.expanded} @toggle=${this.handleToggle}>
+				<summary class="ai-tool-call-summary">
+					<ui-icon class="ai-tool-call-tool" .state.name=${'wrench'} .state.size=${'sm'}></ui-icon>
+					<code class="ai-tool-call-name">${this.state.name}</code>
+					<span class="ai-tool-call-status">
+						<ui-icon class="ai-tool-call-status-icon" .state.name=${this.statusIcon} .state.size=${'xs'} ?spin=${this.state.status === 'running'}></ui-icon>
+						<span class="ai-tool-call-status-label">${this.statusLabel}</span>
 					</span>
-					<ui-icon class="atc-chevron" .state.name=${'chevron-down'} .state.size=${'sm'}></ui-icon>
+					<ui-icon class="ai-tool-call-chevron" .state.name=${'chevron-down'} .state.size=${'sm'}></ui-icon>
 				</summary>
-				<div class="atc-body">
-					<div class="atc-section">
-						<span class="atc-section-label">Arguments</span>
+				<div class="ai-tool-call-body">
+					<div class="ai-tool-call-section">
+						<span class="ai-tool-call-section-label">Arguments</span>
 						<ui-json-inspector #argsview .state.expandDepth=${1} .state.rootLabel=${'args'}></ui-json-inspector>
 					</div>
-					<div class="atc-section" ?hidden=${!this.hasResult}>
-						<span class="atc-section-label">Result</span>
+					<div class="ai-tool-call-section" ?hidden=${!this.hasResult}>
+						<span class="ai-tool-call-section-label">Result</span>
 						<ui-json-inspector #resultview .state.expandDepth=${1} .state.rootLabel=${'result'}></ui-json-inspector>
 					</div>
 				</div>

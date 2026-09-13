@@ -2,7 +2,7 @@ import '../../global/modal/modal.js';
 import { WebComponent } from 'webcomponent';
 /**
  * `<wallet-info-modal>` — long-form explainer modal. Body styling
- * (head / copy / inline code) comes from the shared `modal-chrome.css`;
+ * (copy / inline code) comes from the shared `modal-chrome.css`;
  * the section heading and click-to-expand figure styling are component-local.
  */
 export class WalletInfoModal extends WebComponent {
@@ -18,6 +18,7 @@ export class WalletInfoModal extends WebComponent {
 			open: false,
 			showClose: true,
 			showMaximize: true,
+			heading: 'HOW WALLETS ARE BUILT',
 		},
 	};
 	open() {
@@ -40,10 +41,6 @@ export class WalletInfoModal extends WebComponent {
 		this.html`
 			<ui-modal #modal .state=${this.state.modal} style=${this.modalStyle}>
 				<div class="modal-shell" ?data-expanded=${this.state.expanded}>
-					<header class="modal-head">
-						<span class="modal-head-id">VIAT</span>
-						<span class="modal-head-title">// HOW WALLETS ARE BUILT</span>
-					</header>
 					<figure class="wi-figure">
 						<img class="wi-img"
 							src="./HDSeed.png"

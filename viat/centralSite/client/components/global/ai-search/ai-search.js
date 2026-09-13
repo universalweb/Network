@@ -44,9 +44,9 @@ export class UIAiSearch extends WebComponent {
 	}
 	render() {
 		this.html`
-			<form class="aise" @submit=${this.handleSubmit}>
-				<ui-icon class="aise-icon" .state.name=${'search'} .state.size=${'sm'}></ui-icon>
-				<input class="aise-input"
+			<form class="ai-search" @submit=${this.handleSubmit}>
+				<ui-icon class="ai-search-icon" .state.name=${'search'} .state.size=${'sm'}></ui-icon>
+				<input class="ai-search-input"
 					type="search"
 					name="ai-search-query"
 					$value="query"
@@ -56,7 +56,7 @@ export class UIAiSearch extends WebComponent {
 					autocomplete="off"
 					spellcheck="false">
 				<button type="button"
-					class="aise-clear"
+					class="ai-search-clear"
 					?hidden=${!this.hasQuery}
 					tooltip="Clear"
 					@click=${this.handleClear}>

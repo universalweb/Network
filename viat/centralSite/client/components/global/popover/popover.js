@@ -3,7 +3,7 @@ import { computeAnchor } from 'webcomponent';
 import { withinPaddedRect } from '../menu/menu.js';
 import { MorphSurface } from '../morph-surface/morph-surface.js';
 /*
- * `<ui-popover>` — compact morph popover (/ Base UI Popover options).
+ * `<ui-popover>` — compact morph popover.
  * Grows from its trigger; transparent outside-click catcher (no page dim).
  *
  * Options: side · align · offset · heading · description · showArrow ·
@@ -49,7 +49,7 @@ export class UIPopover extends MorphSurface {
 		offset: 8,
 		// Pointer triangle toward the trigger.
 		showArrow: false,
-		// Open on hover (Base UI openOnHover) in addition to click.
+		// Open on hover in addition to click.
 		openOnHover: false,
 		openDelay: 200,
 		closeDelay: 120,
@@ -217,7 +217,7 @@ export class UIPopover extends MorphSurface {
 	render() {
 		this.html`
 			<button
-				class="pp-trigger"
+				class="popover-trigger"
 				type="button"
 				#trigger
 				aria-haspopup="dialog"
@@ -229,22 +229,22 @@ export class UIPopover extends MorphSurface {
 				@pointerleave=${this.handleTriggerPointerLeave}>
 				<slot name="trigger">${this.state.label}</slot>
 			</button>
-			<div class="pp-overlay" #overlay popover="manual" ?data-hover=${this.state.openOnHover}>
-				<div class="pp-backdrop" @click=${this.handleBackdropClick}></div>
+			<div class="popover-overlay" #overlay popover="manual" ?data-hover=${this.state.openOnHover}>
+				<div class="popover-backdrop" @click=${this.handleBackdropClick}></div>
 				<div
-					class="pp-surface"
+					class="popover-surface glass"
 					#surface
 					role="dialog"
 					aria-label=${this.state.heading || this.state.label}
 					@pointerenter=${this.handleSurfacePointerEnter}
 					@pointerleave=${this.handleSurfacePointerLeave}>
 					<div
-						class="pp-arrow"
+						class="popover-arrow"
 						?hidden=${!this.state.showArrow}
 						aria-hidden="true"></div>
-					<div class="pp-heading" ?hidden=${!this.state.heading}>${this.state.heading}</div>
-					<p class="pp-description" ?hidden=${!this.state.description}>${this.state.description}</p>
-					<div class="pp-body"><slot></slot></div>
+					<div class="popover-heading" ?hidden=${!this.state.heading}>${this.state.heading}</div>
+					<p class="popover-description" ?hidden=${!this.state.description}>${this.state.description}</p>
+					<div class="popover-body"><slot></slot></div>
 				</div>
 			</div>
 		`;

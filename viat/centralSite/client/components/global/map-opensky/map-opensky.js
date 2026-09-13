@@ -126,7 +126,7 @@ function mergeById(userItems, trafficItems) {
 		if (!item) {
 			continue;
 		}
-		const id = item.id != null && item.id !== '' ? String(item.id) : `osky-${index}`;
+		const id = item.id != null && item.id !== '' ? String(item.id) : `map-opensky-${index}`;
 		if (seen.has(id)) {
 			continue;
 		}
@@ -377,27 +377,12 @@ export class UIMapOpensky extends UIMapLeaflet {
 	trafficBadgeTone() {
 		return this.state.trafficError ? 'danger' : 'neutral';
 	}
-	render() {
-		const phase = this.hostPhase();
-		this.html`
-			<div class="lf-root" data-phase=${phase}>
-				<div #map class="lf-canvas" role="application" aria-label=${this.state.emptyLabel || 'OpenSky map'}></div>
-				<div class="osky-badge" data-tone=${this.trafficBadgeTone} ?data-loading=${this.state.trafficLoading}>${this.trafficStatusLabel}</div>
-				<div class="lf-overlay" ?hidden=${phase === 'ready'} ?data-interactive=${phase === 'error'}>
-					<div class="lf-status" data-tone=${phase === 'error' ? 'danger' : 'neutral'}>
-						<span class="lf-status-label">${() => {
-							if (phase === 'loading') {
-								return this.loadingLabel();
-							}
-							if (phase === 'error') {
-								return 'Map unavailable';
-							}
-							return this.state.emptyLabel || 'OpenSky Network';
-						}}</span>
-						<span class="lf-status-msg" ?hidden=${!this.state.errorMessage}>${this.state.errorMessage}</span>
-					</div>
-				</div>
-			</div>
+	canvasLabel() {
+		return this.state.emptyLabel || 'OpenSky map';
+	}
+	mapChrome() {
+		return this.htmlElement`
+			<div class="map-opensky-badge" data-tone=${this.trafficBadgeTone} ?data-loading=${this.state.trafficLoading}>${this.trafficStatusLabel}</div>
 		`;
 	}
 }

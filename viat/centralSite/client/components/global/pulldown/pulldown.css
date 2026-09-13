@@ -9,6 +9,14 @@
 	z-index: var(--z-floating);
 	pointer-events: none;
 }
+:host(:not([data-open]):not([data-active])) {
+	/* Idle-closed overlay must not occupy the viewport. A PE-none inset:0
+	   layer still intercepts hits in Chromium (fall-through lands on body).
+	   data-active keeps the host painted during bar-driven open drag and
+	   the close snap — otherwise the sheet is display:none until commit
+	   and cannot travel with the top bar. */
+	display: none;
+}
 :host([data-open]) {
 	pointer-events: auto;
 }
@@ -32,8 +40,8 @@
 .pulldown-drawer.is-fully-open {
 	pointer-events: auto;
 	background: color-mix(in srgb, var(--bg-dark) 62%, transparent);
-	-webkit-backdrop-filter: blur(18px) saturate(140%);
-	backdrop-filter: blur(18px) saturate(140%);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
+	backdrop-filter: var(--popup-glass-blur);
 	animation: pulldown-blur-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes pulldown-blur-in {

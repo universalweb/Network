@@ -6,7 +6,10 @@
  * cycle the extending module can evaluate before the other's body runs, so
  * the base class must come from a cycle-free leaf.
  */
-import { markSpotDirty } from '../lifecycle/scheduler.js';
+import {
+	markSpotClean,
+	markSpotDirty,
+} from '../lifecycle/scheduler.js';
 import {
 	clearRealmUnsubs,
 	disposeItem,
@@ -60,6 +63,13 @@ export class Spot {
 		this.unsubs = null;
 		this.depMap = null;
 		this.pendingPaths = null;
+		/*
+		 * unsubscribe() is terminal for THIS spot object. cleanupTemplate
+		 * (ifThen branch disconnect) unsubscribes, but the spot may already be
+		 * in the drain snapshot; refresh() used to re-subscribe those zombies
+		 * onto a template that remount replaceChildren then detaches.
+		 */
+		this.live = true;
 	}
 	/** Bus handler. Marks the spot dirty for the single per-microtask drain
 	 *  (drainSpots at the tail of masterFlush) — Set membership is the dedup, so
@@ -73,6 +83,9 @@ export class Spot {
 	 *  and feed `undefined`, collapsing every in-place deep mutation onto the
 	 *  same-ref-skipping full re-diff and never reaching the DOM. */
 	handle(_value, changedPath) {
+		if (!this.live) {
+			return;
+		}
 		if (this.kind === SPOT_KIND.LIST) {
 			if (!this.pendingPaths) {
 				this.pendingPaths = [];
@@ -84,6 +97,9 @@ export class Spot {
 	/** Drain hook — runs once per microtask in drainSpots. Default re-evaluates
 	 *  via refresh(); BindingSpot overrides to apply its captured value. */
 	drain() {
+		if (!this.live) {
+			return undefined;
+		}
 		return this.refresh();
 	}
 	/** Virtual. Subclasses with reactive deps override. */
@@ -91,6 +107,8 @@ export class Spot {
 		return undefined;
 	}
 	unsubscribe() {
+		this.live = false;
+		markSpotClean(this);
 		if (this.depMap) {
 			clearRealmUnsubs(this.depMap);
 			this.depMap = null;

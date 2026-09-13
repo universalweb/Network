@@ -1,0 +1,73 @@
+:host(.is-reordering) {
+	position: relative;
+	z-index: 4;
+	cursor: grabbing;
+	touch-action: none;
+}
+:host {
+	display: block;
+	inline-size: 100%;
+	min-inline-size: 0;
+	container-type: inline-size;
+	--schedule-board-rail: 9rem;
+	--schedule-board-start: 0;
+	--schedule-board-span: 1440;
+	--schedule-board-step: 60;
+}
+.schedule-board {
+	inline-size: 100%;
+	min-inline-size: 0;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	overflow: hidden;
+	background: color-mix(in oklch, var(--bg-panel) 78%, transparent);
+}
+.schedule-board-head {
+	display: grid;
+	grid-template-columns: var(--schedule-board-rail) minmax(0, 1fr);
+	align-items: stretch;
+	border-block-end: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
+	background: color-mix(in oklch, var(--bg-panel) 92%, transparent);
+}
+.schedule-board-corner {
+	border-inline-end: 1px solid color-mix(in oklch, var(--text-muted) 16%, transparent);
+}
+.schedule-board-times {
+	position: relative;
+	min-inline-size: 0;
+	block-size: 1.7rem;
+	background-image: repeating-linear-gradient(
+		to right,
+		transparent 0,
+		transparent calc((var(--schedule-board-step, 60) / var(--schedule-board-span, 1440) * 100%) - 1px),
+		color-mix(in oklch, var(--text-muted) 20%, transparent) calc((var(--schedule-board-step, 60) / var(--schedule-board-span, 1440) * 100%) - 1px),
+		color-mix(in oklch, var(--text-muted) 20%, transparent) calc(var(--schedule-board-step, 60) / var(--schedule-board-span, 1440) * 100%)
+	);
+}
+.schedule-board-tick {
+	position: absolute;
+	inset-block-start: 0.2rem;
+	translate: -50% 0;
+	font-size: var(--text-xs, 0.75rem);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+	white-space: nowrap;
+	pointer-events: none;
+}
+.schedule-board-tick:first-child {
+	translate: 0 0;
+}
+.schedule-board-tick:last-child {
+	translate: -100% 0;
+}
+.schedule-board-body {
+	min-inline-size: 0;
+	min-block-size: 0;
+}
+.schedule-board-body ui-collection {
+	display: block;
+	inline-size: 100%;
+	--uic-loadmore-fg: transparent;
+	--uic-end-fg: transparent;
+}

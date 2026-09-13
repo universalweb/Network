@@ -28,35 +28,211 @@
 [data-orientation='horizontal'] .tab-strip {
 	flex-direction: row;
 	gap: var(--space-1);
-	border-block-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	padding: 0 var(--space-2);
-	/* Per-orientation button box — inherits into each <ui-tab-button> shadow. */
-	--tab-btn-pad: var(--space-3) var(--space-5);
-	--tab-btn-radius: var(--radius-sm) var(--radius-sm) 0 0;
-	--tab-btn-hover-transform: translateY(-1px);
+	--tab-button-pad: var(--space-3) var(--space-5);
+	--tab-button-radius: var(--radius-sm) var(--radius-sm) 0 0;
+	--tab-button-hover-transform: none;
 }
 [data-orientation='vertical'] .tab-strip {
 	flex-direction: column;
 	gap: var(--space-2);
-	--tab-btn-pad: var(--space-3) var(--space-4);
-	--tab-btn-radius: var(--radius-sm);
-	--tab-btn-hover-transform: translateX(2px);
-	/* Inner top inset (default 0) lets a host clear an overlaid window bar while
-	   the strip's background still fills the full height behind the frosted glass. */
+	--tab-button-pad: var(--space-3) var(--space-4);
+	--tab-button-radius: var(--radius-sm);
+	--tab-button-hover-transform: none;
 	padding: calc(var(--space-5) + var(--tabs-top-inset, 0px)) var(--space-3) var(--space-5);
-	background: var(--bg-dark);
-	border-inline-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	overflow-y: auto;
+}
+[data-orientation='horizontal'] .tab-strip[data-strip-border] {
+	border-block-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+}
+[data-orientation='vertical'] .tab-strip[data-strip-border] {
+	border-inline-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	background: var(--bg-dark);
+}
+:host([data-cap='start']) .tab-strip {
+	border-start-start-radius: var(--tab-cap-radius, var(--radius-lg, 0.75rem));
+	border-start-end-radius: var(--tab-cap-radius, var(--radius-lg, 0.75rem));
+	border-end-start-radius: 0;
+	border-end-end-radius: 0;
+}
+:host([data-cap='end']) .tab-strip {
+	border-start-start-radius: 0;
+	border-start-end-radius: 0;
+	border-end-start-radius: var(--tab-cap-radius, var(--radius-lg, 0.75rem));
+	border-end-end-radius: var(--tab-cap-radius, var(--radius-lg, 0.75rem));
+}
+/* Pill stadium is HORIZONTAL only. 999px on a vertical stack turns
+   square/icon buttons into circles. */
+[data-variant='pill'][data-orientation='horizontal'] .tab-strip {
+	display: inline-flex;
+	align-items: stretch;
+	overflow-x: auto;
+	border: 1px solid color-mix(in oklch, var(--text-main) 10%, transparent);
+	border-radius: 999px;
+	padding: var(--tab-strip-pad, 0.25rem);
+	gap: 0;
+	background: transparent;
+	--tab-button-radius: 999px;
+	--tab-button-pad: var(--tab-button-pad-size, 0.45rem 0.9rem);
+	--tab-button-hover-transform: none;
+}
+/*
+ * Pin the pill to the strip padding on the block axis so top/bottom inset
+ * stays even. Slide only inline (x + width); height fills the padded track.
+ */
+[data-variant='pill'][data-orientation='horizontal'] .tab-indicator {
+	inset-inline-start: var(--ind-x, 0);
+	inset-block: var(--tab-strip-pad, 0.25rem);
+	width: var(--ind-w, 0);
+	height: auto;
+	border-radius: 999px;
+	background: var(--tab-indicator-fill, color-mix(in oklch, var(--text-main) 12%, transparent));
+	border: 1px solid var(--tab-indicator-border, color-mix(in oklch, var(--text-main) 10%, transparent));
+	box-shadow: none;
+	/* background-color is in the list so a host swapping --tab-indicator-fill (e.g.
+	   ui-ternary-state changing tone) eases between colours instead of snapping. */
+	transition:
+		inset-inline-start 0.28s cubic-bezier(0.34, 1.05, 0.64, 1),
+		width 0.28s cubic-bezier(0.34, 1.05, 0.64, 1),
+		background-color 0.28s ease,
+		opacity 0.2s ease;
+}
+/* Strip chrome is token-driven so a host can opt out of the card treatment
+   without overriding the rule: a nav rail wants the strip to read as part of
+   the page and to scroll with its container, not as a bordered box with its
+   own scrollbar. Defaults reproduce the standalone pill look exactly. */
+[data-variant='pill'][data-orientation='vertical'] .tab-strip {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	overflow-x: hidden;
+	overflow-y: var(--tab-strip-overflow, auto);
+	inline-size: 100%;
+	border: var(--tab-strip-border, 1px solid color-mix(in oklch, var(--text-main) 10%, transparent));
+	border-radius: var(--tab-strip-radius, 0.75rem);
+	padding: var(--tab-strip-pad, 0.25rem);
+	gap: 0.125rem;
+	background: transparent;
+	--tab-button-radius: 0.5rem;
+	--tab-button-pad: var(--tab-button-pad-size, 0.55rem 0.75rem);
+	--tab-button-hover-transform: none;
+}
+[data-variant='pill'][data-orientation='vertical'] .tab-indicator {
+	inset-block-start: var(--ind-y, 0);
+	inset-inline: var(--tab-strip-pad, 0.25rem);
+	width: auto;
+	height: var(--ind-h, 0);
+	border-radius: 0.5rem;
+	background: var(--tab-indicator-fill, color-mix(in oklch, var(--text-main) 12%, transparent));
+	border: 1px solid var(--tab-indicator-border, color-mix(in oklch, var(--text-main) 10%, transparent));
+	box-shadow: none;
+	/* background-color is in the list so a host swapping --tab-indicator-fill (e.g.
+	   ui-ternary-state changing tone) eases between colours instead of snapping. */
+	transition:
+		inset-block-start 0.28s cubic-bezier(0.34, 1.05, 0.64, 1),
+		height 0.28s cubic-bezier(0.34, 1.05, 0.64, 1),
+		background-color 0.28s ease,
+		opacity 0.2s ease;
+}
+[data-variant='blocks'] .tab-strip {
+	display: flex;
+	align-items: stretch;
+	gap: var(--tab-strip-gap, 0);
+	padding-block: 0;
+	padding-inline: 0;
+	overflow-x: auto;
+	overflow-y: hidden;
+	border-radius: var(--tab-block-radius, var(--radius-lg, 0.625rem));
+	/* Stylesheet hide — an inline scrollbar-width:none aborts scrollTo(smooth) at 1px. */
+	scrollbar-width: none;
+	--tab-button-pad: 0.35rem 0.7rem;
+	--tab-button-radius: 0;
+	/*
+	 * SOFT ROUNDED SQUARE. Blocks are status squares, so the corner must stay a
+	 * corner: --radius-lg resolves to 16px under every shipped theme and a 16px
+	 * radius on a ~33px block is a full pill.
+	 *
+	 * NOTE this declaration SHADOWS anything a host sets on the ui-tabs element
+	 * (it re-declares the property on the strip itself), so this is the only place
+	 * the value can be changed — setting --tab-block-radius from outside silently
+	 * does nothing. That is fine while ui-tracker is the sole `blocks` consumer;
+	 * a second consumer wanting a different radius should turn this back into a
+	 * fallback chain rather than fight it from outside.
+	 */
+	--tab-block-radius: 0.375rem;
+	--tab-block-gap: var(--space-3);
+	--tab-button-hover-transform: none;
+}
+[data-variant='blocks'] .tab-strip::-webkit-scrollbar {
+	display: none;
+}
+[data-variant='blocks'] .tab-strip ui-tab-button:first-of-type {
+	--tab-button-start-radius: var(--tab-block-radius);
+}
+[data-variant='blocks'] .tab-strip ui-tab-button:last-of-type {
+	--tab-button-end-radius: var(--tab-block-radius);
+}
+[data-variant='blocks'] .tab-strip ui-tab-button[data-edge-start] {
+	--tab-button-start-radius: var(--tab-block-radius);
+}
+[data-variant='blocks'] .tab-strip ui-tab-button[data-edge-end] {
+	--tab-button-end-radius: var(--tab-block-radius);
+}
+[data-variant='blocks'][data-join='detached'] .tab-strip ui-tab-button[data-active] {
+	margin-inline: var(--tab-block-gap);
+}
+[data-variant='blocks'][data-join='detached'] .tab-strip ui-tab-button:has(+ [data-active]) {
+	--tab-button-end-radius: var(--tab-block-radius);
+}
+[data-variant='blocks'][data-join='detached'] .tab-strip ui-tab-button[data-active] + ui-tab-button {
+	--tab-button-start-radius: var(--tab-block-radius);
+}
+[data-variant='blocks'][data-join='attached'] .tab-strip ui-tab-button[data-active] {
+	margin-inline: 0;
+}
+/* Duration-weighted ticks cannot absorb an OUTER gutter: margin on the block is
+   taken out of the flex free space, so every block shrinks and the active one's
+   own start tick slides off the clock time it is labelling. So the block's outer
+   box stays exactly on its duration — always, in both joins.
+
+   That does NOT cost the split-apart look. tab-button.css insets the PAINTED
+   surface under [data-join='detached'] instead, which pulls the active block
+   away from its neighbours while leaving the box (and the ticks pinned to it)
+   where the clock says they belong. `attached` stays flush and expands in place.
+   Both joins are available under the guide; this used to force one of them.
+
+   data-time-guide lives on the host (tracker sets it); variant/join live on
+   .tabs AND are mirrored onto the host by syncHostAttrs, which is what lets
+   tab-button match all three in one :host-context() compound. */
+:host([data-variant='blocks'][data-time-guide]) .tab-strip ui-tab-button[data-active] {
+	margin-inline: 0;
+}
+[data-variant='blocks'] .tab-indicator {
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+	inset-inline-start: var(--ind-x, 0);
+	inset-block-start: var(--ind-y, 0);
+	width: var(--ind-w, 0);
+	height: var(--ind-h, 0);
+}
+[data-content='remote'] {
+	grid-template-rows: auto;
+	grid-template-columns: 1fr;
+	height: auto;
+}
+.tab-content[hidden] {
+	display: none !important;
 }
 .tab-indicator {
 	position: absolute;
-	background: var(--teal);
+	box-sizing: border-box;
+	background: var(--tab-indicator-fill, color-mix(in oklab, var(--teal) 8%, transparent));
+	border: 1px solid var(--tab-indicator-border, color-mix(in oklab, var(--teal) 28%, transparent));
 	border-radius: var(--radius-xs);
 	opacity: 0;
 	pointer-events: none;
-	/* Glow is themable — flat/print themes kill it, neon themes recolor it
-	   (fallback = midnight). */
-	box-shadow: var(--tab-indicator-shadow, 0 0 8px rgba(94, 234, 212, 0.45));
+	box-shadow: none;
 }
 .tab-indicator.is-visible {
 	opacity: 1;
@@ -64,24 +240,69 @@
 .tab-indicator.no-transition {
 	transition: none !important;
 }
-[data-orientation='horizontal'] .tab-indicator {
+.tab-indicator::after {
+	content: '';
+	position: absolute;
+	background: var(--tab-bar-color, var(--teal));
+	opacity: 0;
+	pointer-events: none;
+	border-radius: 1px;
+}
+:host([data-bar]) .tab-indicator.is-visible::after {
+	opacity: 1;
+}
+[data-orientation='horizontal'] .tab-indicator::after {
+	inset-inline: 0.35rem;
+	inset-block-end: 0;
+	height: 2px;
+}
+[data-orientation='vertical'] .tab-indicator::after {
+	inset-block: 0.35rem;
+	inset-inline-start: 0;
+	width: 2px;
+}
+[data-variant='generic'][data-orientation='horizontal'] .tab-indicator {
 	inset-inline-start: var(--ind-x, 0);
+	inset-block-start: var(--ind-y, 0);
 	width: var(--ind-w, 0);
-	inset-block-end: 0px;
-	height: 1px;
+	height: var(--ind-h, 0);
+	/*
+	 * The indicator wears the TAB's shape, not its own. A horizontal strip sits
+	 * on a 1px bottom rule and its buttons are rounded on top / flat on the
+	 * bottom; rounding the indicator's bottom corners lifts it off that rule and
+	 * leaves a lit sliver under each corner. The strip already publishes the
+	 * shape as --tab-button-radius and the indicator is its child, so inheriting
+	 * it keeps the two from ever drifting apart.
+	 */
+	border-radius: var(--tab-button-radius, var(--radius-sm) var(--radius-sm) 0 0);
+	background: var(--tab-indicator-fill, color-mix(in oklab, var(--teal) 8%, transparent));
+	border: 1px solid var(--tab-indicator-border, color-mix(in oklab, var(--teal) 28%, transparent));
+	box-shadow: none;
 	transition:
-		left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		inset-inline-start 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		inset-block-start 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
 		width 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		height 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		background-color 0.28s ease,
 		opacity 0.2s ease;
 }
-[data-orientation='vertical'] .tab-indicator {
+[data-variant='generic'][data-orientation='vertical'] .tab-indicator {
 	inset-block-start: var(--ind-y, 0);
+	inset-inline-start: var(--ind-x, 0);
 	height: var(--ind-h, 0);
-	inset-inline-start: 0px;
-	width: 1px;
+	width: var(--ind-w, 0);
+	/* Same rule as the horizontal case — a vertical strip's buttons are rounded
+	   all round, so the indicator follows and resolves to --radius-sm. */
+	border-radius: var(--tab-button-radius, var(--radius-sm));
+	background: var(--tab-indicator-fill, color-mix(in oklab, var(--teal) 8%, transparent));
+	border: 1px solid var(--tab-indicator-border, color-mix(in oklab, var(--teal) 28%, transparent));
+	box-shadow: none;
 	transition:
-		top 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		inset-block-start 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		inset-inline-start 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
 		height 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		width 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		background-color 0.28s ease,
 		opacity 0.2s ease;
 }
 .tab-content {
@@ -94,6 +315,18 @@
 	 * under the cursor on any ui-tabs demo. Opt into trap via host data-scroll-trap.
 	 */
 	overflow-y: auto;
+}
+/*
+ * Content pane — only when the tabs actually carry content, so a strip-only
+ * ui-tabs (rail nav, tracker blocks in remote mode) never grows an empty box.
+ * Flat: spacing + radius only. No inset bevel, no second fill.
+ */
+.tab-content[data-filled] {
+	margin-block-start: var(--tab-content-gap, 0.75rem);
+	padding: var(--tab-content-pad, 1rem);
+	border-radius: var(--tab-content-radius, 0.75rem);
+	background: var(--tab-content-bg, transparent);
+	box-shadow: none;
 }
 :host([data-scroll-trap]) .tab-content {
 	overscroll-behavior: contain;

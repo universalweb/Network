@@ -13,15 +13,10 @@
 	`sortBy`: desc (default) | asc | none. The base for ui-feature-voting.
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent } from 'webcomponent';
+import { captureRects, playFlip, WebComponent } from 'webcomponent';
 import { UIVoteItem } from '../vote-item/vote-item.js';
-const COUNT_MS = 500;
-const FLIP_MS = 380;
-const FLIP_SPRING = 'cubic-bezier(0.34, 1.3, 0.64, 1)';
-function prefersReducedMotion() {
-	return Boolean(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
-}
-
+const TALLY_FLIP_MS = 380;
+const TALLY_FLIP_EASE = 'cubic-bezier(0.34, 1.3, 0.64, 1)';
 export class UIVoteTally extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -92,55 +87,29 @@ export class UIVoteTally extends WebComponent {
 			this.state.items = sorted;
 		}
 	}
-	reorderWithFlip() {
+	async reorderWithFlip() {
 		const listEl = this.refs.votelist;
-		if (!listEl || this.state.sortBy === 'none' || prefersReducedMotion()) {
+		if (!listEl || this.state.sortBy === 'none') {
 			this.applySort();
 			return;
 		}
 		// FIRST: measure every row before the reorder.
-		const firstRects = new Map();
-		const before = listEl.children;
-		for (let index = 0; index < before.length; index += 1) {
-			firstRects.set(before[index], before[index].getBoundingClientRect());
-		}
+		const first = captureRects(listEl.children);
 		// LAST: re-rank — the keyed list relocates the SAME nodes via moveBefore.
 		this.applySort();
 		// INVERT + PLAY on the next frame, once the patch has moved the nodes.
-		this.nextFrame().then(() => {
-			this.playFlip(firstRects);
-		});
-	}
-	playFlip(firstRects) {
-		const listEl = this.refs.votelist;
-		if (!listEl) {
+		await this.nextFrame();
+		if (this.isDisconnected) {
 			return;
 		}
-		const after = listEl.children;
-		for (let index = 0; index < after.length; index += 1) {
-			const element = after[index];
-			const prev = firstRects.get(element);
-			if (!prev) {
-				continue;
-			}
-			const now = element.getBoundingClientRect();
-			const deltaX = prev.left - now.left;
-			const deltaY = prev.top - now.top;
-			if (deltaX === 0 && deltaY === 0) {
-				continue;
-			}
-			element.animate([
-				{
-					transform: `translate(${deltaX}px, ${deltaY}px)`,
-				},
-				{
-					transform: 'translate(0, 0)',
-				},
-			], {
-				duration: FLIP_MS,
-				easing: FLIP_SPRING,
-			});
+		const listAfter = this.refs.votelist;
+		if (!listAfter) {
+			return;
 		}
+		playFlip(listAfter.children, first, {
+			durationMs: TALLY_FLIP_MS,
+			easing: TALLY_FLIP_EASE,
+		});
 	}
 	render() {
 		this.html`

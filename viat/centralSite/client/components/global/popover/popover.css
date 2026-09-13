@@ -2,7 +2,7 @@
 	display: inline-block;
 }
 
-.pp-trigger {
+.popover-trigger {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-2);
@@ -20,27 +20,27 @@
 		border-color var(--dur-fast) ease,
 		color var(--dur-fast) ease;
 }
-.pp-trigger:hover {
+.popover-trigger:hover {
 	transform: scale(1.05);
 	border-color: var(--teal);
 	color: var(--teal);
 }
-.pp-trigger:active {
+.popover-trigger:active {
 	transform: scale(0.95);
 }
-.pp-trigger:focus-visible {
+.popover-trigger:focus-visible {
 	outline: none;
 	border-color: var(--focus-ring-color, var(--cyan));
 	box-shadow: 0 0 0 2px color-mix(in oklab, var(--focus-ring-color, var(--cyan)) 45%, transparent);
 }
-.pp-trigger[aria-expanded='true'] {
+.popover-trigger[aria-expanded='true'] {
 	border-color: var(--teal, var(--cyan));
 	color: var(--teal, var(--cyan));
 }
 
 /* Overlay: fixed viewport layer. Native popover top-layer escapes clip;
    UA popover chrome is reset so this stays a full-bleed layer. */
-.pp-overlay {
+.popover-overlay {
 	position: fixed;
 	inset: 0;
 	inline-size: auto;
@@ -54,24 +54,24 @@
 	pointer-events: none;
 	visibility: hidden;
 }
-.pp-overlay[data-open] {
+.popover-overlay[data-open] {
 	/* Host overlay stays inert so it cannot steal the trigger hover. */
 	pointer-events: none;
 	visibility: visible;
 }
 
 /* Transparent click-catcher — dismiss on outside click; do NOT dim the page. */
-.pp-backdrop {
+.popover-backdrop {
 	position: absolute;
 	inset: 0;
 	pointer-events: auto;
 }
-.pp-overlay[data-hover] .pp-backdrop {
+.popover-overlay[data-hover] .popover-backdrop {
 	/* Hover mode: leave-watch owns dismiss. Backdrop must not cover the trigger. */
 	pointer-events: none;
 }
 
-.pp-surface {
+.popover-surface {
 	position: absolute;
 	pointer-events: auto;
 	/* Gap baked into JS anchor (MorphSurface.anchorGap / state.offset). */
@@ -85,7 +85,6 @@
 	max-inline-size: min(20rem, calc(100vw - 2rem));
 	max-block-size: min(60dvh, 24rem);
 	padding: var(--space-3);
-	background: var(--popup-glass-bg, var(--popup-bg));
 	border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
 	border-radius: var(--radius-md);
 	box-shadow: var(--popup-shadow,
@@ -93,13 +92,11 @@
 		0 0 0 1px color-mix(in oklab, var(--teal) 8%, transparent));
 	color: var(--popup-text, var(--text-main));
 	font-family: var(--font-mono, 'JetBrains Mono', monospace);
-	-webkit-backdrop-filter: var(--popup-glass-blur, blur(0.625rem) saturate(1.25));
-	backdrop-filter: var(--popup-glass-blur, blur(0.625rem) saturate(1.25));
 	overflow: hidden auto;
 }
 
 /* Arrow — points toward trigger; placement from data-side. */
-.pp-arrow {
+.popover-arrow {
 	position: absolute;
 	inline-size: 0.55rem;
 	block-size: 0.55rem;
@@ -109,50 +106,50 @@
 	pointer-events: none;
 	z-index: 1;
 }
-.pp-arrow[hidden] {
+.popover-arrow[hidden] {
 	display: none !important;
 }
-.pp-surface[data-side='bottom'] .pp-arrow {
+.popover-surface[data-side='bottom'] .popover-arrow {
 	inset-block-start: -0.3rem;
 	inset-inline-start: 50%;
 	margin-inline-start: -0.28rem;
 	border-inline-end: 0;
 	border-block-end: 0;
 }
-.pp-surface[data-side='top'] .pp-arrow {
+.popover-surface[data-side='top'] .popover-arrow {
 	inset-block-end: -0.3rem;
 	inset-inline-start: 50%;
 	margin-inline-start: -0.28rem;
 	border-inline-start: 0;
 	border-block-start: 0;
 }
-.pp-surface[data-side='left'] .pp-arrow {
+.popover-surface[data-side='left'] .popover-arrow {
 	inset-inline-end: -0.3rem;
 	inset-block-start: 50%;
 	margin-block-start: -0.28rem;
 	border-inline-start: 0;
 	border-block-end: 0;
 }
-.pp-surface[data-side='right'] .pp-arrow {
+.popover-surface[data-side='right'] .popover-arrow {
 	inset-inline-start: -0.3rem;
 	inset-block-start: 50%;
 	margin-block-start: -0.28rem;
 	border-inline-end: 0;
 	border-block-start: 0;
 }
-.pp-surface[data-align='start'][data-side='bottom'] .pp-arrow,
-.pp-surface[data-align='start'][data-side='top'] .pp-arrow {
+.popover-surface[data-align='start'][data-side='bottom'] .popover-arrow,
+.popover-surface[data-align='start'][data-side='top'] .popover-arrow {
 	inset-inline-start: 1.25rem;
 	margin-inline-start: 0;
 }
-.pp-surface[data-align='end'][data-side='bottom'] .pp-arrow,
-.pp-surface[data-align='end'][data-side='top'] .pp-arrow {
+.popover-surface[data-align='end'][data-side='bottom'] .popover-arrow,
+.popover-surface[data-align='end'][data-side='top'] .popover-arrow {
 	inset-inline-start: auto;
 	inset-inline-end: 1.25rem;
 	margin-inline-start: 0;
 }
 
-.pp-heading {
+.popover-heading {
 	padding: 0 var(--space-1);
 	font-size: var(--text-sm, 0.875rem);
 	font-weight: var(--weight-semibold, 600);
@@ -160,35 +157,35 @@
 	color: var(--text-main);
 	line-height: 1.3;
 }
-.pp-heading[hidden] {
+.popover-heading[hidden] {
 	display: none !important;
 }
 
-.pp-description {
+.popover-description {
 	margin: 0;
 	padding: 0 var(--space-1);
 	font-size: var(--text-xs);
 	line-height: 1.45;
 	color: var(--text-muted, rgb(255 255 255 / 0.55));
 }
-.pp-description[hidden] {
+.popover-description[hidden] {
 	display: none !important;
 }
 
-.pp-body {
+.popover-body {
 	padding: var(--space-1);
 	font-size: var(--text-xs);
 	line-height: 1.5;
 }
 
 /* Content fade over the morph. */
-.pp-overlay[data-open] .pp-body,
-.pp-overlay[data-open] .pp-heading,
-.pp-overlay[data-open] .pp-description {
-	animation: pp-fade var(--dur-base, 0.22s) var(--ease-out, ease-out) both;
+.popover-overlay[data-open] .popover-body,
+.popover-overlay[data-open] .popover-heading,
+.popover-overlay[data-open] .popover-description {
+	animation: popover-fade var(--dur-base, 0.22s) var(--ease-out, ease-out) both;
 	animation-delay: 0.05s;
 }
-@keyframes pp-fade {
+@keyframes popover-fade {
 	from {
 		opacity: 0;
 		transform: translateY(0.375rem);
@@ -200,16 +197,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.pp-trigger {
+	.popover-trigger {
 		transition: border-color var(--dur-fast) ease, color var(--dur-fast) ease;
 	}
-	.pp-trigger:hover,
-	.pp-trigger:active {
+	.popover-trigger:hover,
+	.popover-trigger:active {
 		transform: none;
 	}
-	.pp-overlay[data-open] .pp-body,
-	.pp-overlay[data-open] .pp-heading,
-	.pp-overlay[data-open] .pp-description {
+	.popover-overlay[data-open] .popover-body,
+	.popover-overlay[data-open] .popover-heading,
+	.popover-overlay[data-open] .popover-description {
 		animation: none;
 	}
 }

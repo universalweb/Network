@@ -43,17 +43,17 @@ export class UIWhiteboxModal extends WebComponent {
 	mediaNode() {
 		const src = this.state.src;
 		const video = isVideoSrc(src);
-		return video ? this.htmlElement`<video class="wb-media" src="${src}" controls playsinline preload="metadata"></video>` : this.htmlElement`<img class="wb-media" src="${src}" alt="${this.state.alt}" draggable="false">`;
+		return video ? this.htmlElement`<video class="whitebox-modal-media" src="${src}" controls playsinline preload="metadata"></video>` : this.htmlElement`<img class="whitebox-modal-media" src="${src}" alt="${this.state.alt}" draggable="false">`;
 	}
 	captionNode() {
 		const caption = this.state.caption;
-		return caption ? this.htmlElement`<div class="wb-caption">${caption}</div>` : '';
+		return caption ? this.htmlElement`<div class="whitebox-modal-caption">${caption}</div>` : '';
 	}
 	render() {
 		this.html`
 			<ui-modal #modal class="whitebox-host" .state=${this.state.modal} style="--ui-modal-max-width: min(96vw, 1280px); --ui-modal-max-height: 96dvh">
-				<div class="wb-shell">
-					<div class="wb-stage">
+				<div class="whitebox-modal-shell">
+					<div class="whitebox-modal-stage">
 						${this.mediaNode}
 					</div>
 					${this.captionNode}

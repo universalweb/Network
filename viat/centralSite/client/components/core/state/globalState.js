@@ -246,6 +246,13 @@ class StoreRealm {
 	read(path) {
 		return getValueAtPath(this.store.proxy, path);
 	}
+	/*
+	 * Store reads already go through `store.proxy`. Alias of `read` so
+	 * `ListSpot.realm` stays polymorphism-safe with LocalRealm.readReactive.
+	 */
+	readReactive(path) {
+		return this.read(path);
+	}
 	write(path, value) {
 		this.store.setOne(path, value);
 	}

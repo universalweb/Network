@@ -37,25 +37,25 @@ export class UIAiSources extends WebComponent {
 	}
 	renderSource(source) {
 		// Light rows can't embed a nested html`` fragment (it serializes), so the
-		// snippet span is always emitted and hidden via `.ais-snippet:empty`.
+		// snippet span is always emitted and hidden via `.ai-sources-snippet:empty`.
 		return html`
-			<li class="ais-item">
-				<a class="ais-link" href=${safeHref(source.url)} target="_blank" rel="noopener noreferrer">
-					<span class="ais-title">${source.title || source.url}</span>
-					<span class="ais-host">${hostOf(source.url)}</span>
+			<li class="ai-sources-item">
+				<a class="ai-sources-link" href=${safeHref(source.url)} target="_blank" rel="noopener noreferrer">
+					<span class="ai-sources-title">${source.title || source.url}</span>
+					<span class="ai-sources-host">${hostOf(source.url)}</span>
 				</a>
-				<span class="ais-snippet">${source.snippet || ''}</span>
+				<span class="ai-sources-snippet">${source.snippet || ''}</span>
 			</li>
 		`;
 	}
 	render() {
 		this.html`
-			<section class="ais">
-				<header class="ais-head" ?hidden=${!this.state.label}>
-					<ui-icon class="ais-head-icon" .state.name=${'book-open'} .state.size=${'sm'}></ui-icon>
-					<span class="ais-title-head">${this.state.label}</span>
+			<section class="ai-sources">
+				<header class="ai-sources-head" ?hidden=${!this.state.label}>
+					<ui-icon class="ai-sources-head-icon" .state.name=${'book-open'} .state.size=${'sm'}></ui-icon>
+					<span class="ai-sources-title-head">${this.state.label}</span>
 				</header>
-				<ol class="ais-list">${this.list('items', this.renderSource, this.sourceKey)}</ol>
+				<ol class="ai-sources-list">${this.list('items', this.renderSource, this.sourceKey)}</ol>
 			</section>
 		`;
 	}

@@ -127,6 +127,9 @@ const dirtySpots = new Set();
 export function markSpotDirty(spot) {
 	dirtySpots.add(spot);
 }
+export function markSpotClean(spot) {
+	dirtySpots.delete(spot);
+}
 export function drainSpots() {
 	if (!dirtySpots.size) {
 		return;
@@ -140,6 +143,17 @@ export function drainSpots() {
 	dirtySpots.clear();
 	const spotsLength = spots.length;
 	for (let index = 0; index < spotsLength; index++) {
+		const spot = spots[index];
+		/*
+		 * ifThen caches the branch element; disconnect cleanupTemplate unsubscribes
+		 * then remount replaceChildren detaches the old comment pair. A spot still
+		 * in this snapshot would throw on insertBefore (parentNode null) and abort
+		 * the rest of the drain — including unrelated list patches (sidebar).
+		 */
+		if (spot.anchored && !spot.startComment?.parentNode) {
+			spot.unsubscribe();
+			continue;
+		}
 		/*
 		 * Invoked BARE by the bus-layer failure contract (see
 		 * pathSubscriptions.js subscribe/masterFlush): drain() runs app-authored
@@ -149,7 +163,7 @@ export function drainSpots() {
 		 * for that microtask; a spot re-dirties on its next state change, so
 		 * nothing wedges permanently.
 		 */
-		spots[index].drain();
+		spot.drain();
 	}
 }
 /*

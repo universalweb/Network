@@ -5,12 +5,12 @@
 	display: inline-flex;
 	max-inline-size: 100%;
 }
-.sw {
+.checkbox {
 	/* Switch track geometry as tokens so the size variants only retune three
 	   numbers and the thumb travel derives from them (travel = width − height). */
-	--sw-w: 2.5rem;
-	--sw-h: 1.4rem;
-	--sw-pad: 0.18rem;
+	--checkbox-w: 2.5rem;
+	--checkbox-h: 1.4rem;
+	--checkbox-pad: 0.18rem;
 	/* Checkbox square — solid fill + contrasting mark when checked. */
 	--cb-size: 1.125rem;
 	--cb-radius: 0.25rem;
@@ -19,7 +19,7 @@
 	--cb-checked-bg: var(--text-main, oklch(0.2 0 0));
 	--cb-checked-fg: var(--bg-body, oklch(0.98 0 0));
 	--cb-invalid: var(--color-danger, oklch(0.58 0.2 25));
-	/* Positioning context for the visually-hidden .sw-input. WITHOUT this the
+	/* Positioning context for the visually-hidden .checkbox-input. WITHOUT this the
 	   absolutely-positioned input has no positioned ancestor, so its containing
 	   block is the initial one (html). With top/inset auto it then resolves to
 	   its STATIC flow position — and because it escapes any overflow:auto scroller
@@ -27,7 +27,10 @@
 	   that offset. Anchoring here keeps the input local to the host. */
 	position: relative;
 	display: inline-flex;
-	align-items: flex-start;
+	align-items: center;
+	justify-content: flex-start;
+	inline-size: max-content;
+	max-inline-size: 100%;
 	gap: var(--space-3, 0.75rem);
 	cursor: pointer;
 	font-family: var(--font-display, system-ui, sans-serif);
@@ -35,26 +38,26 @@
 	color: var(--text-main);
 	line-height: 1.35;
 }
-.sw[data-size='sm'] {
-	--sw-w: 2rem;
-	--sw-h: 1.15rem;
+.checkbox[data-size='sm'] {
+	--checkbox-w: 2rem;
+	--checkbox-h: 1.15rem;
 	--cb-size: 1rem;
 	--cb-radius: 0.2rem;
 	font-size: var(--text-xs, 0.75rem);
 }
-.sw[data-size='lg'] {
-	--sw-w: 3.1rem;
-	--sw-h: 1.7rem;
+.checkbox[data-size='lg'] {
+	--checkbox-w: 3.1rem;
+	--checkbox-h: 1.7rem;
 	--cb-size: 1.35rem;
 	--cb-radius: 0.3rem;
 	font-size: var(--text-md, 1rem);
 }
 /* The real control stays focusable but visually collapsed; clicking the <label>
    toggles it, Space toggles when focused. */
-.sw-input {
+.checkbox-input {
 	position: absolute;
 	/* Pin to the host's top-start corner so the 1px control never falls back to
-	   its static flow position (see the position:relative note on .sw). */
+	   its static flow position (see the position:relative note on .checkbox). */
 	inset-block-start: 0;
 	inset-inline-start: 0;
 	inline-size: 1px;
@@ -63,24 +66,23 @@
 	margin: 0;
 	pointer-events: none;
 }
-.sw-face {
+.checkbox-face {
 	position: relative;
 	flex: 0 0 auto;
 	box-sizing: border-box;
-	/* Align face with first line of label text. */
-	margin-block-start: 0.1em;
+	margin-block-start: 0;
 	transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
 }
-.sw[data-variant='switch'] .sw-face {
+.checkbox[data-variant='switch'] .checkbox-face {
 	margin-block-start: 0;
 	align-self: center;
-	inline-size: var(--sw-w);
-	block-size: var(--sw-h);
+	inline-size: var(--checkbox-w);
+	block-size: var(--checkbox-h);
 	border-radius: 999px;
-	background: var(--sw-track-off, color-mix(in oklab, var(--text-muted) 32%, transparent));
+	background: var(--checkbox-track-off, color-mix(in oklab, var(--text-muted) 32%, transparent));
 	border: 1px solid color-mix(in oklab, var(--text-muted) 25%, transparent);
 }
-.sw:not([data-variant='switch']) .sw-face {
+.checkbox:not([data-variant='switch']) .checkbox-face {
 	inline-size: var(--cb-size);
 	block-size: var(--cb-size);
 	border-radius: var(--cb-radius);
@@ -90,32 +92,31 @@
 	color: var(--cb-checked-fg);
 	box-shadow: 0 1px 2px color-mix(in oklch, var(--text-main) 6%, transparent);
 }
-.sw-thumb {
+.checkbox-thumb {
 	position: absolute;
 	inset-block-start: 50%;
-	inset-inline-start: var(--sw-pad);
-	inline-size: calc(var(--sw-h) - var(--sw-pad) * 2);
-	block-size: calc(var(--sw-h) - var(--sw-pad) * 2);
+	inset-inline-start: var(--checkbox-pad);
+	inline-size: calc(var(--checkbox-h) - var(--checkbox-pad) * 2);
+	block-size: calc(var(--checkbox-h) - var(--checkbox-pad) * 2);
 	border-radius: 50%;
-	background: var(--sw-thumb, #fff);
+	background: var(--checkbox-thumb, #fff);
 	translate: 0 -50%;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 	transition: translate 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.sw:not([data-variant='switch']) .sw-thumb {
+.checkbox:not([data-variant='switch']) .checkbox-thumb {
 	display: none;
 }
-.sw-mark {
+.checkbox-mark {
 	position: absolute;
-	inset: 0;
-	inline-size: 100%;
-	block-size: 100%;
-	padding: 0.12rem;
-	box-sizing: border-box;
-	overflow: visible;
+	inset: 0.12rem;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	color: inherit;
 }
-.sw-slot,
-.sw-named {
+.checkbox-slot,
+.checkbox-named {
 	position: absolute;
 	inset: 0;
 	display: none;
@@ -123,136 +124,205 @@
 	justify-content: center;
 	color: inherit;
 }
-.sw-slot::slotted(*),
-.sw-named {
+.checkbox-slot::slotted(*),
+.checkbox-named {
 	inline-size: 0.75em;
 	block-size: 0.75em;
 }
-.sw-face[data-named] .sw-named {
+.checkbox-face[data-named] .checkbox-named {
 	display: inline-flex;
 }
-.sw-face[data-named] .sw-mark {
+.checkbox-face[data-named] .checkbox-mark {
 	display: none;
 }
-:host([data-slot-icon]) .sw-input:not(:checked):not(:indeterminate) + .sw-face .sw-slot-icon,
-:host([data-slot-checked]) .sw-input:checked:not(:indeterminate) + .sw-face .sw-slot-checked,
-:host([data-slot-indeterminate]) .sw-input:indeterminate + .sw-face .sw-slot-indeterminate {
+:host([data-slot-icon]) .checkbox[data-mark='empty'] .checkbox-slot-icon,
+:host([data-slot-checked]) .checkbox[data-mark='positive'] .checkbox-slot-checked,
+:host([data-slot-indeterminate]) .checkbox[data-mark='partial'] .checkbox-slot-indeterminate,
+:host([data-slot-negative]) .checkbox[data-mark='negative'] .checkbox-slot-negative {
 	display: inline-flex;
 }
-:host([data-slot-icon]) .sw-input:not(:checked):not(:indeterminate) + .sw-face .sw-mark,
-:host([data-slot-icon]) .sw-input:not(:checked):not(:indeterminate) + .sw-face .sw-named,
-:host([data-slot-checked]) .sw-input:checked:not(:indeterminate) + .sw-face .sw-mark,
-:host([data-slot-checked]) .sw-input:checked:not(:indeterminate) + .sw-face .sw-named,
-:host([data-slot-indeterminate]) .sw-input:indeterminate + .sw-face .sw-mark,
-:host([data-slot-indeterminate]) .sw-input:indeterminate + .sw-face .sw-named {
+:host([data-slot-icon]) .checkbox[data-mark='empty'] .checkbox-mark,
+:host([data-slot-icon]) .checkbox[data-mark='empty'] .checkbox-named,
+:host([data-slot-checked]) .checkbox[data-mark='positive'] .checkbox-mark,
+:host([data-slot-checked]) .checkbox[data-mark='positive'] .checkbox-named,
+:host([data-slot-indeterminate]) .checkbox[data-mark='partial'] .checkbox-mark,
+:host([data-slot-indeterminate]) .checkbox[data-mark='partial'] .checkbox-named,
+:host([data-slot-negative]) .checkbox[data-mark='negative'] .checkbox-mark,
+:host([data-slot-negative]) .checkbox[data-mark='negative'] .checkbox-named {
 	display: none;
 }
-.sw[data-variant='switch'] .sw-mark,
-.sw[data-variant='switch'] .sw-slot,
-.sw[data-variant='switch'] .sw-named {
+.checkbox[data-variant='switch'] .checkbox-mark,
+.checkbox[data-variant='switch'] .checkbox-slot,
+.checkbox[data-variant='switch'] .checkbox-named {
 	display: none;
 }
-.sw-check,
-.sw-dash {
+.checkbox:not([data-variant='switch'])[data-mark='positive'] .checkbox-check,
+.checkbox:not([data-variant='switch'])[data-mark='partial'] .checkbox-dash,
+.checkbox:not([data-variant='switch'])[data-mark='negative'] .checkbox-x {
+	display: flex;
+}
+.checkbox-check {
+	overflow: visible;
+}
+.checkbox-check-path {
 	fill: none;
 	stroke: currentColor;
-	stroke-width: 2.25;
+	stroke-width: 2;
 	stroke-linecap: round;
 	stroke-linejoin: round;
+	stroke-dasharray: 22;
+	stroke-dashoffset: 22;
 }
-.sw-check {
-	stroke-dasharray: 18;
-	stroke-dashoffset: 18;
-	transition: stroke-dashoffset 0.18s ease;
+.checkbox:not([data-variant='switch'])[data-mark='positive'] .checkbox-face {
+	animation: cb-face-flash 0.42s ease both;
 }
-.sw-dash {
-	opacity: 0;
-	transition: opacity 0.14s ease;
+.checkbox:not([data-variant='switch'])[data-mark='positive'] .checkbox-check-path {
+	animation: cb-trace 0.28s ease 0.12s forwards;
+}
+.checkbox:not([data-variant='switch'])[data-mark='positive'] .checkbox-named,
+.checkbox:not([data-variant='switch'])[data-mark='positive'] .checkbox-slot-checked {
+	animation: cb-reveal 0.28s ease 0.12s both;
+}
+@keyframes cb-face-flash {
+	0% {
+		background: var(--cb-bg);
+		border-color: var(--cb-border);
+		color: oklch(0.2 0 0);
+	}
+	40% {
+		background: #fff;
+		border-color: #fff;
+		color: oklch(0.2 0 0);
+	}
+	100% {
+		background: var(--cb-checked-bg);
+		border-color: var(--cb-checked-bg);
+		color: var(--cb-checked-fg);
+	}
+}
+@keyframes cb-trace {
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+@keyframes cb-reveal {
+	from {
+		clip-path: inset(0 100% 0 0);
+		opacity: 0.15;
+	}
+	to {
+		clip-path: inset(0 0 0 0);
+		opacity: 1;
+	}
+}
+:host([data-layout='item']) {
+	display: flex;
+	inline-size: 100%;
+}
+:host([data-layout='item']) .checkbox {
+	inline-size: 100%;
+	max-inline-size: none;
+	box-sizing: border-box;
+	padding: 0.55rem 0.7rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 16%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: color-mix(in oklch, var(--bg-body, transparent) 35%, transparent);
+	transition:
+		border-color 0.16s ease,
+		background 0.16s ease,
+		box-shadow 0.16s ease;
+}
+:host([data-layout='item']) .checkbox:hover {
+	border-color: color-mix(in oklch, var(--teal, var(--cyan)) 45%, transparent);
+	background: color-mix(in oklch, var(--teal, var(--cyan)) 8%, transparent);
 }
 /* ── Checked: solid fill + mark on top ─────────────────── */
-.sw-input:checked + .sw-face {
-	background: var(--sw-track-on, var(--cb-checked-bg));
-	border-color: var(--sw-track-on, var(--cb-checked-bg));
+.checkbox-input:checked + .checkbox-face {
+	background: var(--checkbox-track-on, var(--cb-checked-bg));
+	border-color: var(--checkbox-track-on, var(--cb-checked-bg));
 	color: var(--cb-checked-fg);
 }
-.sw:not([data-variant='switch']) .sw-input:checked + .sw-face {
+.checkbox:not([data-variant='switch']) .checkbox-input:checked + .checkbox-face {
 	/* Prefer a dark solid with light check (primary / primary-foreground). */
 	background: var(--cb-checked-bg);
 	border-color: var(--cb-checked-bg);
 	color: var(--cb-checked-fg);
 	box-shadow: none;
 }
-.sw-input:checked + .sw-face .sw-thumb {
-	/* Travel = track width − track height; the thumb starts and ends one --sw-pad
+.checkbox-input:checked + .checkbox-face .checkbox-thumb {
+	/* Travel = track width − track height; the thumb starts and ends one --checkbox-pad
 	   from each edge, so the symmetric inset cancels out of the delta. */
-	translate: calc(var(--sw-w) - var(--sw-h)) -50%;
+	translate: calc(var(--checkbox-w) - var(--checkbox-h)) -50%;
 }
-.sw-input:checked:not(:indeterminate) + .sw-face .sw-check {
-	stroke-dashoffset: 0;
-}
-.sw-input:indeterminate + .sw-face {
+.checkbox-input:indeterminate + .checkbox-face,
+.checkbox[data-mark='partial'] .checkbox-face,
+.checkbox[data-mark='negative'] .checkbox-face,
+.checkbox[data-mark='positive'] .checkbox-face {
 	background: var(--cb-checked-bg);
 	border-color: var(--cb-checked-bg);
 	color: var(--cb-checked-fg);
 }
-.sw-input:indeterminate + .sw-face .sw-check {
-	stroke-dashoffset: 18;
-}
-.sw-input:indeterminate + .sw-face .sw-dash {
-	opacity: 1;
-}
-.sw-input:focus-visible + .sw-face {
+.checkbox-input:focus-visible + .checkbox-face {
 	box-shadow: 0 0 0 2px var(--bg-body, #fff), 0 0 0 4px var(--focus-ring-color, var(--cyan, oklch(0.7 0.12 200)));
 }
 /* ── Invalid (aria-invalid) ────────────────────────────── */
-.sw[data-invalid] .sw-face,
-.sw-input[aria-invalid='true'] + .sw-face {
+.checkbox[data-invalid] .checkbox-face,
+.checkbox-input[aria-invalid='true'] + .checkbox-face {
 	border-color: var(--cb-invalid);
 }
-.sw[data-invalid] .sw-input:focus-visible + .sw-face,
-.sw-input[aria-invalid='true']:focus-visible + .sw-face {
+.checkbox[data-invalid] .checkbox-input:focus-visible + .checkbox-face,
+.checkbox-input[aria-invalid='true']:focus-visible + .checkbox-face {
 	box-shadow: 0 0 0 2px var(--bg-body, #fff), 0 0 0 4px color-mix(in oklch, var(--cb-invalid) 45%, transparent);
 }
-.sw[data-invalid] .sw-input:checked + .sw-face {
+.checkbox[data-invalid] .checkbox-input:checked + .checkbox-face {
 	background: var(--cb-invalid);
 	border-color: var(--cb-invalid);
 	color: var(--cb-checked-fg);
 }
 /* ── Disabled ──────────────────────────────────────────── */
-.sw-input:disabled + .sw-face {
+.checkbox-input:disabled + .checkbox-face {
 	opacity: 0.5;
 }
-.sw:has(.sw-input:disabled),
-.sw[data-disabled] {
+.checkbox:has(.checkbox-input:disabled),
+.checkbox[data-disabled] {
 	cursor: not-allowed;
 	opacity: 0.72;
 }
-.sw-copy {
+.checkbox-copy {
 	display: flex;
+	flex: 0 1 auto;
 	flex-direction: column;
 	gap: 0.15rem;
 	min-inline-size: 0;
 	padding-block-start: 0.05em;
 }
-.sw-label {
+.checkbox-label {
 	font-weight: 500;
 	letter-spacing: -0.01em;
 	color: var(--text-main);
 }
-.sw-desc {
+.checkbox-desc {
 	font-size: 0.9em;
 	font-weight: 400;
 	color: var(--text-muted);
 	line-height: 1.4;
 }
-.sw[data-invalid] .sw-desc {
+.checkbox[data-invalid] .checkbox-desc {
 	color: var(--cb-invalid);
 }
 @media (prefers-reduced-motion: reduce) {
-	.sw-face,
-	.sw-thumb,
-	.sw-check,
-	.sw-dash {
+	.checkbox-face,
+	.checkbox-thumb,
+	.checkbox-check,
+	.checkbox-dash,
+	.checkbox-x,
+	.checkbox-check-path,
+	.checkbox-named,
+	.checkbox-slot-checked {
 		transition: none;
+		animation: none;
+	}
+	.checkbox-check-path {
+		stroke-dashoffset: 0;
 	}
 }

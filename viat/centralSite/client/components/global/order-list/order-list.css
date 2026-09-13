@@ -1,7 +1,32 @@
 :host {
 	display: block;
 }
-.ol {
+:host(ui-order-list.is-reordering) {
+	position: relative;
+	z-index: 4;
+	cursor: grabbing;
+	touch-action: none;
+}
+:host(ui-order-list.is-reordering) .order-list {
+	overflow: visible;
+}
+:host(ui-order-item.is-dragging) {
+	position: relative;
+	z-index: 2;
+	pointer-events: none;
+	will-change: transform;
+}
+:host(ui-order-item.is-dragging) .order-list-item {
+	background: var(--bg-panel, Canvas);
+	box-shadow:
+		0 0 0 1px color-mix(in oklab, var(--text-main) 12%, transparent),
+		0 0 0.75rem color-mix(in oklab, #000 35%, transparent),
+		0 0.5rem 1.25rem color-mix(in oklab, #000 48%, transparent);
+}
+:host(ui-order-item.is-dragging) .order-list-handle {
+	cursor: grabbing;
+}
+.order-list {
 	display: flex;
 	flex-direction: column;
 	border: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
@@ -9,7 +34,7 @@
 	background: var(--bg-panel, transparent);
 	overflow: hidden;
 }
-.ol-head {
+.order-list-head {
 	padding: 0.45rem 0.7rem;
 	border-block-end: 1px solid color-mix(in oklch, var(--text-muted) 14%, transparent);
 	color: var(--text-muted);
@@ -18,26 +43,31 @@
 	letter-spacing: 0.04em;
 	text-transform: uppercase;
 }
-.ol-list {
+.order-list-list {
 	display: flex;
 	flex-direction: column;
 	padding: 0.25rem;
 }
-.ol-item {
+.order-list-item {
 	display: flex;
 	align-items: center;
 	gap: 0.35rem;
 	padding: 0.25rem 0.3rem;
 	border-radius: var(--radius-sm, 0.25rem);
+	user-select: none;
+	-webkit-user-select: none;
 }
-.ol-item:hover {
+.order-list-item:hover {
 	background: color-mix(in oklch, currentColor 6%, transparent);
 }
-.ol-item[data-disabled] {
+.order-list-item[aria-selected='true'] {
+	background: color-mix(in oklch, var(--teal, var(--cyan, currentColor)) 18%, transparent);
+}
+.order-list-item[data-disabled] {
 	opacity: 0.45;
 	pointer-events: none;
 }
-.ol-label {
+.order-list-label {
 	flex: 1 1 auto;
 	min-inline-size: 0;
 	overflow: hidden;
@@ -45,8 +75,8 @@
 	white-space: nowrap;
 	font-size: 0.875rem;
 }
-.ol-handle,
-.ol-btn {
+.order-list-handle,
+.order-list-btn {
 	display: inline-flex;
 	flex: none;
 	align-items: center;
@@ -61,12 +91,12 @@
 	color: var(--text-muted);
 	cursor: pointer;
 }
-.ol-handle {
+.order-list-handle {
 	cursor: grab;
 	touch-action: none;
 }
-.ol-handle:focus-visible,
-.ol-btn:focus-visible {
+.order-list-handle:focus-visible,
+.order-list-btn:focus-visible {
 	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
 	outline-offset: 1px;
 }

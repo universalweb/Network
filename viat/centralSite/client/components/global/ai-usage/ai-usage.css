@@ -1,7 +1,7 @@
 :host {
 	display: inline-flex;
 }
-.aius {
+.ai-usage {
 	display: inline-flex;
 	align-items: center;
 	flex-wrap: wrap;
@@ -14,33 +14,33 @@
 	font-size: var(--text-xs);
 	font-variant-numeric: tabular-nums;
 }
-.aius[hidden] {
+.ai-usage[hidden] {
 	display: none;
 }
-.aius-icon {
+.ai-usage-icon {
 	flex: none;
 	opacity: 0.7;
 }
-.aius-title {
+.ai-usage-title {
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 }
-.aius-title[hidden],
-.aius-stat[hidden] {
+.ai-usage-title[hidden],
+.ai-usage-stat[hidden] {
 	display: none;
 }
-.aius-stat {
+.ai-usage-stat {
 	display: inline-flex;
 	align-items: baseline;
 	gap: 0.25rem;
 }
-.aius-k {
+.ai-usage-k {
 	opacity: 0.65;
 	text-transform: lowercase;
 }
-.aius-v {
+.ai-usage-v {
 	color: var(--text-main);
 }
-.aius-cost .aius-v {
+.ai-usage-cost .ai-usage-v {
 	color: var(--teal, var(--accent, currentColor));
 }

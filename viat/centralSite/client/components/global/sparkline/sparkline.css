@@ -1,7 +1,9 @@
 :host {
 	display: inline-block;
-	inline-size: 6rem;
-	block-size: 2rem;
+	inline-size: var(--spark-inline-size, 6rem);
+	block-size: var(--spark-block-size, 2rem);
+	min-inline-size: 0;
+	max-inline-size: 100%;
 }
 .spark-stack {
 	position: relative;
@@ -11,8 +13,7 @@
 	overflow: visible;
 	--viz: var(--cyan);
 }
-.spark-stack > .spark,
-.spark-stack > .spark-hit-svg {
+.spark-stack > .spark {
 	grid-area: 1 / 1;
 	inline-size: 100%;
 	block-size: 100%;
@@ -41,25 +42,28 @@
 	fill: color-mix(in oklab, var(--viz) 18%, transparent);
 	stroke: none;
 }
-.spark-hit-svg {
-	pointer-events: none;
-}
 .spark-hit {
+	--spark-hit-size: 0.35rem;
+	position: absolute;
+	z-index: 1;
+	inset-inline-start: var(--hit-x);
+	inset-block-start: var(--hit-y);
+	inline-size: var(--spark-hit-size);
+	block-size: var(--spark-hit-size);
+	border-radius: 50%;
+	translate: -50% -50%;
+	box-sizing: border-box;
 	cursor: pointer;
-	fill: transparent;
-	pointer-events: all;
-	stroke: transparent;
-	stroke-width: 0;
+	background: transparent;
+	pointer-events: auto;
 	transition:
-		fill var(--dur-fast, 0.12s) ease,
-		stroke var(--dur-fast, 0.12s) ease,
-		stroke-width var(--dur-fast, 0.12s) ease;
+		background var(--dur-fast, 0.12s) ease,
+		box-shadow var(--dur-fast, 0.12s) ease;
 }
 .spark-hit:hover,
 .spark-hit:focus-visible {
-	fill: color-mix(in oklab, var(--viz) 28%, transparent);
-	stroke: var(--viz);
-	stroke-width: 1.5;
+	background: color-mix(in oklab, var(--viz) 28%, transparent);
+	box-shadow: 0 0 0 1px var(--viz);
 }
 @media (prefers-reduced-motion: reduce) {
 	.spark-hit {

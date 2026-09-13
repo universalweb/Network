@@ -34,6 +34,7 @@
 	--text-muted: oklch(0.64 0.005 250);
 	--text-light: oklch(1 0 0);
 	--text-offwhite: oklch(0.76 0.006 250);
+	--text-subtle: rgba(255, 255, 255, 0.4);
 
 	/* ── Fonts ───────────────────────────────────────── */
 	--font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
@@ -89,6 +90,11 @@
 	/* ── Secondary Accent Scale (formerly teal) ──────── */
 	--teal-glow: oklch(1 0 0 / 0.14);
 	--teal-glow-soft: oklch(1 0 0 / 0.1);
+	--teal-glow-faint: rgba(0, 255, 255, 0.2);
+
+	/* ── Scrollbar colours ───────────────────────────── */
+	--scrollbar-thumb: var(--cyan-glow-faint);
+	--scrollbar-thumb-hover: var(--cyan-glow-soft);
 
 	/* ── Status Colors — the only chroma in the theme ── */
 	--color-success: oklch(0.78 0.14 160);
@@ -137,17 +143,15 @@
 	--input-accent-shadow: none;
 	--field-border-style: solid;
 
-	/* ── Panel header — x.ai titling: sans, sentence-case, calm tracking,
-	   no uppercase / wide-tracked mono, no left accent bar ── */
+	/* ── Panel header — sans chrome title, tracked uppercase ── */
 	--panel-header-padding: 0.65rem 0.9rem;
 	--panel-header-font-size: 0.8125rem;
-	--panel-header-text-transform: none;
-	--panel-header-letter-spacing: -0.005em;
+	--panel-header-letter-spacing: 0.12em;
 	--panel-header-color: var(--text-main);
 	--panel-header-left-border: none;
-	--ph-id-font-size: 0.6875rem;
-	--ph-id-letter-spacing: 0;
-	--ph-id-opacity: 0.6;
+	--panel-header-id-font-size: 0.6875rem;
+	--panel-header-id-letter-spacing: 0;
+	--panel-header-id-opacity: 0.6;
 
 	/* ── Panel — flat, hairline-bordered ─────────────── */
 	--panel-shadow:
@@ -182,15 +186,19 @@
 	--btn-hover-inset: none;
 	--btn-hover-glow: none;
 	--btn-hover-color: var(--text-light);
-	/* Primary solid = the x.ai signature white CTA with near-black label. */
+	/* Primary solid = white CTA, near-black label (held across hover).
+	   Border derives from bg at the consumer. */
 	--btn-primary-bg: oklch(1 0 0);
-	--btn-primary-border: oklch(1 0 0);
 	--btn-primary-color: oklch(0.17 0 0);
 	--btn-primary-hover-bg: oklch(0.9 0 0);
-	--btn-primary-hover-border: oklch(0.9 0 0);
-	--btn-primary-hover-color: oklch(0.15 0 0);
 	--focus-ring-color: oklch(1 0 0 / 0.7);
 	--green-hover: oklch(0.8 0.15 155);
+
+	/* ── Icon chrome ─────────────────────────────────── */
+	--icon-color: var(--text-offwhite);
+	--icon-color-hover: var(--text-light);
+	--icon-color-active: var(--text-light);
+	--icon-color-disabled: var(--dark-text-faint);
 
 	/* ── Inputs / Interactive ────────────────────────── */
 	--input-hover-border: oklch(1 0 0 / 0.22);
@@ -208,7 +216,7 @@
 	--status-bar-bg: oklch(0.14 0 0 / 0.62);
 	--topbar-accent: var(--text-light);
 	--topbar-bottom-border: 1px solid oklch(1 0 0 / 0.08);
-	--tb-badge-radius: 4px;
+	--theme-select-chip-radius: 4px;
 	--logo-mark-pattern: repeating-linear-gradient(45deg,
 			oklch(1 0 0 / 0.6), oklch(1 0 0 / 0.6) 2px,
 			transparent 2px, transparent 5px);
@@ -216,13 +224,9 @@
 	/* ── Popups ──────────────────────────────────────── */
 	--popup-bg: oklch(0.18 0 0 / 0.96);
 	--popup-bg-hover: oklch(0.22 0 0 / 0.97);
-	/* Frosted variant for transient popups (tooltips, the native-select picker) —
-	   more translucent than `--popup-bg` and paired with a blur so they glass over
-	   the content behind, matching the modal window bar. Kept SEPARATE from
-	   `--popup-bg` so the settings-modal surface (the reference) stays fully opaque
-	   and readable. Other themes fall back to `--popup-bg` + no blur. */
-	--popup-glass-bg: oklch(0.19 0 0 / 0.78);
-	--popup-glass-blur: blur(0.875rem) saturate(1.3);
+	/* Glass fill color only — alpha, blur radius, and --popup-glass-bg live in
+	   variables.css. Solid `--popup-bg` stays opaque for modals/cards. */
+	--popup-glass-color: oklch(0.19 0 0);
 	--popup-border: oklch(1 0 0 / 0.12);
 	--popup-border-hover: oklch(1 0 0 / 0.2);
 	--popup-accent: oklch(1 0 0 / 0.18);
@@ -232,7 +236,7 @@
 	--popup-text: var(--text-light);
 
 	/* ── Glow Scale — flattened (x.ai has no neon glow) ── */
-	--ph-dot-shadow: none;
+	--panel-header-dot-shadow: none;
 	--tab-indicator-shadow: none;
 	--logo-mark-text-shadow: none;
 	--subtitle-text-shadow: none;

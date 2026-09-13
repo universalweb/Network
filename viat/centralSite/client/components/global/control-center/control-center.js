@@ -1,16 +1,22 @@
 import '../icon/icon.js';
 import '../switch/switch.js';
 import { WebComponent } from 'webcomponent';
-import { ControlCenterTile } from '../control-center-tile/control-center-tile.js';
+import {
+	isTopEscapable,
+	pushEscapable,
+	releaseEscapable,
+} from '../../core/escape/escapeStack.js';
 import { ControlCenterRow } from '../control-center-row/control-center-row.js';
-
+import { ControlCenterTile } from '../control-center-tile/control-center-tile.js';
 /**
  * `<ui-control-center>` — macOS Tahoe–inspired Control Center panel.
  *
  * Blank-slate primitive: pass `tiles` (icon grid toggles) and `items` (switch
  * rows) via `.state=`. Emits `control-center:change` with `{ id, checked, kind }`
  * when any control flips. Host `open` attr controls visibility; call
- * open()/close()/toggle() or bind `centerOpen`.
+ * open()/close()/toggle(). Enter/leave motion is the default: the panel
+ * scales and fades via CSS transitions. Do not hide the popover until
+ * close() finishes that leave.
  *
  * @example
  * <ui-control-center .state=${{
@@ -36,14 +42,103 @@ export class UIControlCenter extends WebComponent {
 		tiles: [],
 		items: [],
 	};
+	motionToken = 0;
+	/*
+	 * Overlay is `popover="manual"` so it paints in the top layer and escapes
+	 * ancestor overflow / content-visibility / transform containing blocks.
+	 * `position: fixed` alone does not — the preview stage + .demo CV clip it.
+	 *
+	 * Show the popover at the closed visual BEFORE [open] flips — otherwise
+	 * the panel paints already at rest and the enter transition never runs.
+	 * hidePopover waits until the leave transition finishes for the same reason.
+	 */
+	onConnect() {
+		// Registered once and guarded per press; the hotkey registry sweeps it on
+		// disconnect, so there is no listener to unwind by hand.
+		this.hotKey('escape', this.handleEscape, {
+			preventDefault: false,
+		});
+	}
+	onDisconnect() {
+		releaseEscapable(this);
+	}
+	// @engram em:network/code/ui-control-center-must-show-popover-before-open-and-delay-hi — show at closed visual before [open]; hide after leave
 	open() {
+		this.motionToken += 1;
+		this.refs.panel?.classList.remove('is-exiting');
+		const overlay = this.refs.root;
+		if (overlay) {
+			this.showSurfacePopover(overlay);
+		}
+		const panel = this.refs.panel;
+		if (panel) {
+			this.flushPanel(panel);
+		}
 		this.attrs.open = true;
+		pushEscapable(this);
 	}
 	close() {
+		if (this.attrs.open !== true) {
+			return;
+		}
 		this.attrs.open = false;
+		const panel = this.refs.panel;
+		if (!panel) {
+			this.finishClose();
+			return;
+		}
+		const token = this.motionToken + 1;
+		this.motionToken = token;
+		return this.afterCloseMotion(this.animateOut({
+			target: panel,
+			className: 'is-exiting',
+		}), token);
+	}
+	flushPanel(panel) {
+		return panel.offsetWidth;
+	}
+	async afterCloseMotion(motion, token) {
+		await motion;
+		if (token !== this.motionToken) {
+			return;
+		}
+		this.finishClose();
+	}
+	finishClose() {
+		this.refs.panel?.classList.remove('is-exiting');
+		if (this.attrs.open === true) {
+			return;
+		}
+		releaseEscapable(this);
+		this.hideSurfacePopover(this.refs.root);
+	}
+	/*
+	 * A `popover="manual"` surface gets NO light-dismiss from the UA, so Escape
+	 * has to be wired by hand. The stack guard keeps it honest when something else
+	 * is open on top: only the most recent layer answers the key.
+	 *
+	 * `preventDefault: false` on the registration, then prevent by hand only when
+	 * we actually close — same contract app.js uses, so a closed control-center
+	 * never swallows Escape from whoever else wants it.
+	 */
+	handleEscape(keyEvent) {
+		if (this.attrs.open !== true || !isTopEscapable(this)) {
+			return;
+		}
+		keyEvent.preventDefault();
+		this.close();
 	}
 	toggle() {
-		this.attrs.open = !this.attrs.open;
+		if (this.attrs.open) {
+			this.close();
+			return;
+		}
+		this.open();
+	}
+	onRendered() {
+		if (this.attrs.open) {
+			this.showSurfacePopover(this.refs.root);
+		}
 	}
 	handleTileToggle(domEvent) {
 		const data = domEvent.detail?.data;
@@ -118,10 +213,11 @@ export class UIControlCenter extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="cc-root" ?data-open=${this.attrs.open}>
-				<div class="cc-backdrop" @click=${this.handleBackdropClick}></div>
+			<div class="control-center-root" #root popover="manual" ?data-open=${this.attrs.open}>
+				<div class="control-center-backdrop" @click=${this.handleBackdropClick}></div>
 				<section
-					class="cc-panel"
+					class="control-center-panel glass"
+					#panel
 					role="dialog"
 					aria-label=${this.state.heading}
 					?inert=${() => {
@@ -129,13 +225,13 @@ export class UIControlCenter extends WebComponent {
 					}}
 					@control-center-tile:toggle=${this.handleTileToggle}
 					@control-center-row:change=${this.handleRowChange}>
-					<header class="cc-header">
-						<span class="cc-heading">${this.state.heading}</span>
+					<header class="control-center-header">
+						<span class="control-center-heading">${this.state.heading}</span>
 					</header>
-					<div class="cc-tiles">
+					<div class="control-center-tiles">
 						${this.list('tiles', ControlCenterTile)}
 					</div>
-					<div class="cc-rows" ?hidden=${() => {
+					<div class="control-center-rows" ?hidden=${() => {
 						return this.state.items.length === 0;
 					}}>
 						${this.list('items', ControlCenterRow)}

@@ -36,7 +36,6 @@ export class UIFab extends WebComponent {
 	}
 	render() {
 		// Label only shows in the extended pill; otherwise it becomes the a11y tooltip.
-		const label = this.state.extended ? this.state.label : '';
 		this.html`
 			<div class="fab" data-position=${this.state.position} ?data-extended=${this.state.extended}>
 				<ui-button
@@ -46,7 +45,7 @@ export class UIFab extends WebComponent {
 					.state.size=${this.state.size}
 					.state.circle=${!this.state.extended}
 					.state.leadicon=${this.state.icon}
-					.state.label=${label}
+					.state.label=${this.state.extended ? this.state.label : ''}
 					.state.tooltip=${this.state.extended ? '' : this.state.label}
 					.state.disabled=${this.state.disabled}
 					@button:click=${this.handleClick}></ui-button>

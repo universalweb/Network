@@ -2,23 +2,23 @@
 	display: block;
 	overflow: auto;
 }
-.tt {
-	--tt-cols: minmax(12rem, 1.6fr) minmax(5rem, 1fr);
+.tree-table {
+	--tree-table-cols: minmax(12rem, 1.6fr) minmax(5rem, 1fr);
 	min-inline-size: 0;
 	border: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
 	border-radius: var(--radius-md, 0.5rem);
 	background: var(--bg-panel, transparent);
 }
-.tt-head,
-.tt-row {
+.tree-table-head,
+.tree-table-row {
 	display: grid;
-	grid-template-columns: var(--tt-cols);
+	grid-template-columns: var(--tree-table-cols);
 	align-items: center;
 	gap: 0.5rem;
 	padding-inline: 0.55rem;
 	min-block-size: 2.1rem;
 }
-.tt-head {
+.tree-table-head {
 	border-block-end: 1px solid color-mix(in oklch, var(--text-muted) 14%, transparent);
 	color: var(--text-muted);
 	font-size: 0.75rem;
@@ -26,28 +26,28 @@
 	letter-spacing: 0.03em;
 	text-transform: uppercase;
 }
-.tt-row {
+.tree-table-row {
 	border-block-end: 1px solid color-mix(in oklch, var(--text-muted) 8%, transparent);
 	cursor: pointer;
 }
-.tt-row:hover {
+.tree-table-row:hover {
 	background: color-mix(in oklch, currentColor 6%, transparent);
 }
-.tt-row[data-selected] {
+.tree-table-row[data-selected] {
 	background: color-mix(in oklch, var(--teal, var(--cyan, oklch(0.75 0.12 195))) 16%, transparent);
 }
-.tt-row[data-disabled] {
+.tree-table-row[data-disabled] {
 	opacity: 0.45;
 	pointer-events: none;
 }
-.tt-tree {
+.tree-table-tree {
 	display: flex;
 	align-items: center;
 	gap: 0.3rem;
 	min-inline-size: 0;
 	padding-inline-start: calc(var(--depth, 0) * 1rem);
 }
-.tt-caret {
+.tree-table-caret {
 	display: inline-flex;
 	flex: none;
 	align-items: center;
@@ -61,27 +61,27 @@
 	color: var(--text-muted);
 	cursor: pointer;
 }
-.tt-caret:disabled {
+.tree-table-caret:disabled {
 	visibility: hidden;
 }
-.tt-icon {
+.tree-table-icon {
 	flex: none;
 	color: var(--text-muted);
 }
-.tt-label,
-.tt-td,
-.tt-th {
+.tree-table-label,
+.tree-table-td,
+.tree-table-th {
 	min-inline-size: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	font-size: 0.875rem;
 }
-.tt-td[data-align='end'],
-.tt-th:last-child {
+.tree-table-td[data-align='end'],
+.tree-table-th:last-child {
 	text-align: end;
 }
-.tt-empty {
+.tree-table-empty {
 	padding: 0.7rem 0.75rem;
 	color: var(--text-muted);
 	font-size: 0.8125rem;

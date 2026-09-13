@@ -46,6 +46,24 @@ export class UISegmentItem extends WebComponent {
 	get hideHint() {
 		return !String(this.state.hint || '').trim();
 	}
+	onConnect() {
+		this.observe([
+			'interactive',
+			'href',
+		], this.syncInteractiveAttr);
+		this.syncInteractiveAttr();
+	}
+	/*
+	 * House hover language keys off [data-interactive]. The painted
+	 * surface is the inner .segment-item (data-hover=wash); the host
+	 * carries the same hook so a probe of the custom element sees it.
+	 */
+	syncInteractiveAttr() {
+		this.toggleAttribute('data-interactive', this.isInteractive);
+	}
+	hoverToken() {
+		return this.isInteractive ? 'wash' : '';
+	}
 	handleClick(domEvent) {
 		if (this.state.interactive !== true) {
 			return;
@@ -71,49 +89,48 @@ export class UISegmentItem extends WebComponent {
 		}
 	}
 	render() {
-		const interactive = this.isInteractive;
-		const link = this.isLink;
-		const tone = this.state.tone || 'accent';
-		if (link) {
+		if (this.isLink) {
 			this.html`
-				<a class="seg"
-					data-tone=${tone}
-					?data-interactive=${interactive}
+				<a class="segment-item"
+					data-hover=${this.hoverToken}
+					data-tone=${this.state.tone || 'accent'}
+					?data-interactive=${this.isInteractive}
 					href=${this.state.href}
 					role="listitem">
-					<span class="seg-icon" ?hidden=${this.hideIcon} aria-hidden="true">
+					<span class="segment-item-icon" ?hidden=${this.hideIcon} aria-hidden="true">
 						<ui-icon .state.name=${this.state.icon} .state.size=${'md'}></ui-icon>
 					</span>
-					<span class="seg-body">
-						<span class="seg-head">
-							<span class="seg-label">${this.state.label}</span>
-							<span class="seg-hint" ?hidden=${this.hideHint}>${this.state.hint}</span>
+					<span class="segment-item-body">
+						<span class="segment-item-head">
+							<span class="segment-item-label">${this.state.label}</span>
+							<span class="segment-item-hint" ?hidden=${this.hideHint}>${this.state.hint}</span>
 						</span>
-						<span class="seg-value" ?hidden=${this.hideValue}>${this.state.value}</span>
-						<span class="seg-desc" ?hidden=${this.hideDescription}>${this.state.description}</span>
+						<span class="segment-item-value" ?hidden=${this.hideValue}>${this.state.value}</span>
+						<span class="segment-item-description" ?hidden=${this.hideDescription}>${this.state.description}</span>
 					</span>
 				</a>
 			`;
 			return;
 		}
 		this.html`
-			<div class="seg"
-				data-tone=${tone}
-				?data-interactive=${interactive}
-				role=${interactive ? 'button' : 'listitem'}
-				tabindex=${interactive ? '0' : '-1'}
+			<div class="segment-item"
+				data-hover=${this.hoverToken}
+				data-tone=${this.state.tone || 'accent'}
+				?data-interactive=${this.isInteractive}
+				role=${this.isInteractive ? 'button' : 'listitem'}
+				tabindex=${this.isInteractive ? '0' : '-1'}
 				@click=${this.handleClick}
 				@keydown=${this.handleKey}>
-				<span class="seg-icon" ?hidden=${this.hideIcon} aria-hidden="true">
+				<span class="segment-item-icon" ?hidden=${this.hideIcon} aria-hidden="true">
 					<ui-icon .state.name=${this.state.icon} .state.size=${'md'}></ui-icon>
 				</span>
-				<span class="seg-body">
-					<span class="seg-head">
-						<span class="seg-label">${this.state.label}</span>
-						<span class="seg-hint" ?hidden=${this.hideHint}>${this.state.hint}</span>
+				<span class="segment-item-body">
+					<span class="segment-item-head">
+						<span class="segment-item-label">${this.state.label}</span>
+						<span class="segment-item-hint" ?hidden=${this.hideHint}>${this.state.hint}</span>
 					</span>
-					<span class="seg-value" ?hidden=${this.hideValue}>${this.state.value}</span>
-					<span class="seg-desc" ?hidden=${this.hideDescription}>${this.state.description}</span>
+					<span class="segment-item-value" ?hidden=${this.hideValue}>${this.state.value}</span>
+					<span class="segment-item-description" ?hidden=${this.hideDescription}>${this.state.description}</span>
 				</span>
 			</div>
 		`;

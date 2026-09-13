@@ -20,7 +20,7 @@ export class UISurface extends WebComponent {
 		   rules set only `--tone-fill`, which surface ignores — no conflict.) */
 		this.html`
 			<div
-				class="sf"
+				class="surface-frame"
 				data-tone=${this.state.tone}
 				data-pad=${this.state.padding}
 				data-radius=${this.state.radius}

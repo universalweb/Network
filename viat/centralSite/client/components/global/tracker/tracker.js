@@ -1,15 +1,48 @@
 /*
-	DESCRIPTION: ui-tracker — status squares (Tremor-style uptime bars).
-	Click a segment to expand an INLINE detail panel under the bar (no full-
-	screen backdrop). Emits cancelable tracker:select so a parent can hijack
-	for modal / popover / floating-panel via event.preventDefault().
-	When the panel is open, hovering another segment slides + resizes the
-	detail (nav-section openOnHover + viewport morph). expandOnSelect:false
-	→ emit only.
+	DESCRIPTION: ui-tracker — status squares composed from <ui-tabs variant=blocks>.
+	Click a segment to expand an INLINE detail panel under the bar. Emits
+	cancelable tracker:select so a parent can hijack via event.preventDefault().
+	toggleActive on the strip collapses on a second click of the open block.
+	openOnHover (default true): once a block is open, hovering another activates it.
+	Overflow arrows sit on this host (not ui-tabs): they page so the last
+	fully-visible block on that edge becomes the new start.
+	`timeGuide` weights each block by its duration and prints clock ticks under
+	it. It COMPOSES with `join` rather than overriding it: detached splits the
+	open block apart, attached expands it in place, and under the guide the
+	gutter is painted inside the block so its box — and its ticks — stay on the
+	clock either way.
+	── USAGE ────────────────────────────────────────────────────────────
+	  <ui-tracker .state.items=${[
+	    { tone: 'success', label: 'API', icon: 'activity' },
+	    { tone: 'danger', label: 'DB', empty: true },
+	  ]}></ui-tracker>
 */
+import '../button/button.js';
 import '../icon/icon.js';
-import { isArray, isString } from '@universalweb/utilitylib';
-import { html, WebComponent } from 'webcomponent';
+import '../tabs/tabs.js';
+import {
+	durationOf,
+	formatTime,
+	html,
+	isArray,
+	isFalse,
+	isString,
+	isTrue,
+	noValue,
+	WebComponent,
+} from 'webcomponent';
+import {
+	pageStripEndDest,
+	pageStripStartDest,
+	SCROLL_EDGE_PX,
+	visibleEdgeIndexes,
+} from './stripPage.js';
+const LABEL_EXPAND_MS = 240;
+const STRIP_SCROLL_MS = 280;
+function easeOutCubic(progress) {
+	const inverse = 1 - progress;
+	return 1 - (inverse * inverse * inverse);
+}
 const TONES = new Set([
 	'accent',
 	'success',
@@ -21,8 +54,28 @@ const TONES = new Set([
 function normalizeTone(tone) {
 	return TONES.has(tone) ? tone : 'neutral';
 }
-function segmentFields(segment) {
+function segmentTime(segment, index) {
+	const start = Number(segment?.start);
+	const end = Number(segment?.end);
+	if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+		return {
+			start,
+			end,
+			duration: durationOf({
+				start,
+				end,
+			}),
+		};
+	}
+	return {
+		start: index,
+		end: index + 1,
+		duration: 1,
+	};
+}
+function segmentFields(segment, index) {
 	if (isString(segment)) {
+		const fallback = segmentTime(null, index);
 		return {
 			tone: normalizeTone(segment),
 			label: '',
@@ -31,14 +84,21 @@ function segmentFields(segment) {
 			icon: '',
 			meta: '',
 			actions: [],
+			empty: false,
+			display: '',
+			color: '',
+			start: fallback.start,
+			end: fallback.end,
+			duration: fallback.duration,
 		};
 	}
 	const label = segment?.label ? String(segment.label) : '';
 	const title = segment?.title ? String(segment.title) : label;
-	const detail = segment?.detail == null ? '' : String(segment.detail);
+	const detail = noValue(segment?.detail) ? '' : String(segment.detail);
 	const icon = segment?.icon ? String(segment.icon) : '';
 	const meta = segment?.meta ? String(segment.meta) : '';
 	const actions = isArray(segment?.actions) ? segment.actions : [];
+	const range = segmentTime(segment, index);
 	return {
 		tone: normalizeTone(segment?.tone),
 		label,
@@ -47,19 +107,29 @@ function segmentFields(segment) {
 		icon,
 		meta,
 		actions,
+		empty: isTrue(segment?.empty) || isFalse(segment?.filled),
+		display: segment?.display ? String(segment.display) : '',
+		color: segment?.color ? String(segment.color) : '',
+		start: range.start,
+		end: range.end,
+		duration: range.duration,
 	};
 }
-function segmentIndexFromEvent(domEvent) {
-	const path = domEvent.composedPath();
-	const pathCount = path.length;
-	for (let pathIndex = 0; pathIndex < pathCount; pathIndex += 1) {
-		const node = path[pathIndex];
-		if (node?.classList?.contains('trk-seg') && node.dataset?.index != null) {
-			return Number(node.dataset.index);
-		}
-	}
-	return -1;
-}
+const EMPTY_FIELDS = {
+	tone: 'neutral',
+	label: '',
+	title: '',
+	detail: '',
+	icon: '',
+	meta: '',
+	actions: [],
+	empty: false,
+	display: '',
+	color: '',
+	start: 0,
+	end: 1,
+	duration: 1,
+};
 export class UITracker extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -67,28 +137,94 @@ export class UITracker extends WebComponent {
 	};
 	static state = {
 		items: [],
+		tabItems: [],
 		label: '',
-		// -1 = collapsed. Index of the open segment detail panel.
 		expandedIndex: -1,
-		// When true (default), a non-canceled select toggles the inline panel.
-		// When false, only tracker:select is emitted (parent owns the reaction).
 		expandOnSelect: true,
-		// When the panel is already open, hover another segment to morph to it.
 		openOnHover: true,
-		// Actions for the open segment — synced from items[expandedIndex].
+		join: 'detached',
 		actionItems: [],
 		slideDir: 'none',
+		canScrollStart: false,
+		canScrollEnd: false,
+		arrowStyle: 'rail',
+		timeGuide: false,
+		labelPlace: 'in',
 	};
 	layoutGen = 0;
+	stripObserver = null;
+	stripNode = null;
+	overflowTimer = null;
+	stripRefreshTimer = null;
+	resizeForwarder = null;
+	stripScrollTick = null;
+	stripScrollRunning = false;
+	stripScrollFrom = 0;
+	stripScrollTarget = 0;
+	stripScrollStarted = 0;
+	stripScrollStrip = null;
+	expandedCache = EMPTY_FIELDS;
+	expandedCacheIndex = -2;
+	expandedCacheItems = null;
 	onConnect() {
+		this.resizeForwarder = () => {
+			this.syncOverflow();
+		};
+		this.stripScrollTick = () => {
+			this.onStripScrollFrame();
+		};
 		this.on('keydown', this.handleHostKeydown);
 		this.observe('expandedIndex', this.syncActionItems);
-		this.observe('items', this.syncActionItems);
+		this.observe('items', this.syncTabItems);
+		this.observe('timeGuide', this.syncTabItems);
+		this.observe('labelPlace', this.syncTabItems);
 		this.observe('expandedIndex', this.onExpandedChange);
+		this.syncTabItems();
 		this.syncActionItems();
+	}
+	onMount() {
+		this.attachStripOverflow();
+		this.queueOverflowSync();
 	}
 	onDisconnect() {
 		this.layoutGen += 1;
+		this.stripScrollRunning = false;
+		this.detachStripOverflow();
+	}
+	syncTabItems() {
+		const items = this.state.items;
+		const next = [];
+		let totalDuration = 0;
+		if (isArray(items)) {
+			const itemCount = items.length;
+			for (let index = 0; index < itemCount; index++) {
+				const fields = segmentFields(items[index], index);
+				totalDuration += fields.duration;
+			}
+			const span = totalDuration > 0 ? totalDuration : 1;
+			const guide = this.state.timeGuide === true;
+			for (let index = 0; index < itemCount; index++) {
+				const fields = segmentFields(items[index], index);
+				const last = index === itemCount - 1;
+				next.push({
+					id: String(index),
+					label: fields.label,
+					icon: fields.icon,
+					tone: fields.tone,
+					empty: fields.empty,
+					display: fields.display,
+					color: fields.color,
+					weight: fields.duration / span,
+					labelPlace: this.state.labelPlace === 'over' ? 'over' : 'in',
+					tickStart: guide ? formatTime(fields.start) : '',
+					tickEnd: guide && last ? formatTime(fields.end) : '',
+				});
+			}
+		}
+		this.state.tabItems = next;
+		if (this.isMounted) {
+			this.queueStripAttach();
+		}
 	}
 	syncActionItems() {
 		const fields = this.expandedFields();
@@ -97,21 +233,24 @@ export class UITracker extends WebComponent {
 	async onExpandedChange() {
 		const gen = this.layoutGen + 1;
 		this.layoutGen = gen;
+		const pane = this.refs.pane;
+		if (pane && this.state.expandedIndex >= 0) {
+			pane.style.animation = 'none';
+		}
 		await this.nextFrame();
 		if (gen !== this.layoutGen || this.isDisconnected) {
 			return;
 		}
-		this.restartPaneAnimation();
 		this.layoutDetail();
-	}
-	restartPaneAnimation() {
-		const pane = this.refs.pane;
-		if (!pane || this.state.expandedIndex < 0) {
+		this.syncOverflow();
+		this.queueOverflowSync();
+		await this.nextFrame();
+		if (gen !== this.layoutGen || this.isDisconnected) {
 			return;
 		}
-		pane.style.animation = 'none';
-		pane.getBoundingClientRect();
-		pane.style.animation = '';
+		if (pane) {
+			pane.style.animation = '';
+		}
 	}
 	layoutDetail() {
 		const panelViewport = this.refs.viewport;
@@ -128,38 +267,213 @@ export class UITracker extends WebComponent {
 			panelViewport.style.blockSize = `${height}px`;
 		}
 	}
-	/* Light row — plain values only. Click / hover are delegated on the track. */
-	segmentRow(segment, itemIndex) {
-		const fields = segmentFields(segment);
-		const index = itemIndex ?? 0;
-		const expanded = index === this.state.expandedIndex;
-		const aria = fields.label || `Segment ${index + 1}`;
-		return html`
-			<button
-				type="button"
-				class="trk-seg"
-				data-tone=${fields.tone}
-				data-index=${String(index)}
-				data-active=${expanded ? 'true' : 'false'}
-				aria-label=${aria}
-				aria-expanded=${expanded ? 'true' : 'false'}
-				aria-controls="trk-detail"></button>`;
+	queueStripAttach() {
+		(this.stripRefreshTimer ??= this.createTimeout(this.onStripAttachTimer, 0)).run();
 	}
-	handleTrackClick(domEvent) {
-		const index = segmentIndexFromEvent(domEvent);
-		if (!Number.isFinite(index) || index < 0) {
+	onStripAttachTimer(component) {
+		if (component.isDisconnected) {
 			return;
 		}
-		this.selectSegment(index);
+		component.attachStripOverflow();
 	}
-	handleTrackHover(domEvent) {
+	queueOverflowSync() {
+		(this.overflowTimer ??= this.createTimeout(this.onOverflowTimer, LABEL_EXPAND_MS)).run();
+	}
+	onOverflowTimer(component) {
+		if (component.isDisconnected) {
+			return;
+		}
+		component.syncOverflow();
+	}
+	attachStripOverflow() {
+		this.detachStripOverflow();
+		const tabs = this.findComponent('ui-tabs');
+		const strip = tabs?.refs?.strip;
+		if (!strip) {
+			return;
+		}
+		this.stripNode = strip;
+		strip.addEventListener('scroll', this, {
+			passive: true,
+		});
+		if (typeof ResizeObserver !== 'undefined') {
+			this.stripObserver = new ResizeObserver(this.resizeForwarder);
+			this.stripObserver.observe(strip);
+			this.stripObserver.observe(this);
+			const nodes = strip.children;
+			const nodeCount = nodes.length;
+			for (let index = 0; index < nodeCount; index++) {
+				this.stripObserver.observe(nodes[index]);
+			}
+		}
+		this.syncOverflow();
+	}
+	detachStripOverflow() {
+		const strip = this.stripNode;
+		if (strip) {
+			strip.removeEventListener('scroll', this);
+		}
+		this.stripObserver?.disconnect();
+		this.stripObserver = null;
+		this.stripNode = null;
+	}
+	handleEvent(domEvent) {
+		if (domEvent.type === 'scroll') {
+			this.syncOverflow();
+		}
+	}
+	syncOverflow(component) {
+		const tracker = component || this;
+		if (tracker.isDisconnected || tracker.stripScrollRunning) {
+			return;
+		}
+		const strip = tracker.stripNode;
+		if (!strip) {
+			return;
+		}
+		const viewSize = strip.clientWidth;
+		const maxScroll = Math.max(0, strip.scrollWidth - viewSize);
+		const scrollPos = strip.scrollLeft;
+		this.markVisibleEdges(strip, viewSize, scrollPos);
+		const canStart = scrollPos > SCROLL_EDGE_PX;
+		const canEnd = scrollPos < maxScroll - SCROLL_EDGE_PX;
+		if (tracker.state.canScrollStart === canStart && tracker.state.canScrollEnd === canEnd) {
+			return;
+		}
+		tracker.assignState({
+			canScrollStart: canStart,
+			canScrollEnd: canEnd,
+		});
+	}
+	prefersReducedMotion() {
+		return Boolean(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+	}
+	scrollStripTo(strip, dest) {
+		const maxScroll = Math.max(0, strip.scrollWidth - strip.clientWidth);
+		const target = Math.max(0, Math.min(maxScroll, dest));
+		const from = strip.scrollLeft;
+		if (this.prefersReducedMotion() || Math.abs(target - from) < 2) {
+			this.stripScrollRunning = false;
+			strip.scrollLeft = target;
+			this.syncOverflow();
+			return;
+		}
+		this.stripScrollStrip = strip;
+		this.stripScrollFrom = from;
+		this.stripScrollTarget = target;
+		this.stripScrollStarted = performance.now();
+		if (this.stripScrollRunning) {
+			return;
+		}
+		this.stripScrollRunning = true;
+		requestAnimationFrame(this.stripScrollTick);
+	}
+	onStripScrollFrame() {
+		if (!this.stripScrollRunning || this.isDisconnected) {
+			this.stripScrollRunning = false;
+			return;
+		}
+		const strip = this.stripScrollStrip;
+		if (!strip) {
+			this.stripScrollRunning = false;
+			return;
+		}
+		const elapsed = performance.now() - this.stripScrollStarted;
+		const progress = Math.min(1, elapsed / STRIP_SCROLL_MS);
+		const delta = this.stripScrollTarget - this.stripScrollFrom;
+		strip.scrollLeft = this.stripScrollFrom + (delta * easeOutCubic(progress));
+		if (progress < 1) {
+			requestAnimationFrame(this.stripScrollTick);
+			return;
+		}
+		this.stripScrollRunning = false;
+		this.syncOverflow();
+	}
+	markVisibleEdges(strip, viewSize, scrollPos) {
+		const blocks = this.stripBlocks(strip);
+		const edges = visibleEdgeIndexes(blocks, viewSize, scrollPos);
+		const startIndex = edges.clipStart ? -1 : edges.start;
+		const endIndex = edges.clipEnd ? -1 : edges.end;
+		const blockCount = blocks.length;
+		for (let index = 0; index < blockCount; index += 1) {
+			const node = blocks[index];
+			node.toggleAttribute('data-edge-start', index === startIndex);
+			node.toggleAttribute('data-edge-end', index === endIndex);
+		}
+	}
+	stripBlocks(strip) {
+		const nodes = strip.children;
+		const nodeCount = nodes.length;
+		const blocks = [];
+		for (let index = 0; index < nodeCount; index++) {
+			const node = nodes[index];
+			if (node.tagName === 'UI-TAB-BUTTON') {
+				blocks.push(node);
+			}
+		}
+		return blocks;
+	}
+	/*
+	 * Page one window along the strip. The last fully-visible block on the
+	 * requested edge becomes the new start (scrollLeft = that child's
+	 * offsetLeft). Remainder shorter than one window scrolls the rest of the way.
+	 */
+	pageStrip(direction) {
+		const strip = this.stripNode;
+		if (!strip) {
+			return;
+		}
+		const viewSize = strip.clientWidth;
+		const maxScroll = Math.max(0, strip.scrollWidth - viewSize);
+		/* Page from the lerp dest so a second click during motion advances another window. */
+		const scrollPos = this.stripScrollRunning ? this.stripScrollTarget : strip.scrollLeft;
+		const blocks = this.stripBlocks(strip);
+		if (direction > 0) {
+			this.scrollStripTo(strip, pageStripEndDest(blocks, viewSize, scrollPos, maxScroll));
+			return;
+		}
+		this.scrollStripTo(strip, pageStripStartDest(blocks, viewSize, scrollPos, maxScroll));
+	}
+	handleScrollStart() {
+		this.pageStrip(-1);
+	}
+	handleScrollEnd() {
+		this.pageStrip(1);
+	}
+	activeTabId() {
+		const index = this.state.expandedIndex;
+		if (index < 0) {
+			return '';
+		}
+		return String(index);
+	}
+	handleTabsChange(domEvent) {
+		const data = domEvent.detail?.data;
+		if (!data) {
+			return;
+		}
+		if (data.collapsed === true) {
+			this.collapse();
+			return;
+		}
+		const index = Number(data.id);
+		if (!Number.isFinite(index)) {
+			return;
+		}
+		this.selectSegment(index, true);
+	}
+	handleTabsHover(domEvent) {
 		if (this.state.openOnHover !== true) {
 			return;
 		}
 		if (this.state.expandedIndex < 0) {
 			return;
 		}
-		const index = segmentIndexFromEvent(domEvent);
+		const tabId = domEvent.detail?.data?.id;
+		if (!tabId) {
+			return;
+		}
+		const index = Number(tabId);
 		if (!Number.isFinite(index) || index < 0 || index === this.state.expandedIndex) {
 			return;
 		}
@@ -175,19 +489,16 @@ export class UITracker extends WebComponent {
 		domEvent.stopPropagation();
 		this.collapse();
 	}
-	/**
-	 * Select a segment by index. Emits cancelable `tracker:select`.
-	 * If the event is not canceled and expandOnSelect is true, toggles the
-	 * inline detail panel (no backdrop).
-	 * @param {number} index - Segment index in state.items.
-	 */
-	selectSegment(index) {
+	selectSegment(index, fromTabs) {
 		const items = this.state.items;
 		if (!isArray(items) || index < 0 || index >= items.length) {
 			return;
 		}
 		const item = items[index];
-		const fields = segmentFields(item);
+		const fields = segmentFields(item, index);
+		if (isTrue(fields.empty)) {
+			return;
+		}
 		const proceed = this.emit('tracker:select', {
 			index,
 			item,
@@ -208,7 +519,7 @@ export class UITracker extends WebComponent {
 		if (this.state.expandOnSelect !== true) {
 			return;
 		}
-		if (this.state.expandedIndex === index) {
+		if (!fromTabs && this.state.expandedIndex === index) {
 			this.collapse();
 			return;
 		}
@@ -223,7 +534,7 @@ export class UITracker extends WebComponent {
 			return;
 		}
 		this.openAt(index);
-		const fields = segmentFields(items[index]);
+		const fields = segmentFields(items[index], index);
 		this.emit('tracker:hover', {
 			index,
 			item: items[index],
@@ -263,21 +574,36 @@ export class UITracker extends WebComponent {
 	detailHidden() {
 		return this.state.expandedIndex < 0;
 	}
+	hideScrollStart() {
+		return !this.state.canScrollStart;
+	}
+	hideScrollEnd() {
+		return !this.state.canScrollEnd;
+	}
+	arrowStyleFlag() {
+		return this.state.arrowStyle === 'overlay' ? 'overlay' : 'rail';
+	}
+	timeGuideOn() {
+		return this.state.timeGuide === true;
+	}
+	labelPlaceAttr() {
+		return this.state.labelPlace === 'over' ? 'over' : 'in';
+	}
 	expandedFields() {
 		const index = this.state.expandedIndex;
 		const items = this.state.items;
-		if (!isArray(items) || index < 0 || index >= items.length) {
-			return {
-				tone: 'neutral',
-				label: '',
-				title: '',
-				detail: '',
-				icon: '',
-				meta: '',
-				actions: [],
-			};
+		if (index === this.expandedCacheIndex && items === this.expandedCacheItems) {
+			return this.expandedCache;
 		}
-		return segmentFields(items[index]);
+		this.expandedCacheIndex = index;
+		this.expandedCacheItems = items;
+		if (!isArray(items) || index < 0 || index >= items.length) {
+			this.expandedCache = EMPTY_FIELDS;
+			return EMPTY_FIELDS;
+		}
+		const fields = segmentFields(items[index], index);
+		this.expandedCache = fields;
+		return fields;
 	}
 	expandedTitle() {
 		const fields = this.expandedFields();
@@ -315,38 +641,12 @@ export class UITracker extends WebComponent {
 	hideActions() {
 		return this.state.actionItems.length === 0;
 	}
-	caretStyle() {
-		const items = this.state.items;
-		const index = this.state.expandedIndex;
-		if (!isArray(items) || items.length === 0 || index < 0) {
-			return '';
-		}
-		const percent = ((index + 0.5) / items.length) * 100;
-		return `--trk-caret:${percent}%;`;
-	}
 	handleDetailClose() {
 		this.collapse();
 	}
-	/* Light row — plain values. Click is delegated on the actions host. */
-	actionRow(item) {
-		return html`
-			<button
-				type="button"
-				class="trk-action"
-				data-action=${item?.id || item?.label || ''}
-				data-tone=${item?.tone || 'neutral'}>${item?.label || item?.id || 'Action'}</button>`;
-	}
 	handleActionClick(domEvent) {
-		const path = domEvent.composedPath();
-		const pathCount = path.length;
-		let actionId = '';
-		for (let pathIndex = 0; pathIndex < pathCount; pathIndex += 1) {
-			const node = path[pathIndex];
-			if (node?.classList?.contains('trk-action') && node.dataset?.action != null) {
-				actionId = node.dataset.action;
-				break;
-			}
-		}
+		const source = domEvent.detail?.source;
+		const actionId = source?.dataset?.action || source?.state?.label || '';
 		if (!actionId) {
 			return;
 		}
@@ -359,78 +659,101 @@ export class UITracker extends WebComponent {
 			item,
 		});
 	}
-	/*
-	 * each() (not list()) so rows re-materialize when expandedIndex changes —
-	 * data-active / aria-expanded must track selection, and list() only re-diffs
-	 * on the items path. Reading expandedIndex registers the render dep.
-	 *
-	 * Key includes open-state (closed over, not via this.keyFn — keyFn is called
-	 * on LiveList, so `this` is not the host). patchList sameKeyOrder skips
-	 * light-row re-patch when the item ref is unchanged; flipping two keys
-	 * remounts only previous + next open rows.
-	 */
-	segmentsLive() {
-		const expanded = this.state.expandedIndex;
-		if (expanded < -1) {
-			return this.each([], this.segmentRow);
-		}
-		return this.each(this.state.items, this.segmentRow, (_segment, index) => {
-			if (index === expanded) {
-				return `open:${index}`;
-			}
-			return index;
-		});
-	}
 	render() {
 		this.html`
-			<div class="trk-root" ?data-expanded=${this.hasExpanded}>
-				<div
-					class="trk"
-					role="group"
-					aria-label=${this.state.label}
-					@click=${this.handleTrackClick}
-					@pointerover=${this.handleTrackHover}>
-					${this.segmentsLive}
+			<div class="tracker-root" data-arrows=${this.arrowStyleFlag} ?data-expanded=${this.hasExpanded}>
+				<div class="tracker-strip-row">
+					<button
+						class="tracker-arrow"
+						type="button"
+						data-dir="start"
+						data-variant="icon"
+						data-tone="neutral"
+						data-size="sm"
+						aria-label="Previous blocks"
+						tooltip="Previous blocks"
+						?hidden=${this.hideScrollStart}
+						@click=${this.handleScrollStart}>
+						<ui-icon .state.name=${'chevron-left'} .state.size=${'sm'}></ui-icon>
+					</button>
+					<ui-tabs class="tracker-tabs"
+						?data-time-guide=${this.timeGuideOn}
+						data-label-place=${this.labelPlaceAttr}
+						.state.variant=${'blocks'}
+						.state.join=${this.state.join}
+						.state.toggleActive=${true}
+						.state.contentMode=${'remote'}
+						.state.items=${this.state.tabItems}
+						.state.activeIndex=${this.activeTabId}
+						aria-label=${this.state.label}
+						@tabs:change=${this.handleTabsChange}
+						@tabs:hover=${this.handleTabsHover}></ui-tabs>
+					<button
+						class="tracker-arrow"
+						type="button"
+						data-dir="end"
+						data-variant="icon"
+						data-tone="neutral"
+						data-size="sm"
+						aria-label="Next blocks"
+						tooltip="Next blocks"
+						?hidden=${this.hideScrollEnd}
+						@click=${this.handleScrollEnd}>
+						<ui-icon .state.name=${'chevron-right'} .state.size=${'sm'}></ui-icon>
+					</button>
 				</div>
 				<div
-					id="trk-detail"
-					class="trk-detail"
+					id="tracker-detail"
+					class="tracker-detail"
 					data-tone=${this.expandedTone}
 					data-slide=${this.state.slideDir}
-					style=${this.caretStyle}
 					?hidden=${this.detailHidden}
 					role="region"
 					aria-live="polite">
-					<div #viewport class="trk-detail-viewport">
-						<div #pane class="trk-detail-pane" data-slide=${this.state.slideDir}>
-							<div class="trk-detail-head">
-								<span class="trk-detail-swatch" data-tone=${this.expandedTone} aria-hidden="true"></span>
+					<div #viewport class="tracker-detail-viewport">
+						<div #pane class="tracker-detail-pane" data-slide=${this.state.slideDir}>
+							<div class="tracker-detail-head">
+								<span class="tracker-detail-swatch" data-tone=${this.expandedTone} aria-hidden="true"></span>
 								<ui-icon
-									class="trk-detail-icon"
+									class="tracker-detail-icon"
 									?hidden=${this.hideExpandedIcon}
 									.state.name=${this.expandedIcon}
 									.state.size=${'sm'}></ui-icon>
-								<span class="trk-detail-title">${this.expandedTitle}</span>
-								<button
-									type="button"
-									class="trk-detail-close"
-									aria-label="Close detail"
-									@click=${this.handleDetailClose}>×</button>
+								<span class="tracker-detail-title">${this.expandedTitle}</span>
+								<ui-button
+									class="tracker-detail-close"
+									.state.variant=${'ghost'}
+									.state.size=${'sm'}
+									.state.tone=${'neutral'}
+									.state.leadicon=${'x'}
+									.state.tooltip=${'Close detail'}
+									@button:click=${this.handleDetailClose}></ui-button>
 							</div>
-							<div class="trk-detail-label" ?hidden=${this.hideExpandedLabel}>${this.expandedLabel}</div>
-							<div class="trk-detail-meta" ?hidden=${this.hideExpandedMeta}>${this.expandedMeta}</div>
-							<div class="trk-detail-body">${this.expandedDetail}</div>
+							<div class="tracker-detail-label" ?hidden=${this.hideExpandedLabel}>${this.expandedLabel}</div>
+							<div class="tracker-detail-meta" ?hidden=${this.hideExpandedMeta}>${this.expandedMeta}</div>
+							<div class="tracker-detail-body">${this.expandedDetail}</div>
 							<div
-								class="trk-detail-actions"
+								class="tracker-detail-actions"
 								?hidden=${this.hideActions}
-								@click=${this.handleActionClick}>
-								${this.list('actionItems', this.actionRow)}
+								@button:click=${this.handleActionClick}>
+								${this.list('actionItems', this.actionButton)}
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		`;
+	}
+	actionButton(item) {
+		const actionLabel = item?.label || item?.id || 'Action';
+		const actionId = item?.id || actionLabel;
+		const actionTone = item?.tone || 'neutral';
+		return html`<ui-button
+			data-action=${actionId}
+			.state.variant=${'outline'}
+			.state.size=${'sm'}
+			.state.tone=${actionTone}
+			.state.label=${actionLabel}></ui-button>`;
 	}
 }
 customElements.define('ui-tracker', UITracker);

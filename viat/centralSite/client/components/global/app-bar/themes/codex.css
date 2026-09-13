@@ -1,35 +1,28 @@
 /*
- * Codex — the app bar is a BLACK SQUARE MASTHEAD: a constant full-bleed ink
- * band over the paper page (a newspaper nameplate), replacing the floating
- * glass chrome. Structural override: the float inset, radius, border and
- * shadow all go; the band is identical in both scroll states, so the
- * detach/dock dance becomes a no-op. Slotted brand + action content re-skins
- * to paper-on-ink through the custom props it already consumes — custom
- * properties inherit along the flattened tree, so values set here reach the
- * slotted light DOM.
+ * Codex — INK-ON-PAPER tokens for slotted brand + actions. Geometry (float /
+ * dock / glass) stays on the default app-bar sheet so Codex floats like Dark.
+ * Custom properties inherit along the flattened tree into slotted light DOM.
+ *
+ * These were paper-on-ink (near-white text, white-alpha chips) back when the
+ * Codex bar was a dark slab. The bar is white glass now, so every one of those
+ * values rendered white-on-white — the theme-select chip was invisible. Alphas
+ * are ink-based for the same reason: a white-alpha tint is a no-op on paper.
  */
-:host {
-	inset-block-start: 0;
-	inset-inline: 0;
-}
 .app-bar {
-	background: #14171b;
-	border: 0;
-	border-radius: 0;
-	box-shadow: none;
-	backdrop-filter: none;
-	--text-light: #f4f5f7;
-	--topbar-accent: #ffffff;
-	--icon-color: #e8eaee;
-	--icon-color-hover: #ffffff;
-	--dark-heading-sep: rgba(255, 255, 255, 0.34);
-	--ts-chip-color: #f4f5f7;
-	--ts-chip-bg: rgba(255, 255, 255, 0.06);
-	--ts-chip-border: rgba(255, 255, 255, 0.22);
-	--ts-chip-bg-hover: rgba(255, 255, 255, 0.12);
-	--ts-chip-border-hover: rgba(255, 255, 255, 0.4);
+	--text-light: #0a0a0a;
+	--topbar-accent: #0a0a0a;
+	--icon-color: #7d8187;
+	--icon-color-hover: #0a0a0a;
+	--dark-heading-sep: rgba(10, 10, 10, 0.52);
+	--theme-select-chip-color: #0a0a0a;
+	--theme-select-chip-bg: rgba(10, 10, 10, 0.04);
+	--theme-select-chip-border: rgba(10, 10, 10, 0.15);
+	--theme-select-chip-bg-hover: rgba(10, 10, 10, 0.07);
+	--theme-select-chip-border-hover: rgba(10, 10, 10, 0.28);
 }
-:host([data-scrolled]) .app-bar {
-	border: 0;
-	box-shadow: none;
+/* Base app-bar.css paints icon hover as oklch(1 0 0) — white for a dark slab.
+   On paper that is white-on-white. Same selectors, later sheet wins. */
+:host ui-icon-button:hover,
+.app-bar-end ui-icon-button:hover {
+	color: var(--icon-color-hover, #0a0a0a);
 }

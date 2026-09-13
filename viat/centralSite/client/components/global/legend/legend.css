@@ -3,7 +3,7 @@
 	min-inline-size: 0;
 }
 
-.lg {
+.legend {
 	align-items: center;
 	column-gap: 1.1em;
 	display: flex;
@@ -11,35 +11,35 @@
 	row-gap: 0.45em;
 }
 
-.lg[data-orientation='vertical'] {
+.legend[data-orientation='vertical'] {
 	align-items: stretch;
 	flex-direction: column;
 	flex-wrap: nowrap;
 	row-gap: 0.4em;
 }
 
-.lg[data-align='start'] {
+.legend[data-align='start'] {
 	justify-content: flex-start;
 }
 
-.lg[data-align='center'] {
+.legend[data-align='center'] {
 	justify-content: center;
 }
 
-.lg[data-align='end'] {
+.legend[data-align='end'] {
 	justify-content: flex-end;
 }
 
-.lg[data-orientation='vertical'][data-align='center'] {
+.legend[data-orientation='vertical'][data-align='center'] {
 	align-items: center;
 }
 
-.lg[data-orientation='vertical'][data-align='end'] {
+.legend[data-orientation='vertical'][data-align='end'] {
 	align-items: flex-end;
 }
 
 /* Flat legend rows (was ui-legend-item shadow) */
-.lg-item {
+.legend-item {
 	align-items: center;
 	background: none;
 	border: 0;
@@ -51,50 +51,50 @@
 	line-height: 1;
 	padding: 0;
 }
-button.lg-item {
+button.legend-item {
 	cursor: pointer;
 	transition: opacity 0.18s ease;
 }
-button.lg-item:hover {
+button.legend-item:hover {
 	color: var(--text-primary, currentColor);
 }
-.lg-item[aria-pressed='false'] {
+.legend-item[aria-pressed='false'] {
 	opacity: 0.4;
 }
-.lg-item[aria-pressed='false'] .lg-swatch {
+.legend-item[aria-pressed='false'] .legend-swatch {
 	background: color-mix(in oklab, currentColor 30%, transparent) !important;
 }
-.lg-item[aria-pressed='false'] .lg-label {
+.legend-item[aria-pressed='false'] .legend-label {
 	text-decoration: line-through;
 }
-.lg-swatch {
+.legend-swatch {
 	block-size: 0.75em;
 	border-radius: 0.2em;
 	flex: 0 0 auto;
 	inline-size: 0.75em;
 }
-.lg-label {
+.legend-label {
 	white-space: nowrap;
 }
-.lg-detail {
+.legend-detail {
 	color: var(--text-muted, var(--text-secondary, currentColor));
 	font-variant-numeric: tabular-nums;
 	margin-inline-start: 0.15em;
 	opacity: 0.9;
 }
-.lg-detail[hidden] {
+.legend-detail[hidden] {
 	display: none !important;
 }
-.lg-item[aria-pressed='false'] .lg-detail {
+.legend-item[aria-pressed='false'] .legend-detail {
 	opacity: 0.5;
 }
-button.lg-item:focus-visible {
+button.legend-item:focus-visible {
 	border-radius: 0.25em;
 	outline: 2px solid var(--color-info, currentColor);
 	outline-offset: 2px;
 }
 @media (prefers-reduced-motion: reduce) {
-	button.lg-item {
+	button.legend-item {
 		transition: none;
 	}
 }

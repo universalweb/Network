@@ -1,3 +1,23 @@
+/*
+ * Interpolable geometry. `@property` in a shadow-adopted sheet is ignored
+ * (same constraint as --hypr-angle); slider.js also registers these on the
+ * document so the thumb interpolates instead of snapping.
+ */
+@property --slider-val {
+	syntax: "<percentage>";
+	inherits: true;
+	initial-value: 0%;
+}
+@property --slider-lo {
+	syntax: "<percentage>";
+	inherits: true;
+	initial-value: 0%;
+}
+@property --slider-hi {
+	syntax: "<percentage>";
+	inherits: true;
+	initial-value: 100%;
+}
 :host {
 	/* Interactive control chrome — never paint a text selection on a click or drag. */
 	user-select: none;
@@ -15,15 +35,15 @@
 	--slider-tick-color: var(--text-muted);
 	--slider-length: 12rem; /* the long axis when vertical */
 }
-.sl {
+.slider {
 	position: relative;
 }
-.sl[data-disabled] {
+.slider[data-disabled] {
 	opacity: 0.55;
 	pointer-events: none;
 }
 /* ── Track: pointer surface + positioning context ─────────────────────── */
-.sl-track {
+.slider-track {
 	position: relative;
 	display: flex;
 	align-items: center;
@@ -31,8 +51,15 @@
 	block-size: var(--slider-thumb-size);
 	cursor: pointer;
 	touch-action: none; /* claim the gesture; don't let the page scroll-steal */
+	/* Position rides interpolable --slider-* (document-registered @property). The thumb is a
+	   <button>, so uwc.util's transition list wins and cannot slide inset-*;
+	   interpolating the custom props updates used inset/inline-size every frame. */
+	transition:
+		--slider-val 0.28s var(--ease-out, ease),
+		--slider-lo 0.28s var(--ease-out, ease),
+		--slider-hi 0.28s var(--ease-out, ease);
 }
-.sl-rail {
+.slider-rail {
 	position: absolute;
 	inset-inline: 0;
 	inset-block-start: 50%;
@@ -41,23 +68,23 @@
 	border-radius: var(--slider-radius);
 	background: var(--slider-track-color);
 }
-.sl-fill {
+.slider-fill {
 	position: absolute;
 	inset-block-start: 50%;
 	translate: 0 -50%;
 	block-size: var(--slider-track-size);
 	border-radius: var(--slider-radius);
 	background: var(--slider-fill);
-	/* Single: 0 → --val. Overridden below for range. */
+	/* Single: 0 → --slider-val. Overridden below for range. */
 	inset-inline-start: 0;
-	inline-size: var(--val, 0%);
+	inline-size: var(--slider-val, 0%);
 }
-.sl[data-range] .sl-fill {
-	inset-inline-start: var(--lo, 0%);
-	inline-size: calc(var(--hi, 0%) - var(--lo, 0%));
+.slider[data-range] .slider-fill {
+	inset-inline-start: var(--slider-lo, 0%);
+	inline-size: calc(var(--slider-hi, 0%) - var(--slider-lo, 0%));
 }
 /* ── Thumb ────────────────────────────────────────────────────────────── */
-.sl-thumb {
+.slider-thumb {
 	position: absolute;
 	inset-block-start: 50%;
 	inline-size: var(--slider-thumb-size);
@@ -70,27 +97,34 @@
 	box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
 	cursor: grab;
 	translate: -50% -50%;
-	transition: box-shadow var(--dur-fast, 0.15s) var(--ease-out, ease);
 }
-/* Single thumb tracks --val; in range mode the main thumb is the low one. */
-.sl-thumb {
-	inset-inline-start: var(--val, 0%);
+.slider-thumb:hover,
+.slider-thumb:focus-visible {
+	scale: 1.12;
+	box-shadow: 0 0 0 4px color-mix(in oklab, var(--slider-fill) 28%, transparent);
 }
-.sl[data-range] .sl-thumb {
-	inset-inline-start: var(--lo, 0%);
+/* Single thumb tracks --slider-val; in range mode the main thumb is the low one. */
+.slider-thumb {
+	inset-inline-start: var(--slider-val, 0%);
 }
-.sl[data-range] .sl-thumb-high {
-	inset-inline-start: var(--hi, 0%);
+.slider[data-range] .slider-thumb {
+	inset-inline-start: var(--slider-lo, 0%);
 }
-.sl-thumb:focus-visible {
+.slider[data-range] .slider-thumb-high {
+	inset-inline-start: var(--slider-hi, 0%);
+}
+.slider-thumb:focus-visible {
 	outline: none;
 	box-shadow: 0 0 0 4px color-mix(in oklab, var(--slider-fill) 30%, transparent);
 }
-.sl[data-dragging] .sl-thumb {
+.slider[data-dragging] .slider-thumb {
 	cursor: grabbing;
 }
+.slider[data-dragging] .slider-track {
+	transition: none;
+}
 /* ── Value bubble ─────────────────────────────────────────────────────── */
-.sl-bubble {
+.slider-bubble {
 	position: absolute;
 	inset-block-end: calc(100% + var(--space-2, 0.5rem));
 	inset-inline-start: 50%;
@@ -118,18 +152,18 @@
 		scale var(--dur-fast, 0.15s) var(--ease-out, ease);
 }
 /* 'auto' reveals on hover / keyboard focus / active drag; 'always' pins it. */
-.sl[data-label='auto'] .sl-thumb:hover .sl-bubble,
-.sl[data-label='auto'] .sl-thumb:focus-visible .sl-bubble,
-.sl[data-label='auto'][data-dragging] .sl-thumb .sl-bubble,
-.sl[data-label='always'] .sl-bubble {
+.slider[data-label='auto'] .slider-thumb:hover .slider-bubble,
+.slider[data-label='auto'] .slider-thumb:focus-visible .slider-bubble,
+.slider[data-label='auto'][data-dragging] .slider-thumb .slider-bubble,
+.slider[data-label='always'] .slider-bubble {
 	opacity: 1;
 	scale: 1;
 }
-.sl[data-label='off'] .sl-bubble {
+.slider[data-label='off'] .slider-bubble {
 	display: none;
 }
 /* ── Marks ────────────────────────────────────────────────────────────── */
-.sl-mark {
+.slider-mark {
 	position: absolute;
 	inset-block-start: 50%;
 	inset-inline-start: var(--pos, 0%);
@@ -140,7 +174,7 @@
 	translate: -50% -50%;
 	pointer-events: none;
 }
-.sl-mark-label {
+.slider-mark-label {
 	position: absolute;
 	inset-block-start: calc(100% + var(--space-1, 0.25rem));
 	inset-inline-start: 50%;
@@ -150,13 +184,13 @@
 	white-space: nowrap;
 }
 /* ── Vertical ─────────────────────────────────────────────────────────── */
-.sl[data-orientation='vertical'] .sl-track {
+.slider[data-orientation='vertical'] .slider-track {
 	flex-direction: column;
 	justify-content: center;
 	inline-size: var(--slider-thumb-size);
 	block-size: var(--slider-length);
 }
-.sl[data-orientation='vertical'] .sl-rail {
+.slider[data-orientation='vertical'] .slider-rail {
 	inset-inline: auto;
 	inset-inline-start: 50%;
 	inset-block: 0;
@@ -164,51 +198,51 @@
 	inline-size: var(--slider-track-size);
 	block-size: auto;
 }
-.sl[data-orientation='vertical'] .sl-fill {
+.slider[data-orientation='vertical'] .slider-fill {
 	inset-inline-start: 50%;
 	translate: -50% 0;
 	inline-size: var(--slider-track-size);
 	/* Value grows UP from the bottom. */
 	inset-block-end: 0;
 	inset-block-start: auto;
-	block-size: var(--val, 0%);
+	block-size: var(--slider-val, 0%);
 }
-.sl[data-orientation='vertical'][data-range] .sl-fill {
-	inset-block-end: var(--lo, 0%);
-	block-size: calc(var(--hi, 0%) - var(--lo, 0%));
+.slider[data-orientation='vertical'][data-range] .slider-fill {
+	inset-block-end: var(--slider-lo, 0%);
+	block-size: calc(var(--slider-hi, 0%) - var(--slider-lo, 0%));
 }
-.sl[data-orientation='vertical'] .sl-thumb {
+.slider[data-orientation='vertical'] .slider-thumb {
 	inset-block-start: auto;
 	inset-inline-start: 50%;
-	inset-block-end: var(--val, 0%);
+	inset-block-end: var(--slider-val, 0%);
 	translate: -50% 50%;
 }
-.sl[data-orientation='vertical'][data-range] .sl-thumb {
-	inset-block-end: var(--lo, 0%);
+.slider[data-orientation='vertical'][data-range] .slider-thumb {
+	inset-block-end: var(--slider-lo, 0%);
 }
-.sl[data-orientation='vertical'][data-range] .sl-thumb-high {
-	inset-block-end: var(--hi, 0%);
+.slider[data-orientation='vertical'][data-range] .slider-thumb-high {
+	inset-block-end: var(--slider-hi, 0%);
 }
-.sl[data-orientation='vertical'] .sl-bubble {
+.slider[data-orientation='vertical'] .slider-bubble {
 	inset-block-end: 50%;
 	inset-inline-start: calc(100% + var(--space-2, 0.5rem));
 	translate: 0 50%;
 	transform-origin: center left;
 }
-.sl[data-orientation='vertical'] .sl-mark {
+.slider[data-orientation='vertical'] .slider-mark {
 	inset-block-start: auto;
 	inset-inline-start: 50%;
 	inset-block-end: var(--pos, 0%);
 	translate: -50% 50%;
 }
-.sl[data-orientation='vertical'] .sl-mark-label {
+.slider[data-orientation='vertical'] .slider-mark-label {
 	inset-block-start: 50%;
 	inset-inline-start: calc(100% + var(--space-1, 0.25rem));
 	translate: 0 -50%;
 }
 @media (prefers-reduced-motion: reduce) {
-	.sl-thumb,
-	.sl-bubble {
+	.slider-track,
+	.slider-bubble {
 		transition: none;
 	}
 }

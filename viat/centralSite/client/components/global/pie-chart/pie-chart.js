@@ -144,7 +144,7 @@ export class UIPieChart extends WebComponent {
 				tip,
 				isHover: id === hoverId,
 				// Plain fields for partial row (no CE / no runtime style build).
-				style: `--pc-series:${item.color || 'currentColor'}`,
+				style: `--pie-chart-series:${item.color || 'currentColor'}`,
 			});
 			legend.push({
 				id,
@@ -164,8 +164,8 @@ export class UIPieChart extends WebComponent {
 	/* Feature-light partial row — framework tooltip= + correct SVG namespace. */
 	sliceLayerRow(layer) {
 		return this.partial`
-			<svg class="pc-slice-svg" viewBox="0 0 200 200" aria-hidden="true">
-				<path class=${layer.isHover ? 'pc-slice is-hover' : 'pc-slice'}
+			<svg class="pie-chart-slice-svg" viewBox="0 0 200 200" aria-hidden="true">
+				<path class=${layer.isHover ? 'pie-chart-slice is-hover' : 'pie-chart-slice'}
 					style=${layer.style}
 					d=${layer.d}
 					data-id=${layer.id}
@@ -268,27 +268,27 @@ export class UIPieChart extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="pc chart-shell" data-tone=${this.state.tone} data-variant=${this.state.variant}
+			<div class="pie-chart chart-shell" data-tone=${this.state.tone} data-variant=${this.state.variant}
 				data-legend-pos=${this.legendPosition}
 				data-legend-orient=${this.legendOrientation}
 				data-layout=${this.shellLayout}
 				?data-compact=${this.shellCompact}
 				role="img" aria-label=${this.state.label || 'Pie chart'}>
-				<div class="pc-empty" ?hidden=${this.hideEmpty}>${this.state.emptyLabel}</div>
+				<div class="pie-chart-empty" ?hidden=${this.hideEmpty}>${this.state.emptyLabel}</div>
 				<div class="chart-plot-area" ?hidden=${this.hideBody}>
 					<div class="chart-heading" ?hidden=${this.hideHeading}>${this.state.label}</div>
-					<div #plot class="chart-plot pc-chart" ?data-motion=${this.state.motion}
+					<div #plot class="chart-plot pie-chart-chart" ?data-motion=${this.state.motion}
 						@click=${this.handleSliceClick}
 						@pointermove=${this.handlePointerMove} @pointerleave=${this.handlePointerLeave}>
-						<div class="pc-svg-stack">
+						<div class="pie-chart-svg-stack">
 							${this.list('sliceLayers', this.sliceLayerRow)}
-							<svg class="pc-total-svg" viewBox="0 0 200 200" aria-hidden="true" ?hidden=${this.hideTotal}>
-								<text class="pc-total" x="100" y="104" text-anchor="middle">${this.state.totalLabel}</text>
+							<svg class="pie-chart-total-svg" viewBox="0 0 200 200" aria-hidden="true" ?hidden=${this.hideTotal}>
+								<text class="pie-chart-total" x="100" y="104" text-anchor="middle">${this.state.totalLabel}</text>
 							</svg>
 						</div>
 					</div>
 				</div>
-				<div class="chart-legend-slot pc-legend" ?hidden=${this.hideLegend}
+				<div class="chart-legend-slot pie-chart-legend" ?hidden=${this.hideLegend}
 					@pointermove=${this.handleLegendPointerMove}
 					@pointerleave=${this.handleLegendPointerLeave}>
 					<ui-legend

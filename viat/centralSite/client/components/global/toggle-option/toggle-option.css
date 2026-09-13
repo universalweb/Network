@@ -4,8 +4,10 @@
 	-webkit-user-select: none;
 	display: inline-flex;
 	flex: 0 0 auto;
+	position: relative;
+	z-index: 1;
 }
-.tg-btn {
+.toggle-option-button {
 	appearance: none;
 	background: transparent;
 	border: 0;
@@ -14,35 +16,35 @@
 	cursor: pointer;
 	font: inherit;
 	/* Sizing inherits from the group container (see toggle-group.css). */
-	font-size: var(--tg-opt-font, var(--text-sm));
+	font-size: var(--toggle-option-font, var(--text-sm));
 	font-weight: var(--weight-semibold);
 	inline-size: 100%;
 	letter-spacing: 0.02em;
 	line-height: 1;
-	padding: var(--tg-opt-pad, 0.4rem 0.8rem);
+	padding: var(--toggle-option-padding, 0.4rem 0.8rem);
 	transition:
 		background 0.16s ease,
 		color 0.16s ease;
 	white-space: nowrap;
 }
-.tg-btn:hover:not([aria-pressed='true']):not(:disabled) {
+.toggle-option-button:hover:not([aria-pressed='true']):not(:disabled) {
 	color: var(--text-primary, currentColor);
 	background: color-mix(in oklab, var(--text-primary, currentColor) 8%, transparent);
 }
-.tg-btn[aria-pressed='true'] {
-	background: color-mix(in oklab, var(--cyan, var(--color-info)) 22%, transparent);
+.toggle-option-button[aria-pressed='true'] {
+	background: var(--toggle-option-pressed-bg, transparent);
 	color: var(--text-primary, currentColor);
 }
-.tg-btn:focus-visible {
+.toggle-option-button:focus-visible {
 	outline: 2px solid var(--color-info, currentColor);
 	outline-offset: 1px;
 }
-.tg-btn:disabled {
+.toggle-option-button:disabled {
 	cursor: not-allowed;
 	opacity: 0.45;
 }
 @media (prefers-reduced-motion: reduce) {
-	.tg-btn {
+	.toggle-option-button {
 		transition: none;
 	}
 }

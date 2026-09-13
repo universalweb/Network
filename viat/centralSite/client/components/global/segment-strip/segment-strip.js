@@ -71,7 +71,7 @@ export class UISegmentStrip extends WebComponent {
 	render() {
 		this.html`
 			<div
-				class="strip"
+				class="segment-strip"
 				role="list"
 				data-size=${this.state.size || 'md'}
 				?data-equal=${this.state.equal !== false}

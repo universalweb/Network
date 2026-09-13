@@ -1,22 +1,70 @@
 :host {
-	display: block;
-	min-inline-size: 0;
-	max-inline-size: 100%;
-}
-.mtc {
 	display: flex;
 	flex-direction: column;
-	gap: 0.5rem;
 	min-inline-size: 0;
+	min-block-size: 0;
 	max-inline-size: 100%;
+	block-size: 100%;
+	max-block-size: 100%;
+	--metric-radius: var(--radius-lg, 0.75rem);
+}
+:host([data-chart]) {
+	/*
+	 * `container-type: size` only — the chart's containing block and clip live
+	 * on .metric, NOT here. The host box and the card box are not the same
+	 * rectangle: `uwc.util` (last layer, so it always wins) forces
+	 * `display: inline-block` on masonry children, which collapses this host's
+	 * flex column and leaves .metric block-size 100% without a definite
+	 * containing block. The card then content-sizes SHORTER than the host, and
+	 * a chart anchored here paints past the card's own border and radius —
+	 * the same defect the surface frame had. Whatever draws the border owns
+	 * the clip.
+	 *
+	 * 12rem is the canvas floor so the slotted chart has a real box to fill
+	 * instead of shrinking to the KPI chrome. Standalone line-chart uses the
+	 * same floor; a caller who wants a banner strip sets --metric-chart-height.
+	 */
+	container-type: size;
+	contain-intrinsic-block-size: 12rem;
+	min-block-size: 12rem;
+}
+.metric {
+	--spark-inline-size: 100%;
+	--spark-block-size: 100%;
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	gap: var(--space-3);
+	min-inline-size: 0;
+	min-block-size: 0;
+	max-inline-size: 100%;
+	block-size: 100%;
+	max-block-size: 100%;
+	/* Sparkline SVG viewBox 100×32 + overflow:visible can paint past the slot. */
 	overflow: hidden;
 	container-type: inline-size;
-	padding: 0.9rem 1.05rem;
+	padding-block: var(--space-4);
+	padding-inline: var(--space-5);
 	border: 1px solid color-mix(in oklab, var(--text-muted) 14%, transparent);
 	border-inline-start: 3px solid var(--viz);
-	border-radius: var(--radius-lg, 0.75rem);
+	border-radius: var(--metric-radius);
 	background: var(--bg-panel);
 	--viz: var(--cyan);
+}
+:host([data-chart]) .metric {
+	/* Containing block for the slotted chart. .metric already carries the border,
+	   the radius and `overflow: hidden`, so the fill clips to the card it is
+	   painted inside — in a grid tile or a masonry column alike. */
+	position: relative;
+	gap: clamp(var(--space-1), 4cqb, var(--space-3));
+	padding-block-start: clamp(var(--space-2), 8cqb, var(--space-4));
+	padding-block-end: 0;
+	padding-inline-end: 0;
+}
+:host([data-chart]) .metric-chrome {
+	position: relative;
+	z-index: 1;
+	padding-inline-end: var(--space-5);
 }
 [data-tone='accent']  { --viz: var(--cyan); }
 [data-tone='success'] { --viz: var(--color-success); }
@@ -24,15 +72,24 @@
 [data-tone='danger']  { --viz: var(--color-danger); }
 [data-tone='info']    { --viz: var(--color-info); }
 [data-tone='neutral'] { --viz: var(--text-muted); }
-.mtc-head {
+.metric-chrome {
+	display: flex;
+	flex-direction: column;
+	flex: 0 0 auto;
+	gap: inherit;
+	min-inline-size: 0;
+	min-block-size: 0;
+	max-inline-size: 100%;
+}
+.metric-head {
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
-	gap: 0.5rem;
+	gap: var(--space-3);
 	min-inline-size: 0;
 	max-inline-size: 100%;
 }
-.mtc-label {
+.metric-label {
 	min-inline-size: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -43,7 +100,7 @@
 	text-transform: uppercase;
 	color: var(--text-muted);
 }
-.mtc-hint {
+.metric-hint {
 	flex: 0 1 auto;
 	min-inline-size: 0;
 	overflow: hidden;
@@ -53,14 +110,14 @@
 	color: var(--text-muted);
 	opacity: 0.7;
 }
-.mtc-row {
+.metric-row {
 	display: flex;
 	align-items: baseline;
-	gap: 0.6rem;
+	gap: var(--space-3);
 	min-inline-size: 0;
 	max-inline-size: 100%;
 }
-.mtc-value {
+.metric-value {
 	min-inline-size: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -72,7 +129,7 @@
 	color: var(--text-main);
 	font-variant-numeric: tabular-nums;
 }
-.mtc-delta {
+.metric-delta {
 	flex: 0 0 auto;
 	font-size: var(--text-xs);
 	font-weight: 600;
@@ -80,9 +137,63 @@
 }
 [data-delta='success'] { color: var(--color-success); }
 [data-delta='danger']  { color: var(--color-danger); }
-.mtc-spark {
+.metric-chart {
+	display: none;
+	flex: 1 1 var(--space-12);
+	min-inline-size: 0;
+	min-block-size: 0;
+	max-inline-size: none;
+	max-block-size: 100%;
+	overflow: hidden;
+	pointer-events: none;
+}
+:host([data-chart]) .metric-chart {
+	display: grid;
+	align-items: stretch;
+}
+.metric-chart ::slotted(*) {
+	min-inline-size: 0;
+	min-block-size: 0;
 	inline-size: 100%;
-	max-inline-size: 100%;
-	block-size: 2.25rem;
-	margin-block-start: 0.15rem;
+	block-size: 100%;
+	max-inline-size: none;
+	max-block-size: 100%;
+	pointer-events: auto;
+}
+/* Pin the slotted chart to the card bottom. Extra block-size clips at the
+   start (chrome), not the container end — the area baseline stays flush. */
+:host([data-chart]) .metric-chart ::slotted(*) {
+	position: absolute;
+	inset-inline: 0;
+	inset-block-end: 0;
+	z-index: 0;
+	inline-size: 100% !important;
+	/*
+	 * Child charts ship standalone min-block-size (line 12rem, radar 14rem).
+	 * As a metric background they take the card, not their own floor.
+	 * !important beats the child's :host rule — same layer, inner :host wins
+	 * otherwise.
+	 */
+	min-block-size: 0 !important;
+	/*
+	 * The old --mtc- name is still honoured as a fallback. Classes are PRIVATE
+	 * to the shadow root and rename freely; a custom property is PUBLIC API the
+	 * page sets from outside, so dropping the old name would silently break
+	 * every caller — silently, because an unknown property is not an error, the
+	 * value just reverts to the default.
+	 */
+	block-size: var(--metric-chart-height, var(--mtc-chart-height, 100%)) !important;
+	max-block-size: none;
+	align-self: stretch;
+	border-radius: inherit;
+	overflow: hidden;
+	/*
+	 * The slot takes ANY component, not just a sparkline, so the card cannot
+	 * assume the visual leaves room for its own chrome — a line chart's ticks, a
+	 * radar's category labels and a heat strip's cells all paint across the full
+	 * box and collided with the label and value. Subduing whatever is slotted
+	 * keeps the KPI first in the reading order regardless of what it is, and
+	 * --metric-chart-opacity / --metric-chart-height let a caller tune or opt out.
+	 */
+	opacity: var(--metric-chart-opacity, var(--mtc-chart-opacity, 0.7));
 }

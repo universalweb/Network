@@ -5,55 +5,55 @@
 	color: var(--text-main);
 }
 
-.gg {
+.gauge {
 	display: grid;
 	justify-items: center;
 	position: relative;
-	--gg-fill: var(--cyan, oklch(0.72 0.14 210));
+	--gauge-fill: var(--cyan, oklch(0.72 0.14 210));
 }
 
-.gg[data-tone='accent'] {
-	--gg-fill: var(--cyan, oklch(0.72 0.14 210));
+.gauge[data-tone='accent'] {
+	--gauge-fill: var(--cyan, oklch(0.72 0.14 210));
 }
-.gg[data-tone='success'] {
-	--gg-fill: var(--color-success, oklch(0.72 0.17 145));
+.gauge[data-tone='success'] {
+	--gauge-fill: var(--color-success, oklch(0.72 0.17 145));
 }
-.gg[data-tone='warning'] {
-	--gg-fill: var(--color-warning, oklch(0.8 0.16 85));
+.gauge[data-tone='warning'] {
+	--gauge-fill: var(--color-warning, oklch(0.8 0.16 85));
 }
-.gg[data-tone='danger'] {
-	--gg-fill: var(--color-danger, oklch(0.62 0.2 25));
+.gauge[data-tone='danger'] {
+	--gauge-fill: var(--color-danger, oklch(0.62 0.2 25));
 }
-.gg[data-tone='info'] {
-	--gg-fill: var(--color-info, oklch(0.7 0.12 250));
+.gauge[data-tone='info'] {
+	--gauge-fill: var(--color-info, oklch(0.7 0.12 250));
 }
-.gg[data-tone='neutral'] {
-	--gg-fill: var(--text-muted, oklch(0.6 0.02 250));
+.gauge[data-tone='neutral'] {
+	--gauge-fill: var(--text-muted, oklch(0.6 0.02 250));
 }
 
-.gg-svg {
+.gauge-svg {
 	inline-size: 100%;
 	aspect-ratio: 200 / 120;
 	overflow: visible;
 }
 
-.gg-track {
+.gauge-track {
 	fill: color-mix(in oklab, var(--border-color, currentColor) 28%, transparent);
 	stroke: none;
 }
 
-.gg-value {
-	fill: var(--gg-fill);
+.gauge-value {
+	fill: var(--gauge-fill);
 	stroke: none;
 }
 
-.gg-readout {
+.gauge-readout {
 	display: grid;
 	justify-items: center;
 	gap: 0.15rem;
 }
 
-.gg[data-readout='overlay'] .gg-readout {
+.gauge[data-readout='overlay'] .gauge-readout {
 	inset-block-end: 0.85rem;
 	inset-inline: 0;
 	margin-block-start: 0;
@@ -61,30 +61,30 @@
 	position: absolute;
 }
 
-.gg[data-readout='below'] .gg-readout {
+.gauge[data-readout='below'] .gauge-readout {
 	margin-block-start: 0.15rem;
 	position: static;
 }
 
 /* Default / legacy look when data-readout is absent */
-.gg:not([data-readout]) .gg-readout {
+.gauge:not([data-readout]) .gauge-readout {
 	margin-block-start: -1.75rem;
 }
 
-.gg-value-text {
+.gauge-value-text {
 	font-size: var(--text-lg, 1.25rem);
 	font-weight: 700;
 	font-variant-numeric: tabular-nums;
 }
 
-.gg-label {
+.gauge-label {
 	font-size: var(--text-xs, 0.75rem);
 	color: var(--text-muted, var(--text-main));
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
 }
 
-.gg-label[hidden],
-.gg-value-text[hidden] {
+.gauge-label[hidden],
+.gauge-value-text[hidden] {
 	display: none !important;
 }

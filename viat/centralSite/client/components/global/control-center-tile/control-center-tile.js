@@ -43,7 +43,7 @@ export class ControlCenterTile extends WebComponent {
 		this.html`
 			<button
 				type="button"
-				class="cc-tile"
+				class="control-center-tile-tile"
 				data-tone=${this.state.tone || 'neutral'}
 				?data-checked=${this.state.checked}
 				?disabled=${this.state.disabled}
@@ -51,10 +51,10 @@ export class ControlCenterTile extends WebComponent {
 					return this.state.checked ? 'true' : 'false';
 				}}
 				@click=${this.handleClick}>
-				<span class="cc-tile-icon" aria-hidden="true">
+				<span class="control-center-tile-tile-icon" aria-hidden="true">
 					<ui-icon .state.name=${this.state.icon} .state.size=${'md'}></ui-icon>
 				</span>
-				<span class="cc-tile-label">${this.state.label}</span>
+				<span class="control-center-tile-tile-label">${this.state.label}</span>
 			</button>
 		`;
 	}

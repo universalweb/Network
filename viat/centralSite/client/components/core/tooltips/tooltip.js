@@ -5,17 +5,30 @@ import { classList } from '../template.js';
 const EDGE_MARGIN = 12;
 const GAP = 10;
 const SLIDE_MS = 240;
+const SIDES = new Set([
+	'top',
+	'bottom',
+	'left',
+	'right',
+]);
 /*
  * Default request is always top-center (tooltip centers on its target). The
  * engine flips, then searches the orthogonal axis when both vertical sides
  * overflow (`fallbackAxis`). CSS keys data-placement off the resolved SIDE only.
+ *
+ * An explicit `side` is a request to STAY on that side. Flip stays on — a
+ * tooltip pinned off-screen is worse than a flipped one, and the flip only
+ * fires when the request genuinely does not fit. The orthogonal search is what
+ * gets dropped: it is the step that quietly turns a `left` request into `top`,
+ * which is the drift an enforced side exists to remove.
  */
-export function placeTooltip(targetRect, floating, viewSize) {
+export function placeTooltip(targetRect, floating, viewSize, side) {
+	const forced = SIDES.has(side);
 	const placed = computeAnchor(targetRect, floating, {
-		placement: 'top-center',
+		placement: `${forced ? side : 'top'}-center`,
 		offset: GAP,
 		padding: EDGE_MARGIN,
-		fallbackAxis: true,
+		fallbackAxis: !forced,
 		viewportWidth: viewSize?.width,
 		viewportHeight: viewSize?.height,
 	});
@@ -59,6 +72,7 @@ export class UITooltip extends WebComponent {
 	}
 	show({
 		text,
+		side,
 		targetRect,
 	} = {}) {
 		const shell = this.refs.shell;
@@ -90,7 +104,7 @@ export class UITooltip extends WebComponent {
 		} = placeTooltip(targetRect, {
 			width: this.shellW,
 			height: this.shellH,
-		});
+		}, undefined, side);
 		if (this.state.placement !== placement) {
 			this.state.placement = placement;
 		}

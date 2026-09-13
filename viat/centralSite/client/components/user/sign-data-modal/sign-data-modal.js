@@ -20,6 +20,7 @@ export class SignDataModal extends WebComponent {
 			open: false,
 			showClose: true,
 			showMaximize: true,
+			heading: 'SIGN // ARBITRARY DATA',
 		},
 	};
 	onConnect() {
@@ -103,10 +104,6 @@ export class SignDataModal extends WebComponent {
 		this.html`
 			<ui-modal #modal .state=${this.state.modal} style="--ui-modal-max-width: min(640px, calc(100vw - 32px))">
 				<div class="modal-shell">
-					<header class="modal-head">
-						<span class="modal-head-id">SIGN</span>
-						<span class="modal-head-title">// ARBITRARY DATA</span>
-					</header>
 					<div class="sign-warning">
 						<div class="sign-warning-head">⚠ Security warning</div>
 						<p class="sign-warning-body">Signing arbitrary data with your primary ed25519 key proves you control this wallet. A malicious site can ask you to sign challenges that grant access to other systems or authorize off-chain actions. <strong>Only sign payloads you understand and trust.</strong></p>

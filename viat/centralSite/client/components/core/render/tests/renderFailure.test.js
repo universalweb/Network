@@ -90,6 +90,8 @@ test('sync render() throw: pendingConnect resolves, all lifecycle gates settle, 
 	const element = await mount(defineSyncThrowProbe());
 	assert.equal(element.renderErrors.length, 1, 'renderError received the throw');
 	assert.match(element.renderErrors[0].message, /sync render boom/);
+	assert.equal(element.lastFrameworkError?.channel, 'renderError', 'emitError stashes the last sink error on the instance');
+	assert.equal(element.lastFrameworkError.error, element.renderErrors[0]);
 	assert.equal(element.lifecycleErrors.length, 0, 'render failure must not leak into lifecycleError');
 	assert.equal(element.firstRenderDone, false, 'failed first pass leaves firstRenderDone false');
 	await element.lifecycle.whenRendered;

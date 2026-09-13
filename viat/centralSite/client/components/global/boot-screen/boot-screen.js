@@ -102,15 +102,15 @@ export class BootScreen extends WebComponent {
 	render() {
 		this.html`
 			<div #splash class="boot-screen" role="status" aria-live="polite">
-				<div class="bs-stage">
-					<div class="bs-glow"></div>
+				<div class="boot-screen-stage">
+					<div class="boot-screen-glow"></div>
 					${this.bind('logo')}
-					<div class="bs-titles">
-						<div class="bs-title">${this.state.heading}</div>
-						<div class="bs-subtitle">${this.state.subheading}</div>
+					<div class="boot-screen-titles">
+						<div class="boot-screen-title">${this.state.heading}</div>
+						<div class="boot-screen-subtitle">${this.state.subheading}</div>
 					</div>
 					<ui-loading-bar .state=${this.state.barState}></ui-loading-bar>
-					<div class="bs-subtitle">${this.state.extraSubheading}</div>
+					<div class="boot-screen-subtitle">${this.state.extraSubheading}</div>
 				</div>
 			</div>
 		`;

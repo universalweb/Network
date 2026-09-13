@@ -1,12 +1,12 @@
 :host {
 	display: inline-flex;
 }
-.aima {
+.ai-message-actions {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-1);
 }
-.aima-btn {
+.ai-message-actions-btn {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -20,27 +20,27 @@
 	cursor: pointer;
 	transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
-.aima-btn > * {
+.ai-message-actions-btn > * {
 	pointer-events: none;
 }
-.aima-btn:hover:not(:disabled) {
+.ai-message-actions-btn:hover:not(:disabled) {
 	color: var(--text-main);
 	background: var(--bg-panel, rgba(255, 255, 255, 0.04));
 }
-.aima-btn:focus-visible {
+.ai-message-actions-btn:focus-visible {
 	outline: 2px solid var(--cyan, currentColor);
 	outline-offset: 1px;
 }
-.aima-btn:disabled {
+.ai-message-actions-btn:disabled {
 	opacity: 0.4;
 	cursor: not-allowed;
 }
-.aima-btn[data-action='delete']:hover:not(:disabled) {
+.ai-message-actions-btn[data-action='delete']:hover:not(:disabled) {
 	color: var(--color-danger, oklch(0.68 0.2 25));
 	border-color: color-mix(in oklab, var(--color-danger, oklch(0.68 0.2 25)) 30%, transparent);
 }
 @media (prefers-reduced-motion: reduce) {
-	.aima-btn {
+	.ai-message-actions-btn {
 		transition: none;
 	}
 }

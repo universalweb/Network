@@ -1,11 +1,11 @@
 :host {
 	display: block;
 }
-.bc {
+.breadcrumbs {
 	font-family: var(--font-mono, ui-monospace, monospace);
 	font-size: var(--text-sm);
 }
-.bc-list {
+.breadcrumbs-list {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -14,30 +14,38 @@
 	padding: 0;
 	list-style: none;
 }
-.bc-item {
+.breadcrumbs-item {
 	display: inline-flex;
 	align-items: center;
 	min-inline-size: 0;
+	color: color-mix(
+		in oklch,
+		var(--text-main) calc((var(--breadcrumbs-i, 0) / var(--breadcrumbs-n, 1)) * 100%),
+		var(--text-muted)
+	);
 }
-.bc-link {
-	color: var(--text-muted);
+.breadcrumbs-item[data-last] {
+	color: var(--text-main);
+	font-weight: var(--weight-semibold, 600);
+}
+.breadcrumbs-link {
+	color: inherit;
 	text-decoration: none;
 	letter-spacing: 0.03em;
 	padding: var(--space-1) var(--space-2);
 	border-radius: var(--radius-sm, 0.35rem);
 	transition: color 0.15s ease, background 0.15s ease;
 }
-.bc-link:hover {
+.breadcrumbs-link:hover {
 	color: var(--cyan);
 	background: color-mix(in oklab, var(--cyan) 8%, transparent);
 }
-.bc-link:focus-visible {
+.breadcrumbs-link:focus-visible {
 	outline: 2px solid var(--focus-ring-color, var(--cyan));
 	outline-offset: 1px;
 }
-.bc-current {
-	color: var(--text-main);
-	font-weight: var(--weight-semibold, 600);
+.breadcrumbs-current {
+	color: inherit;
 	letter-spacing: 0.03em;
 	padding: var(--space-1) var(--space-2);
 	max-inline-size: 22ch;
@@ -45,25 +53,22 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
+.breadcrumbs-item[data-last] .breadcrumbs-current {
+	font-weight: inherit;
+}
 /* Leading chevron on every crumb; hidden on the first so position is pure CSS. */
-.bc-sep {
+.breadcrumbs-sep {
 	inline-size: 0.95em;
 	block-size: 0.95em;
 	margin-inline-end: var(--space-2);
 	color: var(--text-muted);
 	opacity: 0.55;
-	fill: none;
-	stroke: currentColor;
-	stroke-width: 2;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-	overflow: visible;
 }
-.bc-item:first-child .bc-sep {
+.breadcrumbs-item:first-child .breadcrumbs-sep {
 	display: none;
 }
 @media (prefers-reduced-motion: reduce) {
-	.bc-link {
+	.breadcrumbs-link {
 		transition: none;
 	}
 }

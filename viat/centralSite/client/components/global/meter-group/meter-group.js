@@ -1,5 +1,5 @@
 /*
-	DESCRIPTION: ui-meter-group — stacked proportional meter (PrimeVue MeterGroup).
+	DESCRIPTION: ui-meter-group — stacked proportional meter.
 	Items { label, value, color?, icon?, tone? } share a min/max range. Tooltips
 	on segments; hover + click set :hover / [data-active] for styling. Intro
 	scale-in on mount; live value writes animate flex-grow. showIcon swaps the
@@ -12,8 +12,16 @@
 	─────────────────────────────────────────────────────────────────────
 */
 import '../icon/icon.js';
-import { hasValue, isArray, isNumber } from '@universalweb/utilitylib';
-import { WebComponent } from 'webcomponent';
+import {
+	hasValue,
+	isArray,
+	isNumber,
+	isTrue,
+	WebComponent,
+} from 'webcomponent';
+function meterItemKey(item, index) {
+	return String(item?.id ?? item?.label ?? index);
+}
 const TONE_CYCLE = [
 	'accent',
 	'success',
@@ -141,92 +149,148 @@ export class UIMeterGroup extends WebComponent {
 	labelOrientationFlag() {
 		return this.state.labelOrientation === 'vertical' ? 'vertical' : 'horizontal';
 	}
-	handleSegmentClick(_domEvent, item) {
+	itemFromTarget(target) {
 		const items = this.state.items;
-		if (!isArray(items) || !item) {
-			return;
+		if (!isArray(items) || !target) {
+			return null;
+		}
+		const needle = target.dataset?.id;
+		if (!hasValue(needle) || needle === '') {
+			return null;
 		}
 		const count = items.length;
-		let index = -1;
-		for (let itemIndex = 0; itemIndex < count; itemIndex += 1) {
-			const entry = items[itemIndex];
-			const isActive = entry === item;
-			if (isActive) {
-				index = itemIndex;
-			}
-			if (entry && entry.active !== isActive) {
-				entry.active = isActive;
+		for (let index = 0; index < count; index += 1) {
+			const entry = items[index];
+			if (this.itemId(entry, index) === String(needle)) {
+				return entry;
 			}
 		}
-		this.state.activeIndex = item.id ?? index;
+		return null;
+	}
+	itemId(item, index) {
+		if (!item) {
+			return String(index);
+		}
+		if (hasValue(item.id) && item.id !== '') {
+			return String(item.id);
+		}
+		if (hasValue(item.label) && item.label !== '') {
+			return String(item.label);
+		}
+		return String(index);
+	}
+	// @engram em:network/code/meter-group-light-row-click-item-is-not-the-source-entry — match by id, stamp source
+	handleSegmentClick(domEvent, item) {
+		const items = this.state.items;
+		const resolved = item || this.itemFromTarget(domEvent.currentTarget);
+		if (!isArray(items) || !resolved) {
+			return;
+		}
+		const selectedId = this.itemId(resolved, -1);
+		const count = items.length;
+		let index = -1;
+		let source = resolved;
+		/*
+		 * `resolved` can be a stale row from an earlier render, so the live entry
+		 * is located by id rather than trusted from the click.
+		 */
+		for (let itemIndex = 0; itemIndex < count; itemIndex += 1) {
+			const entry = items[itemIndex];
+			if (entry && this.itemId(entry, itemIndex) === selectedId) {
+				index = itemIndex;
+				source = entry;
+				break;
+			}
+		}
+		/* A second click on the live segment clears it, rather than re-selecting. */
+		const deselect = isTrue(source.active);
+		const changedIndexes = [];
+		for (let itemIndex = 0; itemIndex < count; itemIndex += 1) {
+			const entry = items[itemIndex];
+			if (!entry) {
+				continue;
+			}
+			const isActive = !deselect && entry === source;
+			if (entry.active !== isActive) {
+				entry.active = isActive;
+				changedIndexes.push(itemIndex);
+			}
+		}
+		/*
+		 * The rows belong to the caller's array, so a deep write never reaches
+		 * the state proxy — it traps `state.items = …`, not `items[i].active`.
+		 * Notify each flipped index as `items.N.active` so ListSpot's multiPath
+		 * drain patches `data-active` on the EXISTING node (transform / fill
+		 * can ease). A top-level `items` notify skips same-ref light rows; a
+		 * key that folds `active` remounts the row and the CSS never sees a
+		 * from-state. Reassigning `state.items` would fight the parent's
+		 * carrier binding and lag a click behind.
+		 */
+		const changedCount = changedIndexes.length;
+		for (let notifyIndex = 0; notifyIndex < changedCount; notifyIndex += 1) {
+			this.stateBus?.notify(`items.${changedIndexes[notifyIndex]}.active`);
+		}
+		this.state.activeIndex = deselect ? null : source.id ?? index;
 		this.emit('meter-group:select', {
-			id: item.id,
-			item,
-			index,
+			id: deselect ? null : source.id,
+			item: deselect ? null : source,
+			index: deselect ? -1 : index,
 		});
 	}
 	/* Light row — share is a plain value from (item, group). */
 	segmentRow(item) {
-		const share = this.itemShare(item);
-		const tone = this.itemTone(item);
-		const color = item?.color || '';
-		const fillStyle = color ? `background:${color};--mg-share:${share}` : `--mg-share:${share}`;
-		const tip = this.itemTip(item);
-		const active = item?.active === true;
 		return this.partial`
-			<button type="button" class="mg-seg"
-				data-tone=${tone}
-				?data-active=${active}
-				style=${fillStyle}
-				tooltip=${tip}
-				aria-label=${tip}
+			<button type="button" class="meter-group-seg"
+				data-tone=${this.itemTone(item)}
+				data-id=${item?.id ?? item?.label ?? ''}
+				?data-active=${isTrue(item?.active)}
+				style=${item?.color ? `background:${item.color};--meter-group-share:${this.itemShare(item)}` : `--meter-group-share:${this.itemShare(item)}`}
+				tooltip=${this.itemTip(item)}
+				aria-label=${this.itemTip(item)}
 				@click=${this.handleSegmentClick}></button>`;
 	}
 	legendRow(item) {
-		const tone = this.itemTone(item);
-		const color = item?.color || '';
-		const swatchStyle = color ? `background:${color}` : '';
-		const label = item?.label || '';
-		const detail = `${this.itemPercent(item)}%`;
-		const icon = item?.icon || '';
-		const mark = this.state.showIcon === true && icon !== '' ? 'icon' : 'dot';
-		const tip = this.itemTip(item);
-		const active = item?.active === true;
 		return this.partial`
-			<button type="button" class="mg-leg"
-				data-mark=${mark}
-				data-tone=${tone}
-				?data-active=${active}
-				tooltip=${tip}
+			<button type="button" class="meter-group-leg"
+				data-mark=${this.state.showIcon === true && item?.icon ? 'icon' : 'dot'}
+				data-tone=${this.itemTone(item)}
+				data-id=${item?.id ?? item?.label ?? ''}
+				?data-active=${isTrue(item?.active)}
+				tooltip=${this.itemTip(item)}
 				@click=${this.handleSegmentClick}>
-				<span class="mg-swatch" style=${swatchStyle}></span>
-				<ui-icon class="mg-icon" .state.name=${icon} .state.size=${'xs'}></ui-icon>
-				<span class="mg-leg-label">${label}</span>
-				<span class="mg-leg-detail">${detail}</span>
+				<span class="meter-group-swatch" style=${item?.color ? `background:${item.color}` : ''}></span>
+				<ui-icon class="meter-group-icon" .state.name=${item?.icon || ''} .state.size=${'xs'}></ui-icon>
+				<span class="meter-group-leg-label">${item?.label || ''}</span>
+				<span class="meter-group-leg-detail">${this.itemPercent(item)}%</span>
 			</button>`;
 	}
+	rangeMin() {
+		return this.range().min;
+	}
+	rangeMax() {
+		return this.range().max;
+	}
+	meterNow() {
+		const bounds = this.range();
+		return Math.round(clamp(this.totalValue(), bounds.min, bounds.max));
+	}
 	render() {
-		const {
-			min,
-			max,
-		} = this.range();
-		const now = Math.round(clamp(this.totalValue(), min, max));
 		this.html`
-			<div class="mg"
+			<div class="meter-group"
 				data-orientation=${this.orientationFlag}
 				data-labels=${this.labelOrientationFlag}
 				?data-animated=${this.state.animated !== false}
 				?data-show-icon=${this.state.showIcon}
 				role="meter"
 				aria-label=${this.state.label || 'Meter'}
-				aria-valuemin=${min}
-				aria-valuemax=${max}
-				aria-valuenow=${now}>
-				<div class="mg-track" tooltip=${this.state.tooltip}>
-					${this.list('items', this.segmentRow)}
+				aria-valuemin=${this.rangeMin}
+				aria-valuemax=${this.rangeMax}
+				aria-valuenow=${this.meterNow}>
+				<div class="meter-group-track" tooltip=${this.state.tooltip}>
+					${this.list('items', this.segmentRow, meterItemKey)}
 				</div>
-				<div class="mg-legend" ?hidden=${!this.state.showLegend}>
-					${this.list('items', this.legendRow)}
+				<div class="meter-group-legend" ?hidden=${!this.state.showLegend}>
+					${this.list('items', this.legendRow, meterItemKey)}
 				</div>
 			</div>
 		`;

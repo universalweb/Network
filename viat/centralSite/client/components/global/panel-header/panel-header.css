@@ -3,7 +3,7 @@
 	flex-shrink: 0;
 }
 
-.ph {
+.panel-header {
 	/* Header chrome — never paint a text selection on a click or drag. */
 	user-select: none;
 	-webkit-user-select: none;
@@ -16,7 +16,7 @@
 	flex-shrink: 0;
 }
 
-.ph-start {
+.panel-header-start {
 	grid-column: 1;
 	justify-self: start;
 	display: inline-flex;
@@ -25,24 +25,24 @@
 	min-inline-size: 0;
 }
 
-.ph-heading {
+.panel-header-heading {
 	grid-column: 2;
 	justify-self: center;
 	text-align: center;
 	min-inline-size: 0;
 	max-inline-size: 100%;
 	font-family: var(--font-display, inherit);
-	font-size: var(--text-sm);
+	font-size: var(--panel-header-font-size, var(--text-sm));
 	font-weight: var(--weight-semibold, 600);
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	color: var(--text-main);
+	letter-spacing: var(--panel-header-letter-spacing, 0.12em);
+	text-transform: var(--panel-header-text-transform, uppercase);
+	color: var(--panel-header-color, var(--text-main));
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
-.ph-end {
+.panel-header-end {
 	grid-column: 3;
 	justify-self: end;
 	display: inline-flex;
@@ -51,10 +51,10 @@
 	min-inline-size: 0;
 }
 
-.ph-close {
+.panel-header-close {
 	flex-shrink: 0;
 }
 
-.ph-close[hidden] {
+.panel-header-close[hidden] {
 	display: none;
 }

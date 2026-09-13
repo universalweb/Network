@@ -68,6 +68,11 @@
    uwc.base `input:focus-visible` treatment — not just the outline but also its
    box-shadow ring, which would otherwise paint a second ring INSET inside the
    shell. This rule is uwc.components, so it beats uwc.base by layer order. */
+.field-control[data-type='search']::-webkit-search-cancel-button,
+.field-control[data-type='search']::-webkit-search-decoration {
+	appearance: none;
+	display: none;
+}
 .field-control {
 	appearance: none;
 	background: transparent;
@@ -100,8 +105,10 @@
 }
 /*
  * Picker types open a UA surface. appearance:none on .field-control hides the
- * calendar/color chrome — restore auto, tint with accent-color, inherit
- * color-scheme. ::picker / ::calendar-picker-icon when the engine has them.
+ * calendar/color chrome — restore auto so the indicator + popup survive.
+ * Popover paint, datetime-edit, accent, color-scheme live in uwc.base
+ * (elements-forms.css) so bare <input type=date> and this inner control share
+ * one skin. Do not restyle ::picker(select) here — that is <select> only.
  */
 .field-control[data-type='date'],
 .field-control[data-type='datetime-local'],
@@ -112,30 +119,6 @@
 	appearance: auto;
 	color-scheme: inherit;
 	accent-color: var(--focus-ring-color, var(--teal, var(--cyan)));
-}
-.field-control::-webkit-calendar-picker-indicator {
-	cursor: pointer;
-	opacity: 0.75;
-	border-radius: var(--radius-xs);
-}
-.field-control::-webkit-calendar-picker-indicator:hover {
-	opacity: 1;
-}
-@supports selector(::calendar-picker-icon) {
-	.field-control::calendar-picker-icon {
-		color: var(--text-muted, currentColor);
-		cursor: pointer;
-	}
-}
-@supports selector(::picker(select)) {
-	.field-control::picker(select) {
-		appearance: base-select;
-		color-scheme: inherit;
-		background: var(--popup-bg, var(--bg-panel));
-		color: var(--popup-text, var(--text-main));
-		border: 1px solid var(--popup-border, var(--surface-border));
-		border-radius: var(--radius-md, 8px);
-	}
 }
 .field-control:disabled {
 	cursor: not-allowed;

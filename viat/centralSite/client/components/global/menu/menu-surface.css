@@ -9,15 +9,12 @@
 	max-block-size: min(60dvh, 22rem);
 	overflow: hidden auto;
 	padding: 0.3rem;
-	/* Glass fill — not solid --popup-bg (that stays opaque for modals/cards). */
-	background: var(--popup-glass-bg, var(--popup-bg, var(--bg-panel, #14161e)));
+	/* Fill + blur is the `.glass` util (uwc.util). A copy here is dead weight:
+	   util is the last cascade layer, so it always wins. */
 	border: 1px solid var(--popup-border, var(--surface-border, rgba(255, 255, 255, 0.14)));
 	border-radius: var(--radius-md, 0.5rem);
 	box-shadow: var(--popup-shadow, 0 16px 40px rgb(0 0 0 / 0.5));
 	color: var(--popup-text, var(--text-primary, #f5f6fa));
-	/* Frost — slight blur through semi-transparent glass fill. */
-	-webkit-backdrop-filter: var(--popup-glass-blur, blur(0.625rem) saturate(1.25));
-	backdrop-filter: var(--popup-glass-blur, blur(0.625rem) saturate(1.25));
 	opacity: 0;
 	transform: translateY(-4px);
 	transition: opacity 0.12s ease, transform 0.12s ease;

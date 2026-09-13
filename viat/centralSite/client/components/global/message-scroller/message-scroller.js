@@ -6,8 +6,12 @@
 	  <ui-message-scroller .state.items=${this.state.thread}></ui-message-scroller>
 	─────────────────────────────────────────────────────────────────────
 */
-import { isTrue } from '@universalweb/utilitylib';
-import { WebComponent } from 'webcomponent';
+import {
+	isTrue,
+	rafCoalesce,
+	rafCoalesceCancel,
+	WebComponent,
+} from 'webcomponent';
 import { UIMessage } from '../message/message.js';
 const PIN_THRESHOLD = 48;
 export class UIMessageScroller extends WebComponent {
@@ -27,12 +31,20 @@ export class UIMessageScroller extends WebComponent {
 	onMount() {
 		this.scrollToEnd();
 	}
+	onDisconnect() {
+		rafCoalesceCancel(this);
+	}
 	handleItemsChange() {
+		rafCoalesceCancel(this);
+		this.measurePin();
 		if (this.pinned && isTrue(this.state.stick)) {
 			this.scrollToEnd();
 		}
 	}
 	handleScroll() {
+		rafCoalesce(this, this.measurePin);
+	}
+	measurePin() {
 		const scroller = this.refs.scroller;
 		if (!scroller) {
 			return;

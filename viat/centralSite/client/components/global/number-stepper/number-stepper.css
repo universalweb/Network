@@ -1,5 +1,6 @@
 :host {
 	display: inline-block;
+	--stepper-hit: var(--hit-min, max(2.75rem, 44px));
 }
 .number-stepper {
 	display: inline-flex;
@@ -12,11 +13,13 @@
 .number-stepper[data-disabled] {
 	opacity: 0.55;
 }
-.ns-btn {
+.number-stepper-btn {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	inline-size: 2rem;
+	min-inline-size: var(--stepper-hit);
+	min-block-size: var(--stepper-hit);
+	inline-size: auto;
 	border: 0;
 	background: transparent;
 	color: var(--text-primary, currentColor);
@@ -25,23 +28,23 @@
 	cursor: pointer;
 	transition: background 0.14s ease;
 }
-.ns-btn:hover:not(:disabled) {
+.number-stepper-btn:hover:not(:disabled) {
 	background: var(--surface-tint, rgba(255, 255, 255, 0.08));
 }
-.ns-btn:active:not(:disabled) {
+.number-stepper-btn:active:not(:disabled) {
 	background: var(--surface-tint-strong, rgba(255, 255, 255, 0.14));
 }
-.ns-btn:disabled {
+.number-stepper-btn:disabled {
 	opacity: 0.4;
 	cursor: not-allowed;
 }
-.ns-dec {
+.number-stepper-dec {
 	border-inline-end: 1px solid var(--surface-border, rgba(255, 255, 255, 0.14));
 }
-.ns-inc {
+.number-stepper-inc {
 	border-inline-start: 1px solid var(--surface-border, rgba(255, 255, 255, 0.14));
 }
-.ns-input {
+.number-stepper-input {
 	inline-size: 3.5rem;
 	min-inline-size: 0;
 	border: 0;
@@ -51,25 +54,25 @@
 	text-align: center;
 	padding: 0.35rem 0.25rem;
 }
-.ns-input:focus {
+.number-stepper-input:focus {
 	outline: none;
 	background: var(--surface-tint, rgba(255, 255, 255, 0.05));
 }
-.ns-input:disabled {
+.number-stepper-input:disabled {
 	cursor: not-allowed;
 }
-.ns-suffix {
+.number-stepper-suffix {
 	display: inline-flex;
 	align-items: center;
 	padding-inline-end: 0.5rem;
 	color: var(--text-muted, rgba(255, 255, 255, 0.55));
 	font-size: var(--text-sm, 0.8rem);
 }
-.ns-suffix[hidden] {
+.number-stepper-suffix[hidden] {
 	display: none;
 }
 @media (prefers-reduced-motion: reduce) {
-	.ns-btn {
+	.number-stepper-btn {
 		transition: none;
 	}
 }

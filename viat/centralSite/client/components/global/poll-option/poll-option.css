@@ -1,7 +1,7 @@
 :host {
 	display: block;
 }
-.opt {
+.poll-option {
 	position: relative;
 	display: block;
 	inline-size: 100%;
@@ -16,16 +16,16 @@
 	overflow: hidden;
 	transition: border-color var(--dur-fast) var(--ease-out, ease);
 }
-.opt:hover,
-.opt[data-selected] {
+.poll-option:hover,
+.poll-option[data-selected] {
 	border-color: var(--teal);
 }
-.opt[data-revealed] {
+.poll-option[data-revealed] {
 	cursor: default;
 }
 /* The tally bar lives behind the content; its width tracks `percentage`, so the
    lock-time write springs it open from zero. */
-.opt-bar {
+.poll-option-bar {
 	position: absolute;
 	inset-block: 0;
 	inset-inline-start: 0;
@@ -34,17 +34,17 @@
 	pointer-events: none;
 	transition: inline-size var(--dur-slow) var(--ease-spring);
 }
-.opt[data-selected] .opt-bar {
+.poll-option[data-selected] .poll-option-bar {
 	background: color-mix(in oklab, var(--teal) 30%, transparent);
 }
-.opt-face {
+.poll-option-face {
 	position: relative;
 	display: flex;
 	align-items: center;
 	gap: var(--space-2);
 	padding: var(--space-2) var(--space-3);
 }
-.opt-mark {
+.poll-option-mark {
 	flex: none;
 	inline-size: 1rem;
 	block-size: 1rem;
@@ -55,26 +55,26 @@
 		border-color var(--dur-fast) var(--ease-out, ease),
 		background var(--dur-fast) var(--ease-out, ease);
 }
-.opt[data-selected] .opt-mark {
+.poll-option[data-selected] .poll-option-mark {
 	border-color: var(--teal);
 	background: radial-gradient(circle at center, var(--teal) 0 45%, transparent 47%);
 }
-.opt-text {
+.poll-option-text {
 	flex: 1 1 auto;
 	min-inline-size: 0;
 	display: flex;
 	flex-direction: column;
 	gap: 0.1rem;
 }
-.opt-label {
+.poll-option-label {
 	font-size: var(--text-sm);
 	font-weight: var(--weight-medium);
 }
-.opt-desc {
+.poll-option-desc {
 	font-size: var(--text-xs);
 	color: var(--text-muted);
 }
-.opt-pct {
+.poll-option-pct {
 	flex: none;
 	font-size: var(--text-sm);
 	font-weight: var(--weight-semibold);
@@ -82,7 +82,7 @@
 	font-variant-numeric: tabular-nums;
 }
 @media (prefers-reduced-motion: reduce) {
-	.opt-bar {
+	.poll-option-bar {
 		transition: none;
 	}
 }

@@ -19,14 +19,29 @@
 	text-decoration: none;
 	text-align: start;
 	cursor: pointer;
-	transition: background 0.12s ease;
+	transition:
+		background 0.18s ease,
+		color 0.18s ease,
+		opacity 0.18s ease;
 }
 .nav-link:hover {
 	background: var(--surface-tint, rgba(255, 255, 255, 0.08));
+	color: var(--text-main, var(--text-primary, currentColor));
+}
+.nav-link[aria-current='page'],
+.nav-link[data-active] {
+	font-weight: 650;
+	background: color-mix(in oklch, var(--cyan, currentColor) 12%, transparent);
+	color: var(--text-main, var(--text-primary, currentColor));
 }
 .nav-link:focus-visible {
 	outline: none;
 	background: var(--surface-tint, rgba(255, 255, 255, 0.08));
+	color: var(--text-main, var(--text-primary, currentColor));
+}
+.nav-link:active {
+	background: color-mix(in oklch, var(--cyan, currentColor) 18%, transparent);
+	opacity: 0.92;
 }
 .nav-link[aria-disabled='true'] {
 	opacity: 0.45;
@@ -36,6 +51,7 @@
 	flex: 0 0 auto;
 	margin-block-start: 0.12em;
 	opacity: 0.85;
+	--icon-size: var(--nav-icon-size, 1rem);
 }
 .nav-link-text {
 	display: flex;
@@ -58,6 +74,45 @@
 }
 .nav-link-desc[hidden] {
 	display: none;
+}
+.nav-link-count {
+	flex: 0 0 auto;
+	margin-inline-start: auto;
+	align-self: center;
+}
+.nav-link-count[hidden] {
+	display: none;
+}
+:host-context(ui-nav[data-density='slim']) .nav-link-text {
+	display: none;
+}
+:host-context(ui-nav[data-density='slim']) .nav-link {
+	justify-content: center;
+	position: relative;
+	min-block-size: var(--hit-min, max(2.75rem, 44px));
+	padding: 0.55rem 0.35rem;
+	overflow: visible;
+}
+/*
+ * `--nav-icon-size` is owned by ui-nav (nav.css: 1rem, 1.5rem at slim) and
+ * inherits in. The fallback carries the slim value so the rule still sizes
+ * correctly if this link is ever used outside a ui-nav — and keeps the
+ * reference guarded, since the theme audit only walks ONE import hop and
+ * ui-nav reaches us through nav-group (two).
+ */
+:host-context(ui-nav[data-density='slim']) .nav-link-icon {
+	margin-block-start: 0;
+	inline-size: var(--nav-icon-size, 1.5rem);
+	block-size: var(--nav-icon-size, 1.5rem);
+}
+:host-context(ui-nav[data-density='slim']) .nav-link-count {
+	position: absolute;
+	inset-block-start: 0.1rem;
+	inset-inline-end: 0.1rem;
+	margin-inline-start: 0;
+	z-index: 1;
+	transform: scale(0.72);
+	transform-origin: top right;
 }
 @media (prefers-reduced-motion: reduce) {
 	.nav-link {

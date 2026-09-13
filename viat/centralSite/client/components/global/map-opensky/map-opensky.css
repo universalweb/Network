@@ -7,7 +7,7 @@
 	min-block-size: 14rem;
 }
 
-.osky-badge {
+.map-opensky-badge {
 	position: absolute;
 	z-index: 500;
 	inset-block-start: 0.5rem;
@@ -23,10 +23,10 @@
 	box-shadow: 0 1px 4px color-mix(in oklab, black 35%, transparent);
 }
 
-.osky-badge[data-tone='danger'] {
+.map-opensky-badge[data-tone='danger'] {
 	background: color-mix(in oklab, var(--color-danger, oklch(0.55 0.2 25)) 90%, black);
 }
 
-.osky-badge[data-loading] {
+.map-opensky-badge[data-loading] {
 	opacity: 0.85;
 }

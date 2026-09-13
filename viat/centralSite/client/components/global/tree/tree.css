@@ -1,17 +1,17 @@
 :host {
 	display: block;
 }
-.tr {
+.tree {
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
 	min-inline-size: 0;
 }
-.tr[data-disabled] {
+.tree[data-disabled] {
 	opacity: 0.55;
 	pointer-events: none;
 }
-.tr-search {
+.tree-search {
 	inline-size: 100%;
 	min-block-size: 2.125rem;
 	padding-inline: 0.7rem;
@@ -21,11 +21,11 @@
 	color: inherit;
 	font: inherit;
 }
-.tr-search:focus-visible {
+.tree-search:focus-visible {
 	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
 	outline-offset: 2px;
 }
-.tr-tree {
+.tree-root {
 	display: flex;
 	flex-direction: column;
 	min-inline-size: 0;
@@ -34,12 +34,12 @@
 	border-radius: var(--radius-md, 0.5rem);
 	background: var(--bg-panel, transparent);
 }
-.tr-empty {
+.tree-empty {
 	padding: 0.65rem 0.75rem;
 	color: var(--text-muted);
 	font-size: 0.8125rem;
 }
-.tn {
+.tree-node {
 	display: flex;
 	align-items: center;
 	gap: 0.35rem;
@@ -50,21 +50,21 @@
 	cursor: pointer;
 	color: var(--text-main, inherit);
 }
-.tn:hover {
+.tree-node:hover {
 	background: color-mix(in oklch, currentColor 7%, transparent);
 }
-.tn[data-selected] {
+.tree-node[data-selected] {
 	background: color-mix(in oklch, var(--teal, var(--cyan, oklch(0.75 0.12 195))) 18%, transparent);
 }
-.tn[data-focused] {
+.tree-node[data-focused] {
 	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
 	outline-offset: -2px;
 }
-.tn[data-disabled] {
+.tree-node[data-disabled] {
 	opacity: 0.45;
 	pointer-events: none;
 }
-.tn-caret {
+.tree-node-caret {
 	display: inline-flex;
 	flex: none;
 	align-items: center;
@@ -79,19 +79,19 @@
 	cursor: pointer;
 	border-radius: var(--radius-sm, 0.25rem);
 }
-.tn-caret:disabled {
+.tree-node-caret:disabled {
 	visibility: hidden;
 	cursor: default;
 }
-.tn-caret:focus-visible {
+.tree-node-caret:focus-visible {
 	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
 	outline-offset: 1px;
 }
-.tn-icon {
+.tree-node-icon {
 	flex: none;
 	color: var(--text-muted);
 }
-.tn-label {
+.tree-node-label {
 	min-inline-size: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -100,7 +100,7 @@
 	line-height: 1.35;
 }
 @media (prefers-reduced-motion: reduce) {
-	.tn {
+	.tree-node {
 		transition: none;
 	}
 }

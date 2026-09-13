@@ -3,32 +3,32 @@
 	position: relative;
 	inline-size: 100%;
 }
-.ms[data-disabled] {
+.multi-select[data-disabled] {
 	opacity: 0.55;
 	pointer-events: none;
 }
-.ms-trigger {
+.multi-select-trigger {
 	display: flex;
+	flex: 1 1 auto;
 	align-items: center;
 	gap: 0.4rem;
-	inline-size: 100%;
+	min-inline-size: 0;
 	min-block-size: 2.125rem;
 	padding-block: 0.3rem;
 	padding-inline: 0.55rem;
-	border: 1px solid var(--input-border, rgba(255, 255, 255, 0.12));
-	border-radius: var(--radius-md, 0.5rem);
-	background: var(--input-bg, rgba(255, 255, 255, 0.04));
+	border: 0;
+	border-radius: 0;
+	background: transparent;
 	color: inherit;
 	font: inherit;
 	text-align: start;
 	cursor: pointer;
 }
-.ms-trigger:focus-visible {
-	outline: none;
-	border-color: var(--focus-ring-color, var(--teal));
-	box-shadow: 0 0 0 3px var(--focus-ring-glow, color-mix(in oklch, var(--teal) 25%, transparent));
+.multi-select-trigger:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal));
+	outline-offset: -2px;
 }
-.ms-chips {
+.multi-select-chips {
 	display: flex;
 	flex: 1 1 auto;
 	flex-wrap: wrap;
@@ -36,23 +36,37 @@
 	gap: 0.3rem;
 	min-inline-size: 0;
 }
-.ms-placeholder {
+.multi-select-placeholder {
 	color: var(--text-muted);
 	font-size: var(--text-sm, 0.875rem);
 }
-.ms-placeholder[hidden] {
+.multi-select-placeholder[hidden] {
 	display: none;
 }
-.ms-icon {
+.multi-select-icon {
 	flex: 0 0 auto;
 	opacity: 0.55;
 }
-.ms-panel {
+/*
+ * Native [popover] UA chrome is a Canvas box with `border: solid` in
+ * CanvasText — white outline around the whole panel in a dark theme.
+ * ui-listbox already paints the dropdown surface; this host is a
+ * transparent popover wrapper, same reset as notification-stack.
+ */
+.multi-select-panel {
 	position: fixed;
 	inset: auto;
 	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	overflow: visible;
 	z-index: var(--z-dropdown, 1000);
 }
-.ms-panel ui-listbox {
+.multi-select-panel:focus {
+	outline: none;
+}
+.multi-select-panel ui-listbox {
 	display: block;
 }

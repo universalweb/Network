@@ -12,6 +12,13 @@ export class UILoadingScreen extends WebComponent {
 		heading: 'Loading',
 		variant: 'overlay',
 	};
+	onConnect() {
+		this.observe('open', this.syncOpenAttr);
+		this.syncOpenAttr();
+	}
+	syncOpenAttr() {
+		this.toggleAttribute('data-open', this.state.open === true);
+	}
 	open(detail = {}) {
 		this.assignState({
 			...detail,

@@ -58,6 +58,11 @@
 	inset-inline-end: auto;
 }
 
+.notification-stack[hidden],
+:host([data-center-open]) .notification-stack {
+	display: none;
+}
+
 .notification-stack {
 	display: flex;
 	flex-direction: column;
@@ -78,4 +83,65 @@
 .notification-stack > * {
 	transition: transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
 	pointer-events: auto;
+}
+
+/*
+ * ── LAYERED PILE ─────────────────────────────────────────────────────────
+ * A burst of notifications used to grow a column until it ran off the viewport.
+ * Past `--stack-limit` the cards LAYER instead: each one beyond the limit is
+ * tucked behind the card in front, scaled back and dimmed, so the group reads as
+ * a pile with a visible depth rather than an endless list.
+ *
+ * `--stack-i` is stamped per row by the shared notice-stack module (0 = front),
+ * the same number ui-toast uses — each component derives its own look from it.
+ * Nothing is dropped: overflow cards stay in `items` and stay in the centre pane.
+ *
+ * Depth is CLAMPED at the limit so the twentieth notification does not scale to
+ * nothing or slide out of the pile — everything past the limit shares the back
+ * position and simply stacks up there.
+ */
+.notification-stack > * {
+	--stack-i: 0;
+	--stack-limit: 4;
+	--stack-depth: min(var(--stack-i), var(--stack-limit));
+	--stack-peek: 0.55rem;
+}
+:host(:not([data-expanded])) .notification-stack > * {
+	transform:
+		translateY(calc(var(--stack-depth) * var(--stack-peek)))
+		scale(calc(1 - (var(--stack-depth) * 0.04)));
+	opacity: calc(1 - (var(--stack-depth) * 0.14));
+	z-index: calc(40 - var(--stack-depth));
+}
+/* Bottom corners pile upward, so the peek reverses. */
+:host([data-position='bottom-end']:not([data-expanded])) .notification-stack > *,
+:host([data-position='bottom-start']:not([data-expanded])) .notification-stack > * {
+	transform:
+		translateY(calc(var(--stack-depth) * var(--stack-peek) * -1))
+		scale(calc(1 - (var(--stack-depth) * 0.04)));
+}
+/* Cards past the limit are fully behind the pile and take no pointer input. */
+:host(:not([data-expanded])) .notification-stack > *[data-stack] {
+	pointer-events: auto;
+}
+
+/*
+ * Fanning the pile back out is hover OR focus-within, so it is reachable by
+ * keyboard and not only by pointer.
+ */
+.notification-stack:hover > *,
+.notification-stack:focus-within > * {
+	transform: none;
+	opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.notification-stack > * {
+		transition: none;
+	}
+	/* Without motion the pile is disorienting — show a plain list instead. */
+	:host(:not([data-expanded])) .notification-stack > * {
+		transform: none;
+		opacity: 1;
+	}
 }

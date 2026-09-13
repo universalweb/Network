@@ -1,151 +1,112 @@
 :host {
 	display: block;
 }
-.trk-root {
+.tracker-root {
 	display: flex;
 	flex-direction: column;
 	gap: 0;
 	position: relative;
 }
-.trk {
+.tracker-strip-row {
 	display: flex;
-	gap: 0.18rem;
-	align-items: stretch;
-	block-size: 1.85rem;
-	padding-block: 0.4rem 0.7rem;
-	overflow-x: auto;
-	overflow-y: hidden;
-	-webkit-overflow-scrolling: touch;
-	scrollbar-width: thin;
+	align-items: center;
+	gap: 0.15rem;
+	min-inline-size: 0;
 }
-.trk-seg {
+.tracker-tabs {
+	display: block;
 	flex: 1 1 auto;
-	min-inline-size: 1.2rem;
-	margin: 0;
+	min-inline-size: 0;
+	--tab-strip-gap: 0;
+	/*
+	 * Block corner radius is NOT set here: `[data-variant='blocks'] .tab-strip`
+	 * re-declares --tab-block-radius on itself, so a value set on this host is
+	 * shadowed and would be dead code. It lives in tabs.css.
+	 */
+}
+.tracker-arrow {
+	flex: 0 0 auto;
+	align-self: center;
 	padding: 0;
-	border: 1px solid transparent;
-	border-radius: var(--radius-xs, 2px);
-	/* Tone from shared [data-tone] fill map (util-surface.css). */
-	background: color-mix(in oklab, var(--tone-fill, var(--text-muted)) 72%, transparent);
-	cursor: pointer;
+}
+.tracker-arrow[hidden] {
+	display: none !important;
+}
+.tracker-root[data-arrows='overlay'] .tracker-strip-row {
 	position: relative;
-	scale: 1 1;
-	transition:
-		scale 0.22s cubic-bezier(0.34, 1.2, 0.64, 1),
-		box-shadow 0.22s ease,
-		border-color 0.18s ease,
-		filter 0.18s ease,
-		opacity 0.18s ease;
 }
-.trk-seg:hover {
-	scale: 1.08 1.24;
-	border-color: color-mix(in oklab, var(--tone-fill, var(--text-main)) 78%, white);
-	box-shadow:
-		0 0 0 1px color-mix(in oklab, var(--tone-fill, var(--text-main)) 42%, transparent),
-		0 6px 16px color-mix(in oklab, var(--tone-fill, #000) 34%, transparent);
-	filter: brightness(1.08);
-	opacity: 1;
-	z-index: 1;
-}
-.trk-seg:focus-visible {
-	outline: 2px solid var(--focus-ring-color, var(--teal));
-	outline-offset: 1px;
-	z-index: 2;
-}
-.trk-seg:focus:not(:focus-visible) {
-	outline: none;
-}
-.trk-seg[data-active='true'] {
-	scale: 1.06 1.38;
-	opacity: 1;
-	filter: brightness(1.12);
-	border-color: color-mix(in oklab, var(--tone-fill, var(--text-main)) 80%, white);
-	box-shadow:
-		0 0 0 1.5px color-mix(in oklab, var(--tone-fill, var(--text-main)) 80%, white),
-		0 4px 14px color-mix(in oklab, var(--tone-fill, #000) 38%, transparent);
-	z-index: 2;
-}
-.trk-seg[data-active='true']::after {
-	content: '';
+.tracker-root[data-arrows='overlay'] .tracker-arrow {
 	position: absolute;
-	inset-inline: 18%;
-	inset-block-end: -0.62rem;
-	block-size: 0.18rem;
-	border-radius: 999px;
-	background: var(--tone-fill, var(--text-main));
-	box-shadow: 0 0 8px color-mix(in oklab, var(--tone-fill, currentColor) 55%, transparent);
+	z-index: 3;
+	/* Start-only + translate: inset-block:50% set BOTH edges, so the
+	   1.7rem disc grew upward from the midline (arrows sat on the top). */
+	inset-block-start: 50%;
+	inset-block-end: auto;
+	translate: 0 -50%;
+	inline-size: 1.7rem;
+	block-size: 1.7rem;
+	min-inline-size: 1.7rem;
+	padding: 0;
+	border-radius: 50%;
+	background: color-mix(in oklab, black 58%, transparent);
+	backdrop-filter: var(--popup-glass-blur);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
+	border: 1px solid rgb(255 255 255 / 0.12);
+	color: var(--text-main, #f5f6fa);
+	box-shadow: 0 0.25rem 0.7rem rgb(0 0 0 / 0.35);
 }
-/* Neutral = inactive / unknown — mixed weaker so it recedes. */
-.trk-seg[data-tone='neutral'] {
-	background: color-mix(in oklab, var(--tone-fill, var(--text-muted)) 30%, transparent);
+.tracker-root[data-arrows='overlay'] .tracker-arrow[data-dir='start'] {
+	inset-inline-start: 0.2rem;
+}
+.tracker-root[data-arrows='overlay'] .tracker-arrow[data-dir='end'] {
+	inset-inline-end: 0.2rem;
+}
+.tracker-root[data-arrows='overlay'] .tracker-tabs {
+	padding-inline: 0;
 }
 /*
- * Inline expand — sits under the bar, no full-viewport scrim (unlike
- * ui-expandable-card). Grows in place so the tracker stays in document flow.
+ * Detail sits flush under the blocks strip. The sliding tab-indicator
+ * already points at the open block — no diamond caret.
  */
-.trk-detail {
-	--trk-caret: 50%;
+.tracker-detail {
 	position: relative;
-	margin-block-start: 1.15rem;
+	margin-block-start: 0.35rem;
 	padding: 0;
 	border: 1px solid color-mix(in oklch, var(--tone-fill, var(--text-muted)) 28%, transparent);
 	border-radius: var(--radius-md, 0.55rem);
-	background:
-		linear-gradient(
-			180deg,
-			color-mix(in oklab, var(--tone-fill, transparent) 10%, transparent),
-			transparent 2.4rem
-		),
-		color-mix(in oklab, var(--bg-panel, var(--bg-body, #12141a)) 94%, transparent);
-	box-shadow:
-		0 10px 28px color-mix(in oklch, #000 20%, transparent),
-		inset 0 1px 0 color-mix(in oklch, #fff 8%, transparent);
-	animation: trk-detail-in 0.26s cubic-bezier(0.34, 1.35, 0.64, 1);
+	background: var(--bg-panel, var(--bg-body));
+	box-shadow: none;
+	animation: tracker-detail-in 0.26s cubic-bezier(0.34, 1.35, 0.64, 1);
 	overflow: hidden;
 }
-.trk-detail[hidden] {
+.tracker-detail[hidden] {
 	display: none;
 }
-.trk-detail::before {
-	content: '';
-	position: absolute;
-	inset-block-start: -0.38rem;
-	inset-inline-start: var(--trk-caret);
-	translate: -50% 0;
-	inline-size: 0.7rem;
-	block-size: 0.7rem;
-	background: inherit;
-	background-color: color-mix(in oklab, var(--bg-panel, var(--bg-body, #12141a)) 94%, transparent);
-	border-block-start: 1px solid color-mix(in oklch, var(--tone-fill, var(--text-muted)) 28%, transparent);
-	border-inline-start: 1px solid color-mix(in oklch, var(--tone-fill, var(--text-muted)) 28%, transparent);
-	rotate: 45deg;
-	transition: inset-inline-start 0.28s cubic-bezier(0.34, 1.05, 0.64, 1);
-	z-index: 1;
-	pointer-events: none;
-}
-.trk-detail-viewport {
+.tracker-detail-viewport {
 	overflow: hidden;
 	transition: block-size 0.28s cubic-bezier(0.34, 1.05, 0.64, 1);
 }
-.trk-detail-pane {
-	padding: 0.8rem 0.9rem 0.85rem;
+.tracker-detail-pane {
+	/* Was 0.8/0.9/0.85rem — three near-identical values that read as drift rather
+	   than intent, and heavy against this pane's ~12px type. One token, even. */
+	padding: var(--space-4, 0.75rem);
 }
-.trk-detail-pane[data-slide='next'] {
-	animation: trk-slide-next 0.28s cubic-bezier(0.34, 1.1, 0.64, 1);
+.tracker-detail-pane[data-slide='next'] {
+	animation: tracker-slide-next 0.28s cubic-bezier(0.34, 1.1, 0.64, 1);
 }
-.trk-detail-pane[data-slide='prev'] {
-	animation: trk-slide-prev 0.28s cubic-bezier(0.34, 1.1, 0.64, 1);
+.tracker-detail-pane[data-slide='prev'] {
+	animation: tracker-slide-prev 0.28s cubic-bezier(0.34, 1.1, 0.64, 1);
 }
-.trk-detail-pane[data-slide='in'] {
-	animation: trk-slide-in 0.26s cubic-bezier(0.34, 1.2, 0.64, 1);
+.tracker-detail-pane[data-slide='in'] {
+	animation: tracker-slide-in 0.26s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
-.trk-detail-head {
+.tracker-detail-head {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
-	margin-block-end: 0.4rem;
+	gap: var(--space-3, 0.5rem);
+	margin-block-end: var(--space-3, 0.5rem);
 }
-.trk-detail-swatch {
+.tracker-detail-swatch {
 	flex: 0 0 auto;
 	inline-size: 0.65rem;
 	block-size: 0.65rem;
@@ -153,7 +114,7 @@
 	background: color-mix(in oklab, var(--tone-fill, var(--text-muted)) 88%, transparent);
 	box-shadow: 0 0 0 1px color-mix(in oklab, var(--tone-fill, currentColor) 35%, transparent);
 }
-.trk-detail-title {
+.tracker-detail-title {
 	flex: 1 1 auto;
 	min-inline-size: 0;
 	font-size: var(--text-xs, 0.75rem);
@@ -164,77 +125,40 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-.trk-detail-close {
+.tracker-detail-close {
 	flex: 0 0 auto;
-	inline-size: 1.5rem;
-	block-size: 1.5rem;
-	margin: 0;
-	padding: 0;
-	border: 0;
-	border-radius: var(--radius-xs, 0.25rem);
-	background: transparent;
-	color: var(--text-muted);
-	font: inherit;
-	font-size: 1.1rem;
-	line-height: 1;
-	cursor: pointer;
+	/* Dense header: the close sits beside ~12px type, so it paints at the
+	   smallest step instead of filling the default icon box. */
+	--btn-face: 1.5rem;
 }
-.trk-detail-close:hover {
-	color: var(--text-main);
-	background: color-mix(in oklch, var(--text-muted) 14%, transparent);
-}
-.trk-detail-close:focus-visible {
-	outline: 2px solid var(--focus-ring-color, var(--teal));
-	outline-offset: 1px;
-}
-.trk-detail-icon[hidden] {
+.tracker-detail-icon[hidden] {
 	display: none !important;
 }
-.trk-detail-label,
-.trk-detail-meta {
+.tracker-detail-label,
+.tracker-detail-meta {
 	font-size: 0.68rem;
 	letter-spacing: 0.04em;
 	color: var(--text-muted);
 	margin-block-end: 0.2rem;
 }
-.trk-detail-label[hidden],
-.trk-detail-meta[hidden],
-.trk-detail-actions[hidden] {
+.tracker-detail-label[hidden],
+.tracker-detail-meta[hidden],
+.tracker-detail-actions[hidden] {
 	display: none !important;
 }
-.trk-detail-body {
+.tracker-detail-body {
 	font-size: var(--text-xs, 0.75rem);
 	line-height: 1.5;
 	color: var(--text-muted);
 	word-break: break-word;
 }
-.trk-detail-actions {
+.tracker-detail-actions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.35rem;
 	margin-block-start: 0.6rem;
 }
-.trk-action {
-	margin: 0;
-	padding: 0.22rem 0.55rem;
-	border: 1px solid color-mix(in oklch, var(--text-muted) 28%, transparent);
-	border-radius: var(--radius-xs, 0.25rem);
-	background: color-mix(in oklab, var(--bg-body, #0b0d14) 70%, transparent);
-	color: var(--text-main);
-	font: inherit;
-	font-size: 0.68rem;
-	letter-spacing: 0.03em;
-	cursor: pointer;
-}
-.trk-action:hover {
-	border-color: var(--tone-fill, var(--teal));
-	color: var(--tone-fill, var(--teal));
-}
-.trk-action:focus-visible {
-	outline: 2px solid var(--focus-ring-color, var(--teal));
-	outline-offset: 1px;
-}
-@keyframes trk-detail-in {
+@keyframes tracker-detail-in {
 	from {
 		opacity: 0;
 		transform: translateY(-0.3rem);
@@ -244,7 +168,7 @@
 		transform: translateY(0);
 	}
 }
-@keyframes trk-slide-next {
+@keyframes tracker-slide-next {
 	from {
 		opacity: 0.28;
 		transform: translateX(1.15rem);
@@ -254,7 +178,7 @@
 		transform: translateX(0);
 	}
 }
-@keyframes trk-slide-prev {
+@keyframes tracker-slide-prev {
 	from {
 		opacity: 0.28;
 		transform: translateX(-1.15rem);
@@ -264,7 +188,7 @@
 		transform: translateX(0);
 	}
 }
-@keyframes trk-slide-in {
+@keyframes tracker-slide-in {
 	from {
 		opacity: 0;
 		transform: translateY(-0.2rem);
@@ -275,16 +199,12 @@
 	}
 }
 @media (prefers-reduced-motion: reduce) {
-	.trk-seg,
-	.trk-seg:hover,
-	.trk-seg[data-active='true'],
-	.trk-detail,
-	.trk-detail::before,
-	.trk-detail-viewport,
-	.trk-detail-pane[data-slide] {
+	.tracker-arrow,
+	.tracker-detail,
+	.tracker-detail-viewport,
+	.tracker-detail-pane[data-slide] {
 		transition: none;
 		animation: none;
 		transform: none;
-		scale: 1 1;
 	}
 }

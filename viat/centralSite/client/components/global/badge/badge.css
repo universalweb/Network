@@ -8,7 +8,9 @@
 .badge {
 	align-items: center;
 	border: 1px solid transparent;
-	border-radius: 999px;
+	/* Squared-off tag, not a pill. 999px read as a lozenge that fought every
+	   other cornered surface it sat on; --radius-sm lands at ~5px. */
+	border-radius: var(--radius-sm);
 	display: inline-flex;
 	font-weight: var(--weight-semibold);
 	gap: 0.35em;
@@ -81,6 +83,15 @@
 	background: rgba(99, 102, 241, 0.22);
 	border-color: rgba(99, 102, 241, 0.45);
 	color: var(--color-info);
+}
+/* Glass sits over photography: house fill+blur tokens, plus a slight
+   shadow so the label still separates from busy artwork. Tone keeps
+   color/border; only the fill is replaced. */
+[data-surface='glass'] {
+	background: var(--popup-glass-bg);
+	backdrop-filter: var(--popup-glass-blur);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
+	box-shadow: var(--shadow-1, 0 1px 2px oklch(0 0 0 / 0.28));
 }
 .badge-dot {
 	background: currentColor;

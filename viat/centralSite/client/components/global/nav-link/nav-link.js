@@ -5,6 +5,7 @@
 	── EVENTS ───────────────────────────────────────────────────────────
 	  nav-link:select { id, item, index, href }
 */
+import '../badge/badge.js';
 import '../icon/icon.js';
 import { WebComponent } from 'webcomponent';
 export class UINavLink extends WebComponent {
@@ -29,13 +30,40 @@ export class UINavLink extends WebComponent {
 		tooltip: '',
 		disabled: false,
 		itemIndex: -1,
+		active: false,
+		count: 0,
 	};
+	hideCount() {
+		return (Number(this.state.count) || 0) <= 0;
+	}
+	countLabel() {
+		const amount = Number(this.state.count) || 0;
+		if (amount <= 0) {
+			return '';
+		}
+		if (amount > 99) {
+			return '99+';
+		}
+		return String(amount);
+	}
 	handleClick(domEvent) {
 		if (this.state.disabled) {
 			domEvent.preventDefault();
 			return;
 		}
-		// Kill the native composed click before namespaced emit (standard).
+		const modifiedClick = Boolean(domEvent.metaKey ||
+			domEvent.ctrlKey ||
+			domEvent.shiftKey ||
+			domEvent.altKey);
+		if (modifiedClick) {
+			return;
+		}
+		/*
+		 * Unmodified click is in-app. Always cancel native navigation — a real
+		 * href is for cmd-click / copy / reload, not a full load. The host
+		 * (Router intercept or nav-link:select) owns history.
+		 */
+		domEvent.preventDefault();
 		domEvent.stopPropagation();
 		const href = this.state.href || '#';
 		const linkId = this.state.linkId || String(this.state.itemIndex);
@@ -51,27 +79,27 @@ export class UINavLink extends WebComponent {
 			index: this.state.itemIndex,
 			href,
 		});
-		if (!href || href === '#') {
-			domEvent.preventDefault();
-		}
 	}
 	render() {
-		const tip = this.state.tooltip || this.state.label || '';
-		const hasDesc = Boolean(this.state.description);
-		const hasIcon = Boolean(this.state.icon);
 		this.html`
 			<a #anchor class="nav-link"
 				href=${this.state.href || '#'}
-				tooltip=${tip}
+				tooltip=${this.state.tooltip || this.state.label || ''}
 				aria-disabled=${this.state.disabled ? 'true' : 'false'}
+				aria-current=${this.state.active ? 'page' : null}
+				?data-active=${this.state.active}
 				@click=${this.handleClick}>
 				${() => {
-					return hasIcon ? this.htmlElement`<ui-icon class="nav-link-icon" .state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>` : '';
+					return this.state.icon ? this.htmlElement`<ui-icon class="nav-link-icon" .state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>` : '';
 				}}
 				<span class="nav-link-text">
 					<span class="nav-link-label">${this.state.label || ''}</span>
-					<span class="nav-link-desc" ?hidden=${!hasDesc}>${this.state.description || ''}</span>
+					<span class="nav-link-desc" ?hidden=${!this.state.description}>${this.state.description || ''}</span>
 				</span>
+				<ui-badge class="nav-link-count" ?hidden=${this.hideCount}
+					.state.label=${this.countLabel}
+					.state.size=${'sm'}
+					.state.tone=${'accent'}></ui-badge>
 			</a>
 		`;
 	}

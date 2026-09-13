@@ -448,7 +448,7 @@ export class UIBarChart extends WebComponent {
 				y: row.y,
 				width: row.width,
 				height: row.height,
-				style: `--bc-series:${row.color || 'currentColor'}`,
+				style: `--bar-chart-series:${row.color || 'currentColor'}`,
 				tip: tipTextOrEmpty(tipsOn, row.tip),
 			});
 		}
@@ -520,8 +520,8 @@ export class UIBarChart extends WebComponent {
 	}
 	barLayerRow(bar) {
 		return this.partial`
-			<svg class="bc-layer" viewBox=${VIEW_BOX} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-				<rect class="bc-bar" style=${bar.style}
+			<svg class="bar-chart-layer" viewBox=${VIEW_BOX} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+				<rect class="bar-chart-bar" style=${bar.style}
 					x=${bar.x} y=${bar.y}
 					width=${bar.width} height=${bar.height}
 					rx="2" tooltip=${bar.tip}></rect>
@@ -529,14 +529,14 @@ export class UIBarChart extends WebComponent {
 	}
 	gridLayerRow(line) {
 		return this.partial`
-			<svg class="bc-layer bc-layer-grid" viewBox=${VIEW_BOX} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-				<line class="bc-grid" x1=${line.x1} y1=${line.y1} x2=${line.x2} y2=${line.y2}></line>
+			<svg class="bar-chart-layer bar-chart-layer-grid" viewBox=${VIEW_BOX} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+				<line class="bar-chart-grid" x1=${line.x1} y1=${line.y1} x2=${line.x2} y2=${line.y2}></line>
 			</svg>`;
 	}
 	tickLayerRow(tick) {
 		return this.partial`
-			<svg class="bc-layer bc-layer-tick" viewBox=${VIEW_BOX} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-				<text class="bc-tick" x=${tick.x} y=${tick.y} text-anchor=${tick.anchor}>${tick.label}</text>
+			<svg class="bar-chart-layer bar-chart-layer-tick" viewBox=${VIEW_BOX} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+				<text class="bar-chart-tick" x=${tick.x} y=${tick.y} text-anchor=${tick.anchor}>${tick.label}</text>
 			</svg>`;
 	}
 	isEmpty() {
@@ -581,18 +581,18 @@ export class UIBarChart extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="bc chart-shell" data-tone=${this.state.tone} data-orientation=${this.state.orientation}
+			<div class="bar-chart chart-shell" data-tone=${this.state.tone} data-orientation=${this.state.orientation}
 				data-legend-pos=${this.legendPosition}
 				data-legend-orient=${this.legendOrientation}
 				data-layout=${this.shellLayout}
 				?data-compact=${this.shellCompact}
 				role="img" aria-label=${this.state.label || 'Bar chart'}>
-				<div class="bc-empty" ?hidden=${this.hideEmpty}>${this.state.emptyLabel}</div>
+				<div class="bar-chart-empty" ?hidden=${this.hideEmpty}>${this.state.emptyLabel}</div>
 				<div class="chart-plot-area">
 					<div class="chart-heading" ?hidden=${this.hideHeading}>${this.state.label}</div>
 					<div class="chart-axis-label chart-axis-label-y" ?hidden=${this.hideYLabel}>${this.state.yLabel}</div>
 					<div #plot class="chart-plot" ?data-motion=${this.state.motion}>
-						<div class="bc-svg-stack">
+						<div class="bar-chart-svg-stack">
 							${this.list('gridLayers', this.gridLayerRow)}
 							${this.list('barLayers', this.barLayerRow)}
 							${this.list('tickLayers', this.tickLayerRow)}
@@ -600,7 +600,7 @@ export class UIBarChart extends WebComponent {
 					</div>
 					<div class="chart-axis-label chart-axis-label-x" ?hidden=${this.hideXLabel}>${this.state.xLabel}</div>
 				</div>
-				<div class="chart-legend-slot bc-legend" ?hidden=${this.hideLegend}>
+				<div class="chart-legend-slot bar-chart-legend" ?hidden=${this.hideLegend}>
 					<ui-legend
 						.state.items=${this.state.legendItems}
 						.state.orientation=${this.legendOrientation}

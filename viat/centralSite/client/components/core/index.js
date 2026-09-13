@@ -42,7 +42,10 @@ export {
 	defaultLogger,
 	IS_PRODUCTION,
 } from './debug/logger.js';
-export { applyAnchor, computeAnchor, positionOverlay } from './dom/anchor.js';
+export { getRenderWatchRecords } from './debug/renderWatch.js';
+export {
+	applyAnchor, computeAnchor, hideOverlay, positionOverlay, positionOverlayWhenReady, triggerBoxReady,
+} from './dom/anchor.js';
 export { flipMorph } from './dom/animation.js';
 export {
 	allChildren, allConnectedComponents, liveChildren, registerChild, trackComponent, unregisterChild, untrackComponent,
@@ -59,9 +62,26 @@ export {
 	ifAssign,
 	prependTo,
 } from './dom/dom.js';
+export { DragReorder, indexFromSlotMids } from './dom/dragReorder.js';
+export {
+	captureRects, FLIP_EASE, FLIP_MS, playFlip,
+} from './dom/flip.js';
+export { FocusTrap } from './dom/focusTrap.js';
 export { setInert } from './dom/inert.js';
+export { armLazy, onLazyVisible, syncLazy } from './dom/lazyVisible.js';
+export {
+	ensureManualPopover,
+	hideSurfacePopover,
+	repromoteManualPopover,
+	showSurfacePopover,
+} from './dom/manualPopover.js';
+export { Parallax, parallax } from './dom/parallax.js';
+export { rafCoalesce, rafCoalesceCancel } from './dom/rafCoalesce.js';
 export { getRef, makeRefsProxy, registerRef } from './dom/refs.js';
 export { registry } from './dom/registry.js';
+export { ScrollDock } from './dom/scrollDock.js';
+export { lockScroll, unlockScroll } from './dom/scrollLock.js';
+export { findScrollableAncestor } from './dom/scrollRoot.js';
 export {
 	findComponent,
 	findComponentGlobal,
@@ -129,6 +149,31 @@ export {
 	styles,
 } from './template.js';
 export {
+	clockInterval,
+	formatIsoDate,
+	formatTime,
+	pad2,
+	parseIsoDate,
+	parseTime,
+	todayIso,
+} from './time/format.js';
+export {
+	clampInterval,
+	clampToDay,
+	contains,
+	durationOf,
+	findConflicts,
+	MINUTES_PER_DAY,
+	overlaps,
+	snapTo,
+} from './time/interval.js';
+export {
+	expandAssignments,
+	expandOccurrences,
+	MAX_OCCURRENCES,
+	MAX_WINDOW_DAYS,
+} from './time/recurrence.js';
+export {
 	addInterval,
 	clearIntervals,
 	clearTimeouts,
@@ -136,46 +181,4 @@ export {
 	setComponentTimeout,
 	stopInterval,
 } from './timers.js';
-export {
-	assign,
-	assignPromisePair,
-	cachedProxy,
-	callFn,
-	clearUnsubs,
-	createElementFromHTML,
-	eachArray,
-	eachNodeList,
-	eachObject,
-	fireResolver,
-	getOrInit,
-	getProto,
-	getValueAtPath,
-	hasOwn,
-	hasValue,
-	isArray,
-	isElement,
-	isEmpty,
-	isError,
-	isFunction,
-	isNull,
-	isObject,
-	isPlainObject,
-	isPromiseLike,
-	isShadowRoot,
-	isString,
-	isSymbol,
-	isTypeUndefined,
-	isUndefined,
-	joinPath,
-	keysOf,
-	noValue,
-	parsePath,
-	pathsOverlap,
-	plainEqual,
-	queueAsyncError,
-	resolveTarget,
-	runHook,
-	setValueAtPath,
-	smartClone,
-	syncSubsByDiff,
-} from './utilities.js';
+export * from './utilities.js';

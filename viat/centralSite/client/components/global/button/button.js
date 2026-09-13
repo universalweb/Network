@@ -1,5 +1,59 @@
-import { classList, WebComponent } from '../../core/index.js';
+/**
+ *	NAME: Button
+ *	TAG: ui-button
+ *
+ *	── DESCRIPTION ──────────────────────────────────────────────────────
+ *	ui-button — action control. Inner native button or anchor carries
+ *	data-variant, data-tone, and data-size; the component sheet is
+ *	structure only. Tooltip rides state onto the inner control, not a
+ *	host tooltip= attribute. href renders a real <a> so modifier-click
+ *	and middle-click work.
+ *	─────────────────────────────────────────────────────────────────────
+ *
+ *	── USAGE (HTML) ─────────────────────────────────────────────────────
+ *	  <ui-button .state.label=${'Save'}></ui-button>
+ *	  <ui-button .state.href=${'/wallet'}></ui-button>
+ *	─────────────────────────────────────────────────────────────────────
+ *
+ *	── USAGE (JS) ───────────────────────────────────────────────────────
+ *	  import { UIButton } from './button.js';
+ *	  const host = new UIButton({ label: 'Save', tone: 'primary' });
+ *	  document.body.append(host);
+ *	─────────────────────────────────────────────────────────────────────
+ *
+ *	── EVENTS ───────────────────────────────────────────────────────────
+ *	  button:click { href }
+ *	─────────────────────────────────────────────────────────────────────
+ *
+ *	── META ─────────────────────────────────────────────────────────────
+ *	Author: Universal Web
+ *	Date: 2026-09-02
+ *	─────────────────────────────────────────────────────────────────────
+ */
+import { classList, WebComponent } from 'webcomponent';
 import { UIIcon } from '../icon/icon.js';
+const ICON_SPIN_STYLE_ID = 'ui-button-icon-spin';
+const ICON_SPIN_CSS = `@property --ui-btn-icon-spin {
+	syntax: "<angle>";
+	inherits: true;
+	initial-value: 0deg;
+}`;
+/*
+ * `@property` inside a shadow-adopted sheet is ignored. Register on the
+ * document so --ui-btn-icon-spin interpolates. Idempotent: the style node
+ * is keyed, so HMR / a second import does not duplicate it.
+ */
+function ensureIconSpinProperty() {
+	const doc = globalThis.document;
+	if (!doc?.head || doc.getElementById(ICON_SPIN_STYLE_ID)) {
+		return;
+	}
+	const style = doc.createElement('style');
+	style.id = ICON_SPIN_STYLE_ID;
+	style.textContent = ICON_SPIN_CSS;
+	doc.head.append(style);
+}
+ensureIconSpinProperty();
 export class UIButton extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -34,6 +88,12 @@ export class UIButton extends WebComponent {
 		// property — a `title=`/`.title=` binding sets the OS tooltip and never reaches
 		// state, leaving this one empty; that's the trap this key name avoids.)
 		tooltip: '',
+		// Forced tooltip SIDE (top|bottom|left|right). Empty = automatic, which
+		// requests top and lets the engine flip/search. Rides the same inner
+		// element as `tooltip` for the same reason: the <button> is the hover
+		// target, so it must carry both halves or the side never reaches the
+		// element the service looks up.
+		tooltipPlacement: '',
 		// Native Popover API invoker — must land on the real <button>, not a CE host
 		// (light-dismiss + toggle race). Empty = attribute omitted.
 		popoverTarget: '',
@@ -71,7 +131,7 @@ export class UIButton extends WebComponent {
 		}
 		return '';
 	}
-	/* Same ternary as before — htmlElement so label is escaped (raw string + ^html was XSS). */
+	/* htmlElement so the label is escaped (a raw string + ^html is XSS). */
 	renderLabel() {
 		return this.state.label ? this.htmlElement`<span class="btn-label">${this.state.label}</span>` : '';
 	}
@@ -105,24 +165,22 @@ export class UIButton extends WebComponent {
 		);
 	}
 	render() {
-		const variant = this.state.variant || 'solid';
-		const tone = this.state.tone || 'neutral';
-		const size = this.state.size || 'md';
-		const label = this.state.tooltip || this.state.label;
 		// Real anchor when href is set — native ⌘-click / middle-click / status URL.
 		if (this.state.href) {
 			this.html`
 				<a
-					data-variant=${variant}
-					data-tone=${tone}
-					data-size=${size}
+					part="button"
+					data-variant=${this.state.variant || 'solid'}
+					data-tone=${this.state.tone || 'neutral'}
+					data-size=${this.state.size || 'md'}
 					class=${this.controlClass}
 					href=${this.state.href}
 					target=${this.state.target || undefined}
 					rel=${this.state.target === '_blank' ? 'noopener noreferrer' : undefined}
 					aria-disabled=${this.state.disabled || this.state.loading ? 'true' : 'false'}
-					aria-label=${label}
+					aria-label=${this.state.tooltip || this.state.label}
 					tooltip=${this.state.tooltip}
+					tooltipPlacement=${this.state.tooltipPlacement}
 					@click=${this.handleClick}>
 					${this.renderLead}
 					<slot name="lead"></slot>
@@ -136,13 +194,15 @@ export class UIButton extends WebComponent {
 		}
 		this.html`
 			<button
-				data-variant=${variant}
-				data-tone=${tone}
-				data-size=${size}
+				part="button"
+				data-variant=${this.state.variant || 'solid'}
+				data-tone=${this.state.tone || 'neutral'}
+				data-size=${this.state.size || 'md'}
 				class=${this.controlClass}
 				?disabled=${this.state.disabled || this.state.loading}
-				aria-label=${label}
+				aria-label=${this.state.tooltip || this.state.label}
 				tooltip=${this.state.tooltip}
+				tooltipPlacement=${this.state.tooltipPlacement}
 				popovertarget=${this.state.popoverTarget || undefined}
 				aria-expanded=${this.state.expanded || undefined}
 				aria-haspopup=${this.state.hasPopup || undefined}
@@ -158,5 +218,5 @@ export class UIButton extends WebComponent {
 	}
 }
 customElements.define('ui-button', UIButton);
-// Keep UIIcon available so consumers reaching for an icon glyph next to UIButton don't have to add a separate import.
+/* Re-export so a UIButton import also registers <ui-icon>. */
 export { UIIcon };

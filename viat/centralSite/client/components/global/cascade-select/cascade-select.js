@@ -1,5 +1,5 @@
 /*
-	DESCRIPTION: ui-cascade-select — nested option path picker (PrimeVue CascadeSelect).
+	DESCRIPTION: ui-cascade-select — nested option path picker.
 	Items may carry `children[]`. Each visible depth is a composed ui-listbox
 	column. Leaf pick commits value + path. Emits cascade-select:change
 	{value,path,item}.
@@ -10,10 +10,11 @@
 	─────────────────────────────────────────────────────────────────────
 */
 import '../icon/icon.js';
-import { isArray } from '@universalweb/utilitylib';
-import { WebComponent } from 'webcomponent';
-import { positionOverlay } from '../../core/dom/anchor.js';
-import { HideOnScroll } from '../../core/dom/hideOnScroll.js';
+import '../invert-arrow/invert-arrow.js';
+import { isArray, WebComponent } from 'webcomponent';
+import { hideOverlay, positionOverlayWhenReady } from '../../core/dom/anchor.js';
+import { SurfaceController } from '../../core/dom/surfaceController.js';
+import { isTopEscapable } from '../../core/escape/escapeStack.js';
 import { listboxItemLabel, listboxItemValue } from '../listbox/listbox.js';
 const COLUMN_LIMIT = 4;
 /**
@@ -78,7 +79,6 @@ export class UICascadeSelect extends WebComponent {
 			size: 'sm',
 		},
 	};
-	outsideArmed = false;
 	columnKeys = [
 		'col0', 'col1', 'col2', 'col3',
 	];
@@ -93,25 +93,27 @@ export class UICascadeSelect extends WebComponent {
 		this.observe('open', this.syncOpen);
 	}
 	onRendered() {
-		this.syncPopoverFromState(this.state.open);
+		this.syncOpen(this.state.open);
 	}
 	onDisconnect() {
-		this.scrollHide?.detach();
-		this.disarmOutside();
+		this.surfaceCtl?.detach();
 	}
-	ensureScrollHide() {
-		this.scrollHide ??= new HideOnScroll(this, 'closeFromScroll', {
+	ensureSurfaceCtl() {
+		this.surfaceCtl ??= new SurfaceController(this, {
+			surface: () => {
+				return this.refs.surface;
+			},
+			closeMethod: 'closeList',
 			keepOpen: () => {
 				return this.refs.surface;
 			},
+			listenEscape: false,
+			outside: true,
 		});
-		return this.scrollHide;
-	}
-	closeFromScroll() {
-		this.closeList();
+		return this.surfaceCtl;
 	}
 	positionPanel() {
-		positionOverlay(this.refs.surface, this.refs.trigger, {
+		positionOverlayWhenReady(this.refs.surface, this.refs.trigger, {
 			placement: 'bottom-start',
 			offset: 6,
 		});
@@ -123,10 +125,7 @@ export class UICascadeSelect extends WebComponent {
 		}
 		if (isOpen) {
 			this.positionPanel();
-			this.ensureScrollHide().attach();
-			return;
 		}
-		this.scrollHide?.detach();
 	}
 	columnState(index) {
 		return this.state[this.columnKeys[index]];
@@ -237,76 +236,38 @@ export class UICascadeSelect extends WebComponent {
 		}
 		const surface = this.refs.surface;
 		if (surface?.matches(':popover-open')) {
-			surface.hidePopover();
+			this.closeList();
 			return;
 		}
-		surface?.showPopover?.();
+		if (!this.state.open) {
+			this.state.open = true;
+		}
+		hideOverlay(surface);
+		this.showSurfacePopover(surface);
 	}
 	closeList() {
-		this.refs.surface?.hidePopover?.();
+		if (this.state.open) {
+			this.state.open = false;
+		}
+		this.hideSurfacePopover(this.refs.surface);
 	}
 	syncOpen(isOpen) {
-		this.syncPopoverFromState(isOpen);
-		this.syncOutsideListener(isOpen);
-	}
-	syncPopoverFromState(isOpen) {
-		const surface = this.refs.surface;
-		if (!surface || typeof surface.showPopover !== 'function') {
-			return;
-		}
-		const showing = surface.matches(':popover-open');
-		if (isOpen && !showing) {
-			surface.showPopover();
-			return;
-		}
-		if (!isOpen && showing) {
-			surface.hidePopover();
-		}
-	}
-	syncOutsideListener(isOpen) {
+		const ctl = this.ensureSurfaceCtl();
 		if (isOpen) {
-			this.setTimeout(UICascadeSelect.armOutsideTimer, 0);
-			return;
+			hideOverlay(this.refs.surface);
+			ctl.show();
+			ctl.attach();
+		} else {
+			ctl.hide();
+			ctl.detach();
 		}
-		this.disarmOutside();
-	}
-	static armOutsideTimer(component) {
-		component.armOutside();
-	}
-	armOutside() {
-		if (this.outsideArmed || !this.state.open) {
-			return;
-		}
-		this.outsideArmed = true;
-		globalThis.document?.addEventListener('pointerdown', this, true);
-	}
-	disarmOutside() {
-		if (!this.outsideArmed) {
-			return;
-		}
-		this.outsideArmed = false;
-		globalThis.document?.removeEventListener('pointerdown', this, true);
-	}
-	handleEvent(domEvent) {
-		if (domEvent.type === 'pointerdown') {
-			this.handleOutsidePointer(domEvent);
-		}
-	}
-	handleOutsidePointer(domEvent) {
-		if (!this.state.open) {
-			return;
-		}
-		const path = domEvent.composedPath();
-		const pathCount = path.length;
-		for (let index = 0; index < pathCount; index += 1) {
-			if (path[index] === this) {
-				return;
-			}
-		}
-		this.closeList();
 	}
 	handleKeydown(domEvent) {
 		if (domEvent.key === 'Escape' && this.state.open) {
+			// Only the most recent open layer answers Escape.
+			if (!isTopEscapable(this)) {
+				return;
+			}
 			domEvent.preventDefault();
 			this.closeList();
 			return;
@@ -333,25 +294,25 @@ export class UICascadeSelect extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="cs"
+			<div class="cascade-select"
 				?data-open=${this.state.open}
 				?data-disabled=${this.state.disabled}
 				@listbox:change=${this.handleListboxChange}
 				@keydown=${this.handleKeydown}>
-				<button class="cs-trigger" type="button" #trigger
+				<button class="cascade-select-trigger" type="button" data-hover=${'hairline'} #trigger
 					?disabled=${this.state.disabled}
 					aria-haspopup="listbox"
 					aria-expanded=${this.state.open ? 'true' : 'false'}
 					@click=${this.toggleOpen}>
-					<span class="cs-value" ?hidden=${this.isPathEmpty}>${this.state.pathLabel}</span>
-					<span class="cs-placeholder" ?hidden=${this.hasPath}>${this.state.placeholder}</span>
-					<ui-icon class="cs-icon" .state=${this.state.chevronIcon}></ui-icon>
+					<span class="cascade-select-value" ?hidden=${this.isPathEmpty}>${this.state.pathLabel}</span>
+					<span class="cascade-select-placeholder" ?hidden=${this.hasPath}>${this.state.placeholder}</span>
+					<ui-invert-arrow class="cascade-select-icon" .state=${this.state.chevronIcon}></ui-invert-arrow>
 				</button>
-				<div class="cs-panel" #surface popover="manual" @toggle=${this.handleToggle}>
-					<ui-listbox class="cs-col" data-col="0" .state=${this.state.col0}></ui-listbox>
-					<ui-listbox class="cs-col" data-col="1" ?hidden=${this.hideCol1} .state=${this.state.col1}></ui-listbox>
-					<ui-listbox class="cs-col" data-col="2" ?hidden=${this.hideCol2} .state=${this.state.col2}></ui-listbox>
-					<ui-listbox class="cs-col" data-col="3" ?hidden=${this.hideCol3} .state=${this.state.col3}></ui-listbox>
+				<div class="cascade-select-panel glass" #surface popover="manual" @toggle=${this.handleToggle}>
+					<ui-listbox class="cascade-select-col" data-col="0" .state=${this.state.col0}></ui-listbox>
+					<ui-listbox class="cascade-select-col" data-col="1" ?hidden=${this.hideCol1} .state=${this.state.col1}></ui-listbox>
+					<ui-listbox class="cascade-select-col" data-col="2" ?hidden=${this.hideCol2} .state=${this.state.col2}></ui-listbox>
+					<ui-listbox class="cascade-select-col" data-col="3" ?hidden=${this.hideCol3} .state=${this.state.col3}></ui-listbox>
 				</div>
 			</div>
 		`;

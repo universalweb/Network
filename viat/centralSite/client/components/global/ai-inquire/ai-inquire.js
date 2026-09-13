@@ -41,7 +41,7 @@ export class UIAiInquire extends WebComponent {
 		return optionValue(option);
 	}
 	renderOption(option) {
-		return html`<button type="button" class="inq-opt" data-variant="outline" data-size="sm" data-value=${String(optionValue(option))}>${optionLabel(option)}</button>`;
+		return html`<button type="button" class="ai-inquire-opt" data-variant="outline" data-size="sm" data-value=${String(optionValue(option))}>${optionLabel(option)}</button>`;
 	}
 	handleOptionClick(domEvent) {
 		if (this.state.answered) {
@@ -73,21 +73,21 @@ export class UIAiInquire extends WebComponent {
 	}
 	render() {
 		this.html`
-			<section class="inq" data-mode=${this.state.mode}>
-				<header class="inq-head">
-					<ui-icon class="inq-icon" .state.name=${'circle-help'} .state.size=${'sm'}></ui-icon>
-					<span class="inq-q">${this.state.question}</span>
+			<section class="ai-inquire" data-mode=${this.state.mode}>
+				<header class="ai-inquire-head">
+					<ui-icon class="ai-inquire-icon" .state.name=${'circle-help'} .state.size=${'sm'}></ui-icon>
+					<span class="ai-inquire-q">${this.state.question}</span>
 				</header>
-				<div class="inq-choice" ?hidden=${!this.choiceOpen} @click=${this.handleOptionClick}>
+				<div class="ai-inquire-choice" ?hidden=${!this.choiceOpen} @click=${this.handleOptionClick}>
 					${this.list('items', this.renderOption, this.optionKey)}
 				</div>
-				<form class="inq-text" ?hidden=${!this.textOpen} @submit=${this.handleSubmit}>
-					<input class="inq-input" $value="inputValue" placeholder=${this.state.placeholder}>
+				<form class="ai-inquire-text" ?hidden=${!this.textOpen} @submit=${this.handleSubmit}>
+					<input class="ai-inquire-input" $value="inputValue" placeholder=${this.state.placeholder}>
 					<button type="submit" data-variant="solid" data-tone="primary" data-size="sm">Send</button>
 				</form>
-				<div class="inq-answer" ?hidden=${!this.state.answered}>
-					<ui-icon class="inq-answer-icon" .state.name=${'check'} .state.size=${'xs'}></ui-icon>
-					<span class="inq-answer-text">${this.state.answered}</span>
+				<div class="ai-inquire-answer" ?hidden=${!this.state.answered}>
+					<ui-icon class="ai-inquire-answer-icon" .state.name=${'check'} .state.size=${'xs'}></ui-icon>
+					<span class="ai-inquire-answer-text">${this.state.answered}</span>
 				</div>
 			</section>
 		`;

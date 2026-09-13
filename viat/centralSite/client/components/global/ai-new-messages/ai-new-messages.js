@@ -37,11 +37,11 @@ export class UIAiNewMessages extends WebComponent {
 	render() {
 		this.html`
 			<button type="button"
-				class="ainm"
+				class="ai-new-messages"
 				?hidden=${!this.showChip}
 				@click=${this.handleClick}>
 				<ui-icon .state.name=${'arrow-down'} .state.size=${'xs'}></ui-icon>
-				<span class="ainm-label">${this.displayLabel}</span>
+				<span class="ai-new-messages-label">${this.displayLabel}</span>
 			</button>
 		`;
 	}

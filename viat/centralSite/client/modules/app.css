@@ -35,6 +35,7 @@
 	overscroll-behavior: contain;
 	padding-block-start: var(--top-bar-clearance);
 	padding-block-end: var(--bottom-bar-clearance);
+	transition: padding-inline-end 0.22s ease;
 }
 .shell-body {
 	display: grid;
@@ -43,9 +44,9 @@
 	position: relative;
 	min-block-size: 100%;
 }
-/* The sidebar is a fixed-position flyout in every mode — it overlays the page
-   and never reserves a column or displaces dashboard content, so the third
-   track stays 0. See ui-sidebar#mode. */
+/* The sidebar host is fixed, so the third grid track stays 0. Desktop flyout
+   (default) pushes content via padding-inline-end on this scroll surface when
+   open; overlay modes (xs/sm, coverup, full) do not reflow. See ui-sidebar#mode. */
 .shell-body > * {
 	min-width: 0;
 	min-height: 0;
@@ -87,10 +88,18 @@
 :host([data-vw="sm"]) app-dashboard {
 	display: none;
 }
+:host([data-sidebar-open][data-sidebar-mode='flyout']:not([data-vw='xs']):not([data-vw='sm'])) .shell-scroll {
+	padding-inline-end: calc(var(--sidebar-rail-width) + var(--space-6, 1.5rem));
+}
+@media (prefers-reduced-motion: reduce) {
+	.shell-scroll {
+		transition: none;
+	}
+}
 /* Mobile (xs/sm < 768px): the page fills the shell as a single cell; the dock
    is a fixed bottom overlay (global-dock.css) floating above it, and the
-   bottom-bar is suppressed. The sidebar is left alone: it runs in
-   `mode-coverup` here and floats as its own drawer. */
+   bottom-bar is suppressed. The sidebar overlays as a full-viewport drawer
+   and does not reflow the page. */
 :host([data-vw="xs"]) .shell-body,
 :host([data-vw="sm"]) .shell-body {
 	grid-template-columns: minmax(0, 1fr);
@@ -110,7 +119,7 @@
 }
 /* Bottom bar is permanently suppressed on mobile — the dock takes its
    vertical slot. The sidebar is intentionally NOT hidden here: its own
-   mode-coverup CSS keeps the shell translated off-screen until the user
+   overlay CSS keeps the shell translated off-screen until the user
    opens it, and hiding it outright would kill the swipe-open gesture. */
 :host([data-vw="xs"]) global-bottom-bar,
 :host([data-vw="sm"]) global-bottom-bar {

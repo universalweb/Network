@@ -1,7 +1,8 @@
 :host {
 	display: block;
+	--carousel-carousel-nav-hit: var(--hit-min, max(2.75rem, 44px));
 }
-/* `hidden` must win over the explicit display: rules below (.nav/.dots) — an
+/* `hidden` must win over the explicit display: rules below (.carousel-nav/.dots) — an
    author display declaration otherwise overrides the UA [hidden] display:none. */
 [hidden] {
 	display: none !important;
@@ -69,15 +70,17 @@
 	transform: scale(1);
 	pointer-events: auto;
 }
-.nav {
+.carousel-nav {
 	position: absolute;
 	inset-block-start: 50%;
 	transform: translateY(-50%);
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	inline-size: 2rem;
-	block-size: 2rem;
+	min-inline-size: var(--carousel-carousel-nav-hit, var(--hit-min, max(2.75rem, 44px)));
+	min-block-size: var(--carousel-carousel-nav-hit, var(--hit-min, max(2.75rem, 44px)));
+	inline-size: var(--carousel-carousel-nav-hit, var(--hit-min, max(2.75rem, 44px)));
+	block-size: var(--carousel-carousel-nav-hit, var(--hit-min, max(2.75rem, 44px)));
 	/* padding:0 is load-bearing — the global button style injects asymmetric
 	   padding that, under border-box, swells the fixed 2rem box into an ellipse;
 	   zero it so width==height and the radius reads as a true circle. Shape is the
@@ -98,23 +101,23 @@
 		opacity var(--dur-fast) var(--ease-out, ease),
 		transform var(--dur-fast) var(--ease-spring);
 }
-.nav:hover {
+.carousel-nav:hover {
 	/* A faint accent wash on hover — still mostly see-through, just enough to
 	   register the target. Fully overridable per theme. */
 	background: var(--carousel-arrow-hover-bg, color-mix(in oklab, var(--teal) 32%, transparent));
 }
-.nav:active {
+.carousel-nav:active {
 	transform: translateY(-50%) scale(0.9);
 }
-.nav.prev {
+.carousel-nav.prev {
 	inset-inline-start: var(--space-2);
 }
-.nav.next {
+.carousel-nav.next {
 	inset-inline-end: var(--space-2);
 }
 /* ARROW SHAPE: circle is the default (50% fallback on the knob); rounded softens
    to the mid radius, square is sharp. The prop is set on .carousel and inherits
-   down to the absolutely-positioned .nav buttons. */
+   down to the absolutely-positioned .carousel-nav buttons. */
 [data-arrow-shape='rounded'] {
 	--carousel-arrow-radius: var(--radius-md, 0.5rem);
 }
@@ -125,12 +128,12 @@
    the transparent discs never sit over the media while idle. Default keeps them
    always visible. pointer-events track opacity so a hidden arrow is never a hidden
    hit target. */
-[data-arrow-reveal='on'] .nav {
+[data-arrow-reveal='on'] .carousel-nav {
 	opacity: 0;
 	pointer-events: none;
 }
-[data-arrow-reveal='on']:hover .nav,
-[data-arrow-reveal='on']:focus-within .nav {
+[data-arrow-reveal='on']:hover .carousel-nav,
+[data-arrow-reveal='on']:focus-within .carousel-nav {
 	opacity: 1;
 	pointer-events: auto;
 }
@@ -140,7 +143,7 @@
 	justify-content: center;
 	gap: var(--space-2);
 }
-.dot {
+.carousel-dot {
 	position: relative;
 	padding: 0;
 	border: none;
@@ -148,46 +151,46 @@
 	cursor: pointer;
 	overflow: hidden;
 }
-.dot-fill {
+.carousel-dot-fill {
 	display: block;
 	pointer-events: none;
-	background: var(--carousel-dot-active, var(--teal));
+	background: var(--carousel-carousel-dot-active, var(--teal));
 }
 /* DOTS — small pills; the active one widens + fills. */
-[data-indicators='dots'] .dot {
+[data-indicators='dots'] .carousel-dot {
 	inline-size: 0.5rem;
 	block-size: 0.5rem;
 	border-radius: 999px;
 	/* Adaptive pip — --dark-divider is white-alpha and vanishes on a light page;
-	   the adaptive --surface-tint-heavy reads in every theme. --carousel-dot-* hooks
+	   the adaptive --surface-tint-heavy reads in every theme. --carousel-carousel-dot-* hooks
 	   let a theme restyle the rail. */
-	background: var(--carousel-dot-color, var(--surface-tint-heavy));
+	background: var(--carousel-carousel-dot-color, var(--surface-tint-heavy));
 	transition:
 		inline-size var(--dur-fast) var(--ease-spring),
 		background var(--dur-fast) var(--ease-out, ease);
 }
-[data-indicators='dots'] .dot[data-on] {
+[data-indicators='dots'] .carousel-dot[data-on] {
 	inline-size: 1.25rem;
-	background: var(--carousel-dot-active, var(--teal));
+	background: var(--carousel-carousel-dot-active, var(--teal));
 }
-[data-indicators='dots'] .dot-fill {
+[data-indicators='dots'] .carousel-dot-fill {
 	display: none;
 }
 /* PROGRESS — bars; the active one fills across the autoplay interval. */
-[data-indicators='progress'] .dot {
+[data-indicators='progress'] .carousel-dot {
 	inline-size: 2.5rem;
 	block-size: 0.25rem;
 	border-radius: 999px;
-	background: var(--carousel-dot-color, var(--surface-tint-heavy));
+	background: var(--carousel-carousel-dot-color, var(--surface-tint-heavy));
 }
-[data-indicators='progress'] .dot-fill {
+[data-indicators='progress'] .carousel-dot-fill {
 	inline-size: 100%;
 	block-size: 100%;
 	transform: scaleX(0);
 	transform-origin: left center;
 	border-radius: inherit;
 }
-[data-indicators='progress'] .dot[data-on] .dot-fill {
+[data-indicators='progress'] .carousel-dot[data-on] .carousel-dot-fill {
 	animation: carousel-progress var(--carousel-interval, 4000ms) linear forwards;
 }
 @keyframes carousel-progress {
@@ -203,11 +206,11 @@
 	[data-transition='fade'] ui-carousel-slide {
 		transition: none;
 	}
-	[data-indicators='progress'] .dot[data-on] .dot-fill {
+	[data-indicators='progress'] .carousel-dot[data-on] .carousel-dot-fill {
 		animation: none;
 		transform: scaleX(1);
 	}
-	.nav:active {
+	.carousel-nav:active {
 		transform: translateY(-50%);
 	}
 }

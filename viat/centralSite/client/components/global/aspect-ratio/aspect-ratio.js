@@ -37,8 +37,8 @@ export class UIAspectRatio extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="ar" style=${this.ratioStyle}>
-				<div class="ar-inner"><slot></slot></div>
+			<div class="aspect-ratio" style=${this.ratioStyle}>
+				<div class="aspect-ratio-inner"><slot></slot></div>
 			</div>
 		`;
 	}

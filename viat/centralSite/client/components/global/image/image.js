@@ -11,7 +11,13 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import '../whitebox-modal/whitebox-modal.js';
-import { WebComponent } from 'webcomponent';
+import {
+	armLazy,
+	isTrue,
+	onLazyVisible,
+	syncLazy,
+	WebComponent,
+} from 'webcomponent';
 const RADIUS = new Set([
 	'none', 'sm', 'md', 'lg', 'full',
 ]);
@@ -35,7 +41,19 @@ export class UIImage extends WebComponent {
 		shadow: 'none',
 		preview: false,
 		fit: 'cover',
+		lazy: true,
+		loaded: false,
 	};
+	onConnect() {
+		this.observe('lazy', this.onLazyFlag);
+		armLazy(this);
+	}
+	onVisible() {
+		onLazyVisible(this);
+	}
+	onLazyFlag() {
+		syncLazy(this);
+	}
 	radiusToken() {
 		return tokenIn(this.state.radius, RADIUS, 'md');
 	}
@@ -64,20 +82,23 @@ export class UIImage extends WebComponent {
 		});
 	}
 	mediaNode() {
+		if (!isTrue(this.state.loaded)) {
+			return this.htmlElement`<div class="image-ph" aria-hidden="true"></div>`;
+		}
 		if (this.state.preview === true) {
 			return this.htmlElement`
-				<button type="button" class="im-hit" @click=${this.handleActivate}>
-					<img class="im-img" src=${this.state.src} alt=${this.state.alt} loading="lazy">
+				<button type="button" class="image-hit" @click=${this.handleActivate}>
+					<img class="image-img" src=${this.state.src} alt=${this.state.alt} loading="lazy">
 				</button>
 			`;
 		}
-		return this.htmlElement`<img class="im-img" src=${this.state.src} alt=${this.state.alt} loading="lazy">`;
+		return this.htmlElement`<img class="image-img" src=${this.state.src} alt=${this.state.alt} loading="lazy">`;
 	}
 	render() {
 		this.html`
-			<figure class="im" data-radius=${this.radiusToken} data-shadow=${this.shadowToken} data-fit=${this.state.fit}>
+			<figure class="image" data-radius=${this.radiusToken} data-shadow=${this.shadowToken} data-fit=${this.state.fit}>
 				${this.mediaNode}
-				<figcaption class="im-cap" ?hidden=${this.captionHidden}>${this.state.caption}</figcaption>
+				<figcaption class="image-cap" ?hidden=${this.captionHidden}>${this.state.caption}</figcaption>
 			</figure>
 			<ui-whitebox-modal #box
 				.state.src=${this.state.src}

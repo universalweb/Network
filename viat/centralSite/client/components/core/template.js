@@ -6,6 +6,7 @@ import { projectPortals, removePortals } from './dom/portal.js';
 import { captureLightChildren, projectLightChildren } from './dom/projection.js';
 import { registerRef } from './dom/refs.js';
 import { markSpotDirty } from './lifecycle/scheduler.js';
+import { scanAndResolve } from './resolver.js';
 import {
 	addDep,
 	CONTENT_KIND,
@@ -43,6 +44,7 @@ import {
 	disposeItem,
 	eachArray,
 	getValueAtPath,
+	isArray,
 	isArrayBuffer,
 	isFunction,
 	isMap,
@@ -753,6 +755,9 @@ const CONTENT_PATCHERS = {
  * siblings — so it NEVER reads/writes the parent's whole textContent/innerHTML.
  * `spot.textNode` caches the single managed text node for the hot TEXT path.
  */
+function anchoredParent(spot) {
+	return spot.startComment?.parentNode ?? null;
+}
 function patchTextAnchored(spot, value) {
 	const str = valueToText(value);
 	const textNode = spot.textNode;
@@ -764,13 +769,21 @@ function patchTextAnchored(spot, value) {
 		}
 		return;
 	}
+	const parentNode = anchoredParent(spot);
+	if (!parentNode) {
+		return;
+	}
 	// Range held other content (or first patch) — clear it, drop in a fresh node.
 	clearRange(spot.startComment, spot.endComment);
 	const fresh = document.createTextNode(str);
 	spot.textNode = fresh;
-	spot.startComment.parentNode.insertBefore(fresh, spot.endComment);
+	parentNode.insertBefore(fresh, spot.endComment);
 }
 function patchHtmlAnchored(spot, value) {
+	const parentNode = anchoredParent(spot);
+	if (!parentNode) {
+		return;
+	}
 	clearRange(spot.startComment, spot.endComment);
 	spot.textNode = null;
 	const str = String(value ?? '');
@@ -785,7 +798,7 @@ function patchHtmlAnchored(spot, value) {
 	 */
 	const parsed = document.createElement('template');
 	parsed.innerHTML = str;
-	spot.startComment.parentNode.insertBefore(parsed.content, spot.endComment);
+	parentNode.insertBefore(parsed.content, spot.endComment);
 }
 function patchComponentAnchored(spot, value) {
 	const node = ComponentBinding.is(value) ? value.value : value;
@@ -793,10 +806,14 @@ function patchComponentAnchored(spot, value) {
 		(node === null || node.nextSibling === spot.endComment)) {
 		return;
 	}
+	const parentNode = anchoredParent(spot);
+	if (!parentNode) {
+		return;
+	}
 	clearRange(spot.startComment, spot.endComment);
 	spot.textNode = null;
 	if (node) {
-		spot.startComment.parentNode.insertBefore(node, spot.endComment);
+		parentNode.insertBefore(node, spot.endComment);
 	}
 }
 const CONTENT_PATCHERS_ANCHORED = {
@@ -806,6 +823,46 @@ const CONTENT_PATCHERS_ANCHORED = {
 	[CONTENT_KIND.COMPONENT]: patchComponentAnchored,
 	[CONTENT_KIND.LIST]: patchListAnchored,
 };
+/*
+ * The patchers that COMMIT ELEMENT NODES to the document — the only ones that can
+ * introduce an as-yet-undefined custom element, so the only ones that pay for a
+ * resolver scan. Text and empty spots never reach it.
+ *
+ * Keyed on the PATCHER, not on `spot.contentKind`: `installSpotFromPlan`
+ * pre-assigns `spot.patch` for a static list / comp() binding and never populates
+ * `contentKind`, so a kind-based gate would silently skip every StaticSpot.
+ * (`patchList*` are hoisted function declarations in template/list.js precisely so
+ * this Set can name them across the template <-> list module cycle.)
+ */
+const NODE_INSERTING_PATCHERS = new Set([
+	patchComponentKind,
+	patchComponentAnchored,
+	patchHtmlKind,
+	patchHtmlAnchored,
+	patchListKind,
+	patchListAnchored,
+]);
+/**
+ * Resolve any undefined custom element a spot just committed.
+ *
+ * The lazy component resolver otherwise runs ONCE PER RENDER PASS (render.js), but
+ * a spot patch is fine-grained — `ComputedSpot.refresh` and the list deep-write
+ * fast path put DOM on screen with no pass around them. So an `ifThen` branch, a
+ * `${() => this.htmlElement`…`}` block, or a rebuilt light row could land a tag
+ * whose module was never imported, leaving an inert `HTMLElement` in the tree: the
+ * tag appears, its content never does.
+ *
+ * Scans the spot's PARENT, never the inserted node — `querySelectorAll` excludes
+ * its own root, so scanning the node itself would miss a spot whose content IS the
+ * undefined element.
+ * @param {object} spot - The spot whose freshly patched range should be resolved.
+ */
+export function scanSpotParent(spot) {
+	const root = spot.anchored ? spot.startComment?.parentNode : spot.element;
+	if (root) {
+		scanAndResolve(root);
+	}
+}
 /**
  * A spot's contents-wrapper stays hit-testable only when it holds real
  * elements (a list, a component, or markup with tags). Pure text and
@@ -977,6 +1034,9 @@ function patchSpotBody(spot, value) {
 			bindSpotKind(spot, value);
 		}
 		spot.patch(spot, value);
+		if (NODE_INSERTING_PATCHERS.has(spot.patch)) {
+			scanSpotParent(spot);
+		}
 		return;
 	}
 	if (spot.type === SPOT_TYPE.BARE_ATTR) {
@@ -1138,6 +1198,45 @@ const EVENT_SPOTS = new WeakMap();
 function eventSpotKey(eventName, capture) {
 	return `${eventName}|${capture}`;
 }
+function findSourceKeyForRawItem(source, rawItem) {
+	const keys = Object.keys(source);
+	const keyCount = keys.length;
+	for (let keyIndex = 0; keyIndex < keyCount; keyIndex++) {
+		const sourceKey = keys[keyIndex];
+		if (source[sourceKey] === rawItem) {
+			return sourceKey;
+		}
+	}
+	return null;
+}
+/*
+ * Dispatch-time identity resolve for a componentPartial row handler. Reads the
+ * SOURCE (realm.read), never the filter/virtual view. Hit → the live
+ * `readReactive` item at that index/key. Miss (no realm, each()-static,
+ * removed row) → the stored raw item. Never drop the handler call.
+ */
+function resolvePartialHandlerItem(partialMeta) {
+	const listSpot = partialMeta.listSpot;
+	if (!listSpot?.realm) {
+		return partialMeta.item;
+	}
+	const raw = listSpot.realm.read(listSpot.realmPath);
+	if (isArray(raw)) {
+		const sourceIndex = raw.indexOf(partialMeta.item);
+		if (sourceIndex === -1) {
+			return partialMeta.item;
+		}
+		return listSpot.realm.readReactive(listSpot.realmPath)[sourceIndex];
+	}
+	if (isPlainObject(raw)) {
+		const sourceKey = findSourceKeyForRawItem(raw, partialMeta.item);
+		if (sourceKey === null) {
+			return partialMeta.item;
+		}
+		return listSpot.realm.readReactive(listSpot.realmPath)[sourceKey];
+	}
+	return partialMeta.item;
+}
 function dispatchEventSpot(host, domEvent, capture) {
 	const map = EVENT_SPOTS.get(host);
 	if (!map) {
@@ -1161,17 +1260,23 @@ function dispatchEventSpot(host, domEvent, capture) {
 		domEvent.preventDefault();
 	}
 	/*
-	 * componentPartial list rows: pass current item/index from the row binding
-	 * record (updated on every patchList reuse) so handlers must not close over
-	 * the mount-time item. Signature: handler(domEvent, item, itemIndex).
-	 * Receiver is record.host (template owner), not the list spot alone.
+	 * componentPartial list rows: resolve the handler item at DISPATCH time by
+	 * identity against the live source (never a cached index; never the
+	 * filter/virtual view). Miss fails soft to the stored raw item — the
+	 * handler still runs. Signature: handler(domEvent, item, itemIndex).
+	 * `itemIndex` stays the row's stored index. Receiver is record.host.
 	 */
 	let result;
 	if (spot.partialRoot) {
 		const partialMeta = PARTIAL_ROW_INSTANCES.get(spot.partialRoot);
 		if (partialMeta) {
 			const owner = partialMeta.host || spot.component;
-			result = spot.expr.call(owner, domEvent, partialMeta.item, partialMeta.itemIndex);
+			result = spot.expr.call(
+				owner,
+				domEvent,
+				resolvePartialHandlerItem(partialMeta),
+				partialMeta.itemIndex
+			);
 		} else {
 			result = spot.component.runEventHandler(spot.expr, domEvent, host, domEvent.type);
 		}
@@ -1256,10 +1361,16 @@ class BindingSpot extends Spot {
 	 *  skip the redundant getValueAtPath walk at drain time. Measured 1.28x
 	 *  faster than the re-read + task-dispatch path (see _batcherBench). */
 	handle(nextValue) {
+		if (!this.live) {
+			return;
+		}
 		this.pendingValue = nextValue;
 		markSpotDirty(this);
 	}
 	drain() {
+		if (!this.live) {
+			return;
+		}
 		const pendingValue = this.pendingValue;
 		/*
 		 * Release the captured value once patched — holding it until the next
@@ -1304,10 +1415,16 @@ class ComputedSpot extends Spot {
 		this.branchNodes = null;
 	}
 	refresh() {
+		if (!this.live) {
+			return;
+		}
 		const {
 			value,
 			deps,
 		} = evaluateTrackedExpression(this.component, this.expr, this);
+		if (!this.live) {
+			return;
+		}
 		patchSpot(this, value);
 		syncSpotSubscriptions(this, deps);
 	}

@@ -341,7 +341,7 @@ export class UIScatterChart extends WebComponent {
 				cx: row.cx,
 				cy: row.cy,
 				r: row.r,
-				style: `--sc-series:${row.color || 'currentColor'}`,
+				style: `--scatter-chart-series:${row.color || 'currentColor'}`,
 				seriesId: row.seriesId,
 				x: row.x,
 				y: row.y,
@@ -400,8 +400,8 @@ export class UIScatterChart extends WebComponent {
 	}
 	dotLayerRow(dot) {
 		return this.partial`
-			<svg class="sc-layer" viewBox=${VIEW_BOX} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-				<circle class="sc-dot" style=${dot.style}
+			<svg class="scatter-chart-layer" viewBox=${VIEW_BOX} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+				<circle class="scatter-chart-dot" style=${dot.style}
 					cx=${dot.cx} cy=${dot.cy} r=${dot.r}
 					data-series=${dot.seriesId}
 					data-x=${dot.x}
@@ -412,14 +412,14 @@ export class UIScatterChart extends WebComponent {
 	}
 	gridLayerRow(line) {
 		return this.partial`
-			<svg class="sc-layer sc-layer-grid" viewBox=${VIEW_BOX} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-				<line class="sc-grid" x1=${line.x1} y1=${line.y1} x2=${line.x2} y2=${line.y2}></line>
+			<svg class="scatter-chart-layer scatter-chart-layer-grid" viewBox=${VIEW_BOX} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+				<line class="scatter-chart-grid" x1=${line.x1} y1=${line.y1} x2=${line.x2} y2=${line.y2}></line>
 			</svg>`;
 	}
 	tickLayerRow(tick) {
 		return this.partial`
-			<svg class="sc-layer sc-layer-tick" viewBox=${VIEW_BOX} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-				<text class="sc-tick" x=${tick.x} y=${tick.y} text-anchor=${tick.anchor}>${tick.label}</text>
+			<svg class="scatter-chart-layer scatter-chart-layer-tick" viewBox=${VIEW_BOX} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+				<text class="scatter-chart-tick" x=${tick.x} y=${tick.y} text-anchor=${tick.anchor}>${tick.label}</text>
 			</svg>`;
 	}
 	isEmpty() {
@@ -476,18 +476,18 @@ export class UIScatterChart extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="sc chart-shell" data-tone=${this.state.tone}
+			<div class="scatter-chart chart-shell" data-tone=${this.state.tone}
 				data-legend-pos=${this.legendPosition}
 				data-legend-orient=${this.legendOrientation}
 				data-layout=${this.shellLayout}
 				?data-compact=${this.shellCompact}
 				role="img" aria-label=${this.state.label || 'Scatter chart'} @click=${this.handleDotClick}>
-				<div class="sc-empty" ?hidden=${this.hideEmpty}>${this.state.emptyLabel}</div>
+				<div class="scatter-chart-empty" ?hidden=${this.hideEmpty}>${this.state.emptyLabel}</div>
 				<div class="chart-plot-area">
 					<div class="chart-heading" ?hidden=${this.hideHeading}>${this.state.label}</div>
 					<div class="chart-axis-label chart-axis-label-y" ?hidden=${this.hideYLabel}>${this.state.yLabel}</div>
 					<div #plot class="chart-plot" ?data-motion=${this.state.motion}>
-						<div class="sc-svg-stack">
+						<div class="scatter-chart-svg-stack">
 							${this.list('gridLayers', this.gridLayerRow)}
 							${this.list('dotLayers', this.dotLayerRow)}
 							${this.list('tickLayers', this.tickLayerRow)}
@@ -495,7 +495,7 @@ export class UIScatterChart extends WebComponent {
 					</div>
 					<div class="chart-axis-label chart-axis-label-x" ?hidden=${this.hideXLabel}>${this.state.xLabel}</div>
 				</div>
-				<div class="chart-legend-slot sc-legend" ?hidden=${this.hideLegend}>
+				<div class="chart-legend-slot scatter-chart-legend" ?hidden=${this.hideLegend}>
 					<ui-legend
 						.state.items=${this.state.legendItems}
 						.state.orientation=${this.legendOrientation}

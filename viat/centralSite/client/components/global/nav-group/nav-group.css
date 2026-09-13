@@ -1,0 +1,8 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	min-inline-size: 0;
+}
+ui-nav-group {
+	padding-inline-start: 0.55rem;
+}

@@ -29,7 +29,7 @@ export class UIFloatingPanel extends MorphSurface {
 	render() {
 		this.html`
 			<button
-				class="fp-trigger"
+				class="floating-panel-trigger"
 				type="button"
 				#trigger
 				aria-haspopup="dialog"
@@ -39,17 +39,17 @@ export class UIFloatingPanel extends MorphSurface {
 				@click=${this.handleTriggerClick}>
 				<slot name="trigger">${this.state.label}</slot>
 			</button>
-			<div class="fp-overlay" #overlay popover="manual">
-				<div class="fp-backdrop" @click=${this.handleBackdropClick}></div>
-				<div class="fp-panel" #surface role="dialog" aria-label=${this.state.heading}>
-					<header class="fp-head">
-						<span class="fp-title">${this.state.heading}</span>
-						<button class="fp-close" type="button" aria-label="Close" @click=${this.handleCloseClick}>
+			<div class="floating-panel-overlay" #overlay popover="manual">
+				<div class="floating-panel-backdrop" @click=${this.handleBackdropClick}></div>
+				<div class="floating-panel-panel glass" #surface role="dialog" aria-label=${this.state.heading}>
+					<header class="floating-panel-head">
+						<span class="floating-panel-title">${this.state.heading}</span>
+						<button class="floating-panel-close" type="button" aria-label="Close" @click=${this.handleCloseClick}>
 							<ui-icon .state.name=${'x'} .state.size=${'sm'}></ui-icon>
 						</button>
 					</header>
-					<div class="fp-body"><slot></slot></div>
-					<footer class="fp-foot" ?hidden=${() => {
+					<div class="floating-panel-body"><slot></slot></div>
+					<footer class="floating-panel-foot" ?hidden=${() => {
 						return !this.state.footer;
 					}}><slot name="footer"></slot></footer>
 				</div>

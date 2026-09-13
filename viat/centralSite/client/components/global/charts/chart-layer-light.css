@@ -1,9 +1,10 @@
 /*
 	Light mini-SVG series + hit layers (componentPartial / this.partial).
 	Replaces ui-chart-hit / ui-chart-series-layer :host stacking rules.
-	Parent stack (.lc-svg-stack / .rc-svg-stack) places roots on one cell.
+	Parent stack (.line-chart-svg-stack / .radar-chart-svg-stack) places roots on one cell.
 */
 .chart-series-svg,
+.chart-candle-svg,
 .chart-hit-svg {
 	display: block;
 	grid-area: 1 / 1;

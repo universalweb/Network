@@ -141,12 +141,12 @@ export class AccountsListPage extends WebComponent {
 	}
 	headRow() {
 		return html`
-			<div class="al-row al-head">
-				<span class="al-cell al-addr">ADDRESS</span>
-				<span class="al-cell al-balance">BALANCE</span>
-				<span class="al-cell al-totin">TOTAL IN</span>
-				<span class="al-cell al-totout">TOTAL OUT</span>
-				<span class="al-cell al-time">UPDATED</span>
+			<div class="accounts-list-row accounts-list-head">
+				<span class="accounts-list-cell accounts-list-addr">ADDRESS</span>
+				<span class="accounts-list-cell accounts-list-balance">BALANCE</span>
+				<span class="accounts-list-cell accounts-list-totin">TOTAL IN</span>
+				<span class="accounts-list-cell accounts-list-totout">TOTAL OUT</span>
+				<span class="accounts-list-cell accounts-list-time">UPDATED</span>
 			</div>
 		`;
 	}
@@ -154,22 +154,22 @@ export class AccountsListPage extends WebComponent {
 		const addr = account.address;
 		const href = `/account/${encodeURIComponent(addr)}/`;
 		return html`
-			<div class="al-row">
-				<a class="al-cell al-addr" href=${href} title=${addr}>${shortAddress(addr)}</a>
-				<span class="al-cell al-balance">${formatAmount(account.balance)}</span>
-				<span class="al-cell al-totin">${formatAmount(account.totalIn)}</span>
-				<span class="al-cell al-totout">${formatAmount(account.totalOut)}</span>
-				<span class="al-cell al-time">${formatTimestamp(account.updatedAt || account.createdAt)}</span>
+			<div class="accounts-list-row">
+				<a class="accounts-list-cell accounts-list-addr" href=${href} title=${addr}>${shortAddress(addr)}</a>
+				<span class="accounts-list-cell accounts-list-balance">${formatAmount(account.balance)}</span>
+				<span class="accounts-list-cell accounts-list-totin">${formatAmount(account.totalIn)}</span>
+				<span class="accounts-list-cell accounts-list-totout">${formatAmount(account.totalOut)}</span>
+				<span class="accounts-list-cell accounts-list-time">${formatTimestamp(account.updatedAt || account.createdAt)}</span>
 			</div>
 		`;
 	}
 	render() {
 		this.html`
-			<div class="al-shell">
-				<header class="al-title-header">
-					<div class="al-title-block">
-						<ui-icon class="al-title-icon" .state.name=${'users'} .state.size=${'md'}></ui-icon>
-						<span class="al-title">// ACCOUNTS · RECENTLY UPDATED</span>
+			<div class="accounts-list-shell">
+				<header class="accounts-list-title-header">
+					<div class="accounts-list-title-block">
+						<ui-icon class="accounts-list-title-icon" .state.name=${'users'} .state.size=${'md'}></ui-icon>
+						<span class="accounts-list-title">// ACCOUNTS · RECENTLY UPDATED</span>
 					</div>
 				</header>
 				<ui-collection

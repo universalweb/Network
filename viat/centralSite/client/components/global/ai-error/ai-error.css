@@ -1,10 +1,7 @@
 :host {
 	display: block;
 }
-:host([hidden]) {
-	display: none;
-}
-.aier {
+.ai-error {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-2);
@@ -14,41 +11,41 @@
 	border-radius: var(--radius-md);
 	background: color-mix(in oklab, var(--color-danger, oklch(0.68 0.2 25)) 8%, var(--bg-panel, rgba(255, 255, 255, 0.02)));
 }
-.aier[hidden] {
+.ai-error[hidden] {
 	display: none;
 }
-.aier[data-kind='rate-limit'],
-.aier[data-kind='quota'] {
+.ai-error[data-kind='rate-limit'],
+.ai-error[data-kind='quota'] {
 	border-color: color-mix(in oklab, var(--color-warning, oklch(0.8 0.16 80)) 40%, transparent);
 	background: color-mix(in oklab, var(--color-warning, oklch(0.8 0.16 80)) 8%, var(--bg-panel, rgba(255, 255, 255, 0.02)));
 }
-.aier[data-kind='offline'] {
+.ai-error[data-kind='offline'] {
 	border-color: color-mix(in oklab, var(--text-muted, rgba(255, 255, 255, 0.45)) 35%, transparent);
 	background: var(--bg-panel, rgba(255, 255, 255, 0.03));
 }
-.aier-head {
+.ai-error-head {
 	display: flex;
 	align-items: center;
 	gap: var(--space-2);
 }
-.aier-icon {
+.ai-error-icon {
 	flex: none;
 	color: var(--color-danger, oklch(0.68 0.2 25));
 }
-.aier[data-kind='rate-limit'] .aier-icon,
-.aier[data-kind='quota'] .aier-icon {
+.ai-error[data-kind='rate-limit'] .ai-error-icon,
+.ai-error[data-kind='quota'] .ai-error-icon {
 	color: var(--color-warning, oklch(0.8 0.16 80));
 }
-.aier[data-kind='offline'] .aier-icon {
+.ai-error[data-kind='offline'] .ai-error-icon {
 	color: var(--text-muted, rgba(255, 255, 255, 0.55));
 }
-.aier-title {
+.ai-error-title {
 	font-size: var(--text-xs);
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	color: var(--text-main);
 }
-.aier-dismiss {
+.ai-error-dismiss {
 	margin-inline-start: auto;
 	display: inline-flex;
 	align-items: center;
@@ -60,23 +57,23 @@
 	color: var(--text-muted, rgba(255, 255, 255, 0.55));
 	cursor: pointer;
 }
-.aier-dismiss:hover {
+.ai-error-dismiss:hover {
 	color: var(--text-main);
 }
-.aier-dismiss[hidden] {
+.ai-error-dismiss[hidden] {
 	display: none;
 }
-.aier-message {
+.ai-error-message {
 	margin: 0;
 	font-size: var(--text-sm);
 	line-height: 1.45;
 	color: var(--text-main);
 	overflow-wrap: anywhere;
 }
-.aier-actions {
+.ai-error-actions {
 	display: flex;
 	gap: var(--space-2);
 }
-.aier-actions[hidden] {
+.ai-error-actions[hidden] {
 	display: none;
 }

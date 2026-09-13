@@ -2,12 +2,12 @@
 	position: relative;
 	display: block;
 	/* Width comes from the list's 1fr track; aspect-ratio drives height. The list
-	   feeds --il-aspect so every cell shares one ratio without per-item stamping. */
-	aspect-ratio: var(--il-aspect, 1 / 1);
+	   feeds --image-cell-aspect so every cell shares one ratio without per-item stamping. */
+	aspect-ratio: var(--image-cell-aspect, 1 / 1);
 	overflow: hidden;
 	background: var(--surface-tint, rgba(255, 255, 255, 0.04));
 }
-.il-fill {
+.image-cell-fill {
 	display: block;
 	inline-size: 100%;
 	block-size: 100%;
@@ -19,7 +19,7 @@
 	text-decoration: none;
 	cursor: pointer;
 }
-.il-img {
+.image-cell-image {
 	display: block;
 	inline-size: 100%;
 	block-size: 100%;
@@ -27,10 +27,10 @@
 	transition: transform 0.25s ease;
 	will-change: transform;
 }
-:host(:hover) .il-img {
+:host(:hover) .image-cell-image {
 	transform: scale(1.05);
 }
-.il-caption {
+.image-cell-caption {
 	position: absolute;
 	inset-inline: 0;
 	inset-block-end: 0;
@@ -40,13 +40,13 @@
 	background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
 	pointer-events: none;
 }
-.il-fill:focus-visible {
+.image-cell-fill:focus-visible {
 	outline: 2px solid var(--color-info, #3b82f6);
 	outline-offset: -2px;
 }
 @media (prefers-reduced-motion: reduce) {
-	.il-img,
-	:host(:hover) .il-img {
+	.image-cell-image,
+	:host(:hover) .image-cell-image {
 		transition: none;
 		transform: none;
 	}

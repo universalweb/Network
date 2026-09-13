@@ -27,6 +27,53 @@
  * from the DOM and dropped from all refs takes its entry with it.
  */
 const tooltipText = new WeakMap();
+/*
+ * Element key → forced SIDE (top|bottom|left|right). An entry here ALWAYS
+ * wins — `tooltipPlacement=` is a fact only the control knows. Absent = the
+ * service picks from the anchor's viewport EDGE (left band → right, right
+ * band → left), then the engine's default top-center plus flip/orthogonal
+ * search. Separate map rather than a field on a shared record so an element
+ * that only ever sets text costs exactly what it did before.
+ */
+const tooltipSide = new WeakMap();
+/*
+ * Edge band is a quarter of the viewport. Chrome (dock, sidebar) lives in
+ * that strip; a third would steal tooltips from a left content column. Below
+ * MIN_VIEW_FOR_EDGE the two bands would leave no middle, and two tooltip
+ * widths cannot sit beside the anchor anyway — leave the side to flip.
+ */
+const EDGE_BAND = 0.25;
+const MIN_VIEW_FOR_EDGE = 280;
+/**
+ * Viewport-edge side for an unplaced tooltip. Pure: the service calls this
+ * at show time; tests pin the band math without mounting a popover.
+ * @param {{left:number, width:number, right?:number}} rect - Anchor rect.
+ * @param {number} viewWidth - Viewport width in CSS pixels.
+ * @returns {string} `left` | `right` | '' (caller keeps auto).
+ */
+export function resolveAutoTooltipSide(rect, viewWidth) {
+	if (!rect || !(viewWidth >= MIN_VIEW_FOR_EDGE)) {
+		return '';
+	}
+	const band = viewWidth * EDGE_BAND;
+	const left = Number(rect.left) || 0;
+	const width = Number(rect.width) || 0;
+	const right = left + width;
+	if (left < band && right > viewWidth - band) {
+		return '';
+	}
+	const center = left + (width / 2);
+	if (center < band) {
+		return 'right';
+	}
+	if (center > viewWidth - band) {
+		return 'left';
+	}
+	return '';
+}
+function resolvedSide(element, targetRect) {
+	return tooltipSide.get(element) || resolveAutoTooltipSide(targetRect, globalThis.innerWidth);
+}
 let tooltipReady = null;
 /*
  * WeakRef so an element removed from DOM mid-hover doesn't pin. The deref
@@ -48,9 +95,16 @@ async function createTooltipElement() {
 	await tooltipEl.lifecycle.whenMounted;
 	return tooltipEl;
 }
+function reuseOrRecreateTooltip(tip) {
+	if (tip?.isConnected) {
+		return tip;
+	}
+	tooltipReady = createTooltipElement();
+	return tooltipReady;
+}
 function ensureTooltip() {
 	if (tooltipReady) {
-		return tooltipReady;
+		return tooltipReady.then(reuseOrRecreateTooltip);
 	}
 	tooltipReady = createTooltipElement();
 	return tooltipReady;
@@ -63,9 +117,11 @@ async function showFor(target, text) {
 	if (!target.isConnected || currentActiveTarget() !== target) {
 		return;
 	}
+	const targetRect = target.getBoundingClientRect();
 	tip.show({
 		text,
-		targetRect: target.getBoundingClientRect(),
+		side: resolvedSide(target, targetRect),
+		targetRect,
 	});
 }
 /**
@@ -105,9 +161,11 @@ async function hideWhenReady(ready) {
 }
 async function showWhenReady(ready, element, text) {
 	const tip = await ready.catch(swallowTooltipLoadFailure);
+	const targetRect = element.getBoundingClientRect();
 	tip?.show({
 		text,
-		targetRect: element.getBoundingClientRect(),
+		side: resolvedSide(element, targetRect),
+		targetRect,
 	});
 }
 function hide() {
@@ -154,6 +212,33 @@ export function clearTooltipText(element) {
 	if (currentActiveTarget() === element) {
 		hide();
 	}
+}
+/**
+ * — Side registry API — used by `behaviors/tooltipPlacement.js`. An element
+ * with an entry here gets that side ENFORCED (see placeTooltip); one without
+ * is placed from the viewport edge, then the automatic top-then-search.
+ */
+export function getTooltipSide(element) {
+	return tooltipSide.get(element) || '';
+}
+export function setTooltipSide(element, value) {
+	const side = value == null || value === false ? '' : String(value);
+	if (side) {
+		tooltipSide.set(element, side);
+	} else {
+		tooltipSide.delete(element);
+	}
+	/* Same live-update path as the text: re-place under the pointer rather than
+	   waiting for the next hover, so a reactive side change is visible now. */
+	if (tooltipReady && currentActiveTarget() === element) {
+		const text = tooltipText.get(element);
+		if (text) {
+			showWhenReady(tooltipReady, element, text);
+		}
+	}
+}
+export function clearTooltipSide(element) {
+	tooltipSide.delete(element);
 }
 /*
  * Shared listener objects — DOM `EventListener`-object pattern. The browser

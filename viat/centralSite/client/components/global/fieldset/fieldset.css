@@ -1,94 +1,115 @@
 :host {
 	display: block;
-	interpolate-size: allow-keywords;
+	container-type: inline-size;
+	container-name: fieldset;
 }
-.fs {
+.fieldset {
 	margin: 0;
 	min-inline-size: 0;
-	padding: 0;
-	border: 1px solid var(--popup-border, var(--surface-border, rgba(30, 35, 41, 0.14)));
-	border-radius: var(--radius-md, 0);
+	padding-block: 0 0.85rem;
+	padding-inline: 1rem;
+	border: var(--border-width, 1px) solid var(--popup-border, var(--surface-border, var(--dark-divider)));
+	border-radius: var(--radius-lg, 0.875rem);
 	background: var(--bg-panel);
 }
-.fs-legend {
-	display: block;
+.fieldset-legend {
+	display: inline-flex;
 	float: none;
-	inline-size: 100%;
-	padding: 0;
+	inline-size: auto;
+	max-inline-size: calc(100% - 1.5rem);
+	padding-inline: 0.4rem;
 	margin: 0;
+	margin-inline-start: 0.35rem;
 }
-.fs-trigger,
-.fs-static {
-	display: flex;
+.fieldset-trigger,
+.fieldset-static {
+	display: inline-flex;
 	align-items: center;
-	justify-content: space-between;
-	gap: 0.6rem;
-	inline-size: 100%;
-	padding: 0.7rem 0.9rem;
+	gap: var(--space-2, 0.4rem);
 	margin: 0;
+	padding-block: 0.15rem;
+	padding-inline: 0.15rem;
 	border: 0;
-	background: transparent;
-	color: var(--text-main);
-	font: inherit;
+	border-radius: var(--radius-sm, 0.3rem);
+	background: var(--bg-panel);
+	color: var(--panel-header-color, var(--text-muted));
+	font-family: var(--font-display, inherit);
+	font-size: var(--panel-header-font-size, var(--text-xs, 0.6875rem));
 	font-weight: var(--weight-semibold, 600);
+	letter-spacing: var(--panel-header-letter-spacing, 0.12em);
+	line-height: var(--leading-tight, 1.2);
 	text-align: start;
+	text-transform: var(--panel-header-text-transform, uppercase);
 }
-.fs-trigger {
+.fieldset-label {
+	min-inline-size: 0;
+	text-wrap: pretty;
+}
+.fieldset-trigger {
 	cursor: pointer;
+	transition:
+		color var(--dur-fast, 0.16s) var(--ease-out, ease),
+		background var(--dur-fast, 0.16s) var(--ease-out, ease);
 }
-.fs-trigger:hover {
-	background: color-mix(in oklab, var(--text-main) 5%, transparent);
+.fieldset-trigger:hover {
+	color: var(--text-main);
 }
-.fs-trigger:focus-visible {
-	outline: 2px solid var(--focus-ring-color, var(--teal));
-	outline-offset: -2px;
+.fieldset-trigger:focus {
+	outline: none;
 }
-.fs-trigger[hidden],
-.fs-static[hidden] {
+.fieldset-trigger:focus-visible {
+	outline: var(--border-width-thick, 2px) solid var(--focus-ring-color, var(--teal));
+	outline-offset: 2px;
+}
+.fieldset-trigger[hidden],
+.fieldset-static[hidden] {
 	display: none !important;
 }
-.fs[data-disabled] .fs-trigger {
+.fieldset[data-disabled] .fieldset-trigger {
 	opacity: 0.55;
 	cursor: not-allowed;
 }
-.fs-heading {
-	min-inline-size: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-.fs-chevron {
+.fieldset-chevron {
 	flex: 0 0 auto;
+	display: grid;
+	place-items: center;
 	color: var(--text-muted);
-	transition: rotate var(--dur-fast, 0.18s) var(--ease-out, ease);
+	transition:
+		rotate var(--dur-fast, 0.18s) var(--ease-out, ease),
+		color var(--dur-fast, 0.16s) var(--ease-out, ease);
 }
-.fs[data-open] .fs-chevron {
+.fieldset-trigger:hover .fieldset-chevron {
+	color: var(--text-main);
+}
+.fieldset[data-open] .fieldset-chevron {
 	rotate: 180deg;
 }
-.fs[data-icon-swap] .fs-chevron,
-.fs[data-icon-swap][data-open] .fs-chevron {
+.fieldset[data-icon-swap] .fieldset-chevron,
+.fieldset[data-icon-swap][data-open] .fieldset-chevron {
 	rotate: none;
 }
-.fs-body {
+.fieldset-body {
 	display: grid;
 	grid-template-rows: 0fr;
+	overflow: hidden;
 	transition: grid-template-rows var(--dur-base, 0.3s) var(--ease-out, ease);
 }
-.fs[data-open] .fs-body {
+.fieldset[data-open] .fieldset-body,
+.fieldset:not([data-toggleable]) .fieldset-body {
 	grid-template-rows: 1fr;
 }
-.fs-inner {
+.fieldset-inner {
+	min-block-size: 0;
 	overflow: hidden;
-	padding: 0 0.9rem 0.9rem;
+	padding-block-start: 0.35rem;
 	color: var(--text-main);
-	line-height: var(--leading-relaxed, 1.6);
-}
-.fs:not([data-toggleable]) .fs-body {
-	grid-template-rows: 1fr;
+	line-height: var(--leading-loose, 1.6);
+	background: transparent;
 }
 @media (prefers-reduced-motion: reduce) {
-	.fs-chevron,
-	.fs-body {
+	.fieldset-trigger,
+	.fieldset-chevron,
+	.fieldset-body {
 		transition: none;
 	}
 }

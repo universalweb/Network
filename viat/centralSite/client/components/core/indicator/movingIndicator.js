@@ -38,6 +38,9 @@ export class MovingIndicator {
 		this.propY = `--${prefix}-y`;
 		this.propW = `--${prefix}-w`;
 		this.propH = `--${prefix}-h`;
+		this.snapFrameTick = () => {
+			this.#onSnapFrame();
+		};
 	}
 	static create(indicatorElement, options) {
 		return new MovingIndicator(indicatorElement, options);
@@ -84,9 +87,7 @@ export class MovingIndicator {
 		if (this.#pendingFrame) {
 			cancelAnimationFrame(this.#pendingFrame);
 		}
-		this.#pendingFrame = requestAnimationFrame(() => {
-			this.#onSnapFrame();
-		});
+		this.#pendingFrame = requestAnimationFrame(this.snapFrameTick);
 	}
 	destroy() {
 		if (this.#pendingFrame) {

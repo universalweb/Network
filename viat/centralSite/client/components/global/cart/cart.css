@@ -1,0 +1,19 @@
+:host {
+	display: block;
+}
+.cart {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+.cart-heading {
+	margin: 0;
+	font-size: var(--text-md, 1rem);
+	font-weight: 650;
+	letter-spacing: -0.02em;
+	color: var(--text-main, oklch(0.95 0 0));
+}
+.cart-list {
+	display: flex;
+	flex-direction: column;
+}

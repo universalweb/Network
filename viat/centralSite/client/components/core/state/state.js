@@ -211,6 +211,13 @@ class LocalRealm {
 	read(path) {
 		return getValueAtPath(this.component.STATE, path);
 	}
+	/*
+	 * App-facing hand-off: the live `stateProxy` value at `path`. Engine
+	 * internals keep `read()` (raw STATE).
+	 */
+	readReactive(path) {
+		return getValueAtPath(this.component.stateProxy, path);
+	}
 	write(path, value) {
 		setValueAtPath(this.component.stateProxy, path, value);
 	}
@@ -592,10 +599,11 @@ class StateProxyHandler {
 	get(target, key) {
 		// Live path meta for ensure/collection(this.state.itemsConfig) and tooling.
 		if (key === STATE_PATH) {
-			// Per-(target,path) handler — path/component immutable, cache once.
+			// Per-(target,path) handler — path/component/target immutable, cache once.
 			this.carrier ??= {
 				path: this.path,
 				component: this.component,
+				target,
 			};
 			return this.carrier;
 		}

@@ -19,7 +19,7 @@
 	opacity: 0;
 	pointer-events: none;
 }
-.bs-stage {
+.boot-screen-stage {
 	position: relative;
 	display: flex;
 	flex-direction: column;
@@ -31,11 +31,11 @@
 }
 /* The logo arrives as a caller-supplied HTML string in state; the framework
    wraps that spot in a <span>. display:contents drops the wrapper box so the
-   injected <svg class="bs-mark"> is the real flex child of .bs-stage. */
-.bs-stage > span {
+   injected <svg class="boot-screen-mark"> is the real flex child of .boot-screen-stage. */
+.boot-screen-stage > span {
 	display: contents;
 }
-.bs-glow {
+.boot-screen-glow {
 	position: absolute;
 	inset-block-start: -20%;
 	inset-inline-start: 50%;
@@ -50,41 +50,41 @@
 	   the compositor and never repaints the mark. This is what keeps the boot
 	   animation smooth while the main thread is busy initialising the app. */
 	will-change: opacity, transform;
-	animation: bs-glow-pulse 4s ease-in-out infinite;
+	animation: boot-screen-glow-pulse 4s ease-in-out infinite;
 }
-.bs-mark {
+.boot-screen-mark {
 	position: relative;
 	z-index: 1;
 	width: clamp(160px, 26vw, 280px);
 	height: clamp(160px, 26vw, 280px);
 	overflow: visible;
-	/* STATIC V-halo. Previously this drop-shadow stack was animated (bs-pulse),
+	/* STATIC V-halo. Previously this drop-shadow stack was animated (boot-screen-pulse),
 	   forcing a full filter repaint of a ~360px region every frame during boot —
 	   the single most expensive thing on the splash. The breathing motion moved
-	   to the composited .bs-glow layer above; the mark now paints its halo once. */
+	   to the composited .boot-screen-glow layer above; the mark now paints its halo once. */
 	filter:
 		drop-shadow(0 4px 6px rgba(0, 0, 0, 0.55))
 		drop-shadow(0 0 18px color-mix(in oklab, var(--cyan) 62%, transparent))
 		drop-shadow(0 0 34px rgba(94, 234, 212, 0.32));
 }
-.bs-leg-left,
-.bs-leg-right,
-.bs-dash {
+.boot-screen-leg-left,
+.boot-screen-leg-right,
+.boot-screen-dash {
 	transform-box: fill-box;
 }
-.bs-leg-left {
+.boot-screen-leg-left {
 	transform-origin: 100% 100%;
-	animation: bs-leg-left-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+	animation: boot-screen-leg-left-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.bs-leg-right {
+.boot-screen-leg-right {
 	transform-origin: 0% 100%;
-	animation: bs-leg-right-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+	animation: boot-screen-leg-right-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.bs-dash {
+.boot-screen-dash {
 	transform-origin: center;
-	animation: bs-dash-in 0.55s 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+	animation: boot-screen-dash-in 0.55s 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
-@keyframes bs-leg-left-in {
+@keyframes boot-screen-leg-left-in {
 	0% {
 		opacity: 0;
 		transform: translate(48px, -38px);
@@ -94,7 +94,7 @@
 		transform: translate(0, 0);
 	}
 }
-@keyframes bs-leg-right-in {
+@keyframes boot-screen-leg-right-in {
 	0% {
 		opacity: 0;
 		transform: translate(-48px, 38px);
@@ -104,7 +104,7 @@
 		transform: translate(0, 0);
 	}
 }
-@keyframes bs-dash-in {
+@keyframes boot-screen-dash-in {
 	0% {
 		opacity: 0;
 		transform: scaleX(0);
@@ -114,7 +114,7 @@
 		transform: scaleX(1);
 	}
 }
-.bs-titles {
+.boot-screen-titles {
 	position: relative;
 	z-index: 1;
 	display: flex;
@@ -123,13 +123,13 @@
 	gap: var(--space-2);
 	text-align: center;
 }
-.bs-title {
+.boot-screen-title {
 	font-size: var(--text-md);
 	letter-spacing: 0.28em;
 	text-transform: uppercase;
 	color: var(--text-muted, rgba(255, 255, 255, 0.7));
 }
-.bs-subtitle {
+.boot-screen-subtitle {
 	font-size: var(--text-xs);
 	letter-spacing: 0.32em;
 	text-transform: uppercase;
@@ -144,7 +144,7 @@
 	--accent: var(--teal);
 	--accent-2: var(--cyan-glow-strong, color-mix(in oklab, var(--teal) 44%, transparent));
 }
-@keyframes bs-glow-pulse {
+@keyframes boot-screen-glow-pulse {
 	0%, 100% {
 		opacity: 0.7;
 		transform: translateX(-50%) scale(1);
@@ -155,11 +155,11 @@
 	}
 }
 @media (prefers-reduced-motion: reduce) {
-	.bs-glow,
-	.bs-mark,
-	.bs-leg-left,
-	.bs-leg-right,
-	.bs-dash {
+	.boot-screen-glow,
+	.boot-screen-mark,
+	.boot-screen-leg-left,
+	.boot-screen-leg-right,
+	.boot-screen-dash {
 		animation: none;
 	}
 }

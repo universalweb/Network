@@ -1,5 +1,5 @@
 /*
-	DESCRIPTION: ui-menu — a dropdown menu (MUI "Menu"), the base for context-menu
+	DESCRIPTION: ui-menu — a dropdown menu, the base for context-menu
 	(#10) and menubar (#41). Built on the NATIVE Popover API: the panel is
 	`popover="auto"`, so it renders in the TOP LAYER (escapes transformed /
 	overflow-clipped ancestors — which a MorphSurface `position:fixed`-in-shadow
@@ -13,6 +13,21 @@
 	component and cross-shadow focus).
 	── EVENTS ───────────────────────────────────────────────────────────
 	  menu:select { value, item, index }
+	Item pick closes the auto popover via closeAfterSelect(). Set
+	closeOnSelect:false to keep it open for multi-pick. Enter/Space share
+	that path (handleKey → selectIndex). Auto popovers stay OFF the
+	escape stack.
+	REJECTED lifting ui-multi-select stay-open — that component never
+	calls hidePopover after listbox:change because it is a different
+	surface (ui-listbox + popover=manual + SurfaceController). Folding
+	menus onto it would flatten auto→manual and force escape-stack
+	registration that escapeStack.js forbids.
+	REJECTED a per-component flag on menubar / split-button / nav-section /
+	context-menu — they share UIMenu.selectIndex or a copy of hidePopover.
+	REJECTED a per-item closeOnSelect on ui-menu-item — keyboard goes
+	through selectIndex; one dropdown-level policy.
+	REJECTED stuffing this into SurfaceController — that is
+	open/close/dismiss, not item-select policy.
 	── USAGE ────────────────────────────────────────────────────────────
 	  <ui-menu .state.label=${'Actions ▾'} .state.items=${[
 	    { label: 'Rename', value: 'rename', kbd: '⌘R' },
@@ -21,12 +36,32 @@
 	    { label: 'Delete', value: 'del', danger: true },
 	  ]} @menu:select=${e => run(e.detail.data.value)}></ui-menu>
 	  <ui-menu .state.align=${'end'}><span slot="trigger">⋮</span></ui-menu>
+	  <ui-menu .state.closeOnSelect=${false} .state.items=${[...]}></ui-menu>
 	──────────────────────────────────────────────────────────────────────
 */
+import '../icon/icon.js';
 import { applyAnchor, computeAnchor } from '../../core/dom/anchor.js';
 import { HideOnScroll } from '../../core/dom/hideOnScroll.js';
 import { WebComponent } from '../../core/index.js';
 import { UIMenuItem } from '../menu-item/menu-item.js';
+function itemIsSelectable(item) {
+	if (!item || item.separator === true) {
+		return false;
+	}
+	return item.checkable === true || item.checked === true || item.active === true;
+}
+function itemsAreSelectable(items) {
+	if (!Array.isArray(items)) {
+		return false;
+	}
+	const count = items.length;
+	for (let index = 0; index < count; index += 1) {
+		if (itemIsSelectable(items[index])) {
+			return true;
+		}
+	}
+	return false;
+}
 // True when (x,y) sits inside `rect` grown by `pad` on every edge. The pad
 // bridges the trigger↔panel offset gap so a pointer crossing it isn't read as
 // "left the menu". Exported for nav-section / other leave-watch consumers.
@@ -68,7 +103,59 @@ export class UIMenu extends WebComponent {
 		// Close when the page (or any ancestor scroll root) scrolls. Shared
 		// HideOnScroll util — menubar/nav-section also use it.
 		closeOnScroll: true,
+		/*
+		 * Close the auto popover after an item pick (click and Enter/Space).
+		 * Default true — today's behaviour. false keeps the panel open so
+		 * the caller can pick several items without reopening.
+		 */
+		closeOnSelect: true,
+		/*
+		 * Group default lead glyph. Applied to items that omit `icon`.
+		 * Empty + no selectable items = no reserved slot (Cut/Copy/Paste).
+		 * Empty + any checkable/checked/active item = auto `circle` / `check`
+		 * so the gutter is reserved and the row does not collapse on select.
+		 * Set leadIcon '' on a pure action menu to keep the slot closed.
+		 * `activeLeadIcon` replaces the lead when the item is selected.
+		 */
+		leadIcon: '',
+		activeLeadIcon: '',
+		/*
+		 * Trigger icon. When set, the trigger is icon-only (label remains the
+		 * accessible name). Empty = the current text trigger.
+		 */
+		icon: '',
 	};
+	onConnect() {
+		this.observe([
+			'items', 'leadIcon', 'activeLeadIcon',
+		], this.applyLeadDefaults);
+		this.applyLeadDefaults();
+	}
+	applyLeadDefaults() {
+		const selectable = itemsAreSelectable(this.state.items);
+		const idle = this.state.leadIcon || (selectable ? 'circle' : '');
+		const selected = this.state.activeLeadIcon || (selectable ? 'check' : '');
+		if (!idle && !selected) {
+			return;
+		}
+		const items = this.state.items;
+		if (!items || !items.length) {
+			return;
+		}
+		const itemCount = items.length;
+		for (let index = 0; index < itemCount; index += 1) {
+			const item = items[index];
+			if (!item || item.separator === true) {
+				continue;
+			}
+			if (idle && !item.icon) {
+				item.icon = idle;
+			}
+			if (selected && !item.activeIcon) {
+				item.activeIcon = selected;
+			}
+		}
+	}
 	// Tracks the keyboard-focused item; NOT reactive (open/close must not re-render
 	// the panel, which would tear down the live native popover).
 	activeIndex = -1;
@@ -178,7 +265,11 @@ export class UIMenu extends WebComponent {
 	/* Placement anchor element. Split-button / menubar override when the visual
 	   anchor is a cluster or a bar trigger, not `#trigger`. */
 	anchorElement() {
-		return this.refs.trigger ?? null;
+		return this.flyoutAnchor ?? this.refs.trigger ?? null;
+	}
+	showFrom(anchor) {
+		this.flyoutAnchor = anchor ?? null;
+		this.showSurfacePopover(this.refs.surface);
 	}
 	position() {
 		const anchor = this.anchorElement();
@@ -294,15 +385,35 @@ export class UIMenu extends WebComponent {
 			href: item.href,
 		});
 		// Navigation is native when the row is an <a href> — do not location.assign.
+		this.closeAfterSelect();
+	}
+	closeAfterSelect() {
+		if (this.state.closeOnSelect === false) {
+			return;
+		}
 		this.refs.surface?.hidePopover();
+	}
+	hasTriggerIcon() {
+		return Boolean(this.state.icon);
+	}
+	hideTriggerIcon() {
+		return !this.state.icon;
+	}
+	hideTriggerLabel() {
+		return Boolean(this.state.icon);
 	}
 	render() {
 		this.html`
-			<button #trigger class="menu-trigger" type="button"
+			<button #trigger class="menu-trigger" part="trigger" type="button"
+				?data-icon=${this.hasTriggerIcon}
+				aria-label=${this.state.label}
 				popovertarget="menu-pop" aria-haspopup="menu" aria-expanded="false">
-				<slot name="trigger">${this.state.label}</slot>
+				<slot name="trigger">
+					<ui-icon class="menu-trigger-icon" ?hidden=${this.hideTriggerIcon} .state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>
+					<span class="menu-trigger-label" ?hidden=${this.hideTriggerLabel}>${this.state.label}</span>
+				</slot>
 			</button>
-			<div #surface class="menu-surface" id="menu-pop" popover="auto" role="menu" tabindex="-1"
+			<div #surface class="menu-surface glass" id="menu-pop" popover="auto" role="menu" tabindex="-1"
 				@toggle=${this.handleToggle} @menu-item:select=${this.handleSelect} @keydown=${this.handleKey}>
 				${this.list('items', UIMenuItem)}
 			</div>

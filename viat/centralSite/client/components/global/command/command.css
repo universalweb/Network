@@ -2,26 +2,26 @@
 	--ui-modal-max-width: min(36rem, calc(100vw - 2rem));
 	display: contents;
 }
-.cmd {
+.command {
 	display: contents;
 }
-.cmd-dialog {
+.command-dialog {
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
 	min-inline-size: min(32rem, calc(100vw - 2.5rem));
 	padding: 0.6rem;
 }
-.cmd-field {
+.command-field {
 	flex: 0 0 auto;
 }
-.cmd-listbox {
+.command-listbox {
 	display: flex;
 	flex-direction: column;
 	min-block-size: 0;
 	position: relative;
 }
-.cmd-empty[hidden] {
+.command-empty[hidden] {
 	display: none;
 }
 @media (prefers-reduced-motion: reduce) {

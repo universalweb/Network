@@ -8,6 +8,12 @@
 	/* Nested solid buttons: glyph tracks button text, never standalone hover white. */
 	--icon-color-hover: currentColor;
 	--icon-color-active: currentColor;
+	/* Tap floor inherits into the inner ui-button. `--btn-face` keeps the
+	   painted disc at the pre-floor size; `--btn-face-clip` paints only that disc. */
+	--btn-hit: var(--hit-min, max(2.75rem, 44px));
+	/* Pre-floor painted disc (~31.5px at the 14px root). */
+	--btn-face: 2.25rem;
+	--btn-face-clip: content-box;
 }
 :host(:hover) {
 	--ui-icon-anim-state: ;

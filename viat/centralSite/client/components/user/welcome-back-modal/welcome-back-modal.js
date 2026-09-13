@@ -76,11 +76,11 @@ export class WelcomeBackModal extends WebComponent {
 		this.html`
 			<ui-modal #modal .state=${this.state.modal} style="--ui-modal-max-width: 620px">
 				<div class="modal-shell">
-					<div class="wb-hero">
-						<span class="wb-glyph" aria-hidden="true">
-							<svg class="wb-mark" viewBox="0 0 64 64" fill="none" stroke-width="5.5" stroke-linecap="square" stroke-linejoin="miter">
+					<div class="welcome-back-hero">
+						<span class="welcome-back-glyph" aria-hidden="true">
+							<svg class="welcome-back-mark" viewBox="0 0 64 64" fill="none" stroke-width="5.5" stroke-linecap="square" stroke-linejoin="miter">
 								<defs>
-									<linearGradient id="wb-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="64" y2="64">
+									<linearGradient id="welcome-back-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="64" y2="64">
 										<stop offset="0%" stop-color="#c4b5fd">
 											<animate attributeName="stop-color" values="#c4b5fd;#5eead4;#60a5fa;#f0abfc;#c4b5fd" dur="8s" repeatCount="indefinite"></animate>
 										</stop>
@@ -93,17 +93,17 @@ export class WelcomeBackModal extends WebComponent {
 										<animateTransform attributeName="gradientTransform" type="rotate" from="0 32 32" to="360 32 32" dur="14s" repeatCount="indefinite"></animateTransform>
 									</linearGradient>
 								</defs>
-								<path class="wb-leg wb-leg-left" fill="url(#wb-grad)" d="M 11.54 15.23 L 16.46 12.77 L 32.8 43.85 L 32 56.14 Z"></path>
-								<path class="wb-leg wb-leg-right" fill="url(#wb-grad)" d="M 52.46 15.23 L 47.54 12.77 L 31.2 43.85 L 32 56.14 Z"></path>
-								<line class="wb-dash" stroke="url(#wb-grad)" x1="16" y1="32" x2="48" y2="32"></line>
+								<path class="welcome-back-leg welcome-back-leg-left" fill="url(#welcome-back-grad)" d="M 11.54 15.23 L 16.46 12.77 L 32.8 43.85 L 32 56.14 Z"></path>
+								<path class="welcome-back-leg welcome-back-leg-right" fill="url(#welcome-back-grad)" d="M 52.46 15.23 L 47.54 12.77 L 31.2 43.85 L 32 56.14 Z"></path>
+								<line class="welcome-back-dash" stroke="url(#welcome-back-grad)" x1="16" y1="32" x2="48" y2="32"></line>
 							</svg>
 						</span>
-						<div class="wb-hero-text">
+						<div class="welcome-back-hero-text">
 							<header class="modal-head">
 								<span class="modal-head-id">⩝VIAT</span>
 								<span class="modal-head-title">// WELCOME BACK</span>
 							</header>
-							<p class="wb-tagline">${() => {
+							<p class="welcome-back-tagline">${() => {
 								return (this.state.locked ? 'Your profile is loaded — unlock when you\'re ready.' : 'Your profile is loaded and unlocked.');
 							}}</p>
 						</div>
@@ -129,11 +129,11 @@ export class WelcomeBackModal extends WebComponent {
 							<span class="modal-meta-val" data-lock=${this.state.locked ? 'locked' : 'unlocked'}>${this.state.locked ? '🔒 LOCKED — public data only' : '🔓 UNLOCKED — ready'}</span>
 						</div>
 					</div>
-					<div class="wb-thumb-card">
-						<button type="button" class="wb-thumb" @click=${this.handleThumbClick} aria-label="Open HD seed diagram">
+					<div class="welcome-back-thumb-card">
+						<button type="button" class="welcome-back-thumb" @click=${this.handleThumbClick} aria-label="Open HD seed diagram">
 							<img src="./HDSeed.png" alt="HD seed tree diagram" draggable="false">
 						</button>
-						<div class="wb-thumb-text">
+						<div class="welcome-back-thumb-text">
 							<strong>HOW WALLETS WORK</strong>
 							<span>Tap the diagram for a closer look at the four-pool master entropy + post-quantum trapdoor that backs every VIAT wallet.</span>
 						</div>

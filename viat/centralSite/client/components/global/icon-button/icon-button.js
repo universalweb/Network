@@ -8,6 +8,12 @@ import { classList, WebComponent } from '../../core/index.js';
  *
  * Configured by flat keys `icon` / `tooltip` / `size` / `tone` / `variant` /
  * `animated`, bound straight onto the children as direct `.state.key=` reads.
+ *
+ * The class is IconButtonBase because this module is both the shipped
+ * element (`customElements.define('ui-icon-button', IconButtonBase)`) and
+ * the extendable base (DockIconButton, toolbar / app-bar itemComponent).
+ * The Base suffix is load-bearing, not naming debt — do not rename it to
+ * UIIconButton. CATALOG_ALIASES maps IconButtonBase → UIIconButton.
  */
 export class IconButtonBase extends WebComponent {
 	static url = import.meta.url;
@@ -21,6 +27,9 @@ export class IconButtonBase extends WebComponent {
 		classes: new Set(),
 		icon: '',
 		tooltip: '',
+		// Forced tooltip side (top|bottom|left|right); empty keeps the automatic
+		// placement. Forwarded to ui-button, which owns the hover target.
+		tooltipPlacement: '',
 		size: 'md',
 		tone: 'neutral',
 		// Default chrome-light icon control; use solid/outline to match a split.
@@ -70,12 +79,14 @@ export class IconButtonBase extends WebComponent {
 			<ui-button class=${classList('icon-button', this.state.classes, {
 				active: this.state.active,
 			})}
+				exportparts="button"
 				.state.variant=${this.state.variant || 'icon'}
 				.state.tone=${this.state.tone || 'neutral'}
 				.state.size=${this.state.size || 'md'}
 				.state.circle=${this.state.circle}
 				.state.disabled=${this.state.disabled}
 				.state.tooltip=${this.state.tooltip}
+				.state.tooltipPlacement=${this.state.tooltipPlacement}
 				.state.popoverTarget=${this.state.popoverTarget}
 				.state.expanded=${this.state.expanded}
 				.state.hasPopup=${this.state.hasPopup}

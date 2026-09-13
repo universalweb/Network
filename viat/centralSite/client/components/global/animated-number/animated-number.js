@@ -81,9 +81,19 @@ export class UIAnimatedNumber extends WebComponent {
 		}) : number.toFixed(decimals);
 		return `${this.state.pre || ''}${body}${this.state.suffix || ''}`;
 	}
+	/*
+	 * NO role="status". This span's text is rewritten on every animation frame,
+	 * and role="status" is an aria-live region — a 900ms roll repaints it ~54
+	 * times and queues an announcement each time, so one KPI landing buries
+	 * assistive tech in half-counted numbers. ui-gauge sets the precedent: its
+	 * role="status" is on the hover TOOLTIP, whose text changes once per
+	 * interaction, while its value readout carries no live region at all.
+	 * The tween settles exactly on the target, so the resting text is the true
+	 * value and is read normally as page content.
+	 */
 	render() {
 		this.html`
-			<span class="animated-number" role="status">${this.format(this.state.shown)}</span>
+			<span class="animated-number">${this.format(this.state.shown)}</span>
 		`;
 	}
 }

@@ -1,0 +1,9 @@
+/*
+	This host is light-DOM inside ui-table-row's shadow. Document-scoped
+	@scope sheets cannot reach it — display:contents lives on
+	`.table-row > ui-table-cell` in table-row.css. :host is kept for the
+	empty-sheet contract and for any future shadow mount of this tag.
+*/
+:host {
+	display: contents;
+}

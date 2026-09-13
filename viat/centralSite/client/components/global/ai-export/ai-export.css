@@ -1,7 +1,7 @@
 :host {
 	display: inline-flex;
 }
-.aiex {
+.ai-export {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-2);
@@ -18,20 +18,20 @@
 	cursor: pointer;
 	transition: border-color 0.15s ease, color 0.15s ease;
 }
-.aiex:hover:not(:disabled) {
+.ai-export:hover:not(:disabled) {
 	border-color: var(--teal, var(--accent, currentColor));
 	color: var(--teal, var(--accent, currentColor));
 }
-.aiex:focus-visible {
+.ai-export:focus-visible {
 	outline: 2px solid var(--cyan, currentColor);
 	outline-offset: 1px;
 }
-.aiex:disabled {
+.ai-export:disabled {
 	opacity: 0.4;
 	cursor: not-allowed;
 }
 @media (prefers-reduced-motion: reduce) {
-	.aiex {
+	.ai-export {
 		transition: none;
 	}
 }

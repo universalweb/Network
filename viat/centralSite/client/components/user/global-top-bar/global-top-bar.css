@@ -6,7 +6,7 @@
 }
 
 /* Home link — logo mark only. Color shift on hover, no background wash. */
-.tb-logo {
+.top-bar-logo {
 	display: inline-flex;
 	align-items: center;
 	flex: 0 0 auto;
@@ -16,11 +16,11 @@
 	transition: color 0.15s ease;
 }
 
-.tb-logo:hover {
+.top-bar-logo:hover {
 	color: var(--text-light);
 }
 
-.tb-logo:focus-visible {
+.top-bar-logo:focus-visible {
 	outline: 1px solid var(--focus-ring-color, var(--topbar-accent));
 	outline-offset: 2px;
 	border-radius: var(--radius-sm);
@@ -28,14 +28,14 @@
 
 /* The mark as inline SVG (same geometry as the onboarding wo-mark) —
    centers on the bar flex midline and scales crisply via currentColor. */
-.tb-logo-mark {
+.top-bar-logo-mark {
 	display: block;
 	width: 1.5rem;
 	height: 1.5rem;
 	flex: 0 0 auto;
 }
 
-.tb-logo-text {
+.top-bar-logo-text {
 	display: inline-flex;
 	align-items: center;
 	font-family: var(--font-display);
@@ -48,14 +48,14 @@
 	min-width: 0;
 }
 
-.tb-logo-sep {
+.top-bar-logo-sep {
 	display: inline-flex;
 	align-items: center;
 	color: var(--dark-heading-sep);
 	font-weight: 300;
 }
 
-.tb-subtitle {
+.top-bar-subtitle {
 	display: inline-flex;
 	align-items: center;
 	font-size: var(--text-2xs);
@@ -73,11 +73,11 @@
 :host([data-vw="xs"]) ui-theme-select,
 :host([data-vw="sm"]) ui-theme-select,
 :host([data-vw="md"]) ui-theme-select,
-:host([data-vw="xs"]) .tb-logo-sep,
-:host([data-vw="sm"]) .tb-logo-sep,
-:host([data-vw="md"]) .tb-logo-sep,
-:host([data-vw="xs"]) .tb-subtitle,
-:host([data-vw="sm"]) .tb-subtitle,
-:host([data-vw="md"]) .tb-subtitle {
+:host([data-vw="xs"]) .top-bar-logo-sep,
+:host([data-vw="sm"]) .top-bar-logo-sep,
+:host([data-vw="md"]) .top-bar-logo-sep,
+:host([data-vw="xs"]) .top-bar-subtitle,
+:host([data-vw="sm"]) .top-bar-subtitle,
+:host([data-vw="md"]) .top-bar-subtitle {
 	display: none;
 }

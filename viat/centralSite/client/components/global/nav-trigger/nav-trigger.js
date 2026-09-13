@@ -7,6 +7,7 @@
 	  nav-trigger:hover  { id, index, hasPanel }  (pointerenter — parent opens)
 */
 import '../icon/icon.js';
+import '../invert-arrow/invert-arrow.js';
 import { WebComponent } from 'webcomponent';
 import { itemHasPanel } from '../nav-section/navPanel.js';
 function itemIsIconTrigger(item) {
@@ -93,50 +94,60 @@ export class UINavTrigger extends WebComponent {
 		if (!itemShowsChevron(this.state)) {
 			return '';
 		}
-		return this.htmlElement`<ui-icon class="nav-chevron" .state.name=${'chevron-down'} .state.size=${'sm'}></ui-icon>`;
+		return this.htmlElement`<ui-invert-arrow class="nav-chevron" .state.size=${'sm'}></ui-invert-arrow>`;
+	}
+	triggerTip() {
+		return this.state.tooltip || this.state.label || '';
+	}
+	triggerTabIndex() {
+		return this.state.tabStop ? 0 : -1;
+	}
+	hideTriggerLabel() {
+		return !this.state.label || itemIsIconTrigger(this.state);
+	}
+	triggerVariant() {
+		return itemIsIconTrigger(this.state) ? 'icon' : 'text';
+	}
+	triggerHasPopup() {
+		return this.hasPanel() ? 'dialog' : 'false';
+	}
+	triggerExpanded() {
+		if (this.hasPanel() && this.state.expanded) {
+			return 'true';
+		}
+		return 'false';
 	}
 	render() {
-		const tip = this.state.tooltip || this.state.label || '';
-		const hasPanel = this.hasPanel();
-		const isIcon = itemIsIconTrigger(this.state);
-		const tabIndex = this.state.tabStop ? 0 : -1;
-		const showLabel = Boolean(this.state.label) && !isIcon;
 		if (this.isPlainLink()) {
 			this.html`
 				<a #control class="nav-trigger" data-variant="link"
 					data-nav=${this.state.itemIndex}
 					href=${this.state.href}
-					tabindex=${tabIndex}
+					tabindex=${this.triggerTabIndex}
 					aria-disabled=${this.state.disabled ? 'true' : 'false'}
-					tooltip=${tip}
+					tooltip=${this.triggerTip}
 					@click=${this.handleActivate}
 					@pointerenter=${this.handleHover}>
 					${this.renderLead}
-					<span class="nav-label" ?hidden=${!showLabel}>${this.state.label || ''}</span>
+					<span class="nav-label" ?hidden=${this.hideTriggerLabel}>${this.state.label || ''}</span>
 				</a>
 			`;
 			return;
 		}
-		const variant = isIcon ? 'icon' : 'text';
-		const hasPopup = hasPanel ? 'dialog' : 'false';
-		let expanded = 'false';
-		if (hasPanel && this.state.expanded) {
-			expanded = 'true';
-		}
 		this.html`
 			<button #control type="button" class="nav-trigger"
-				data-variant=${variant}
+				data-variant=${this.triggerVariant}
 				data-nav=${this.state.itemIndex}
-				tabindex=${tabIndex}
+				tabindex=${this.triggerTabIndex}
 				?disabled=${this.state.disabled}
-				aria-haspopup=${hasPopup}
-				aria-expanded=${expanded}
+				aria-haspopup=${this.triggerHasPopup}
+				aria-expanded=${this.triggerExpanded}
 				?data-open=${this.state.expanded}
-				tooltip=${tip}
+				tooltip=${this.triggerTip}
 				@click=${this.handleActivate}
 				@pointerenter=${this.handleHover}>
 				${this.renderLead}
-				<span class="nav-label" ?hidden=${!showLabel}>${this.state.label || ''}</span>
+				<span class="nav-label" ?hidden=${this.hideTriggerLabel}>${this.state.label || ''}</span>
 				${this.renderChevron}
 			</button>
 		`;

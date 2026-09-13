@@ -1,8 +1,10 @@
 import { defaultLogger } from '../debug/logger.js';
 import { Perf } from '../debug/perf.js';
+import { armRenderWatch, clearRenderWatch } from '../debug/renderWatch.js';
 import {
 	registerChild, trackComponent, unregisterChild, untrackComponent,
 } from '../dom/children.js';
+import { cancelPopoverWhenReady } from '../dom/manualPopover.js';
 import { register, unregister } from '../dom/registry.js';
 import { sweepHotkeyEntries } from '../hotkeys/hotkeys.js';
 import { unlinkStateCarrier } from '../state/state.js';
@@ -16,6 +18,10 @@ import {
 	runHook,
 } from '../utilities.js';
 import { PHASE } from './phase.js';
+import {
+	enterCustomElementReaction,
+	leaveCustomElementReaction,
+} from './reactionDepth.js';
 /**
  * Lifecycle-promise key vocabulary. The single source of truth for every
  * `lifecycle.whenX` key passed as a string argument to awaitChildren.
@@ -76,13 +82,28 @@ export function connectedCallback() {
 		this.classList.add('mounting');
 	}
 	this.connectGeneration = (this.connectGeneration | 0) + 1;
-	this.pendingConnect = settleConnect(this, this.connectGeneration);
+	enterCustomElementReaction();
+	try {
+		this.pendingConnect = settleConnect(this, this.connectGeneration);
+	} finally {
+		leaveCustomElementReaction();
+	}
 }
 export function connectedMoveCallback() {
-	this.handleMove().catch(queueAsyncError);
+	enterCustomElementReaction();
+	try {
+		this.handleMove().catch(queueAsyncError);
+	} finally {
+		leaveCustomElementReaction();
+	}
 }
 export function disconnectedCallback() {
-	this.handleDisconnect().catch(queueAsyncError);
+	enterCustomElementReaction();
+	try {
+		this.handleDisconnect().catch(queueAsyncError);
+	} finally {
+		leaveCustomElementReaction();
+	}
 }
 export async function handleConnect() {
 	const perfMark = Perf.mark('connect');
@@ -93,6 +114,7 @@ export async function handleConnect() {
 	 * pair. Paired with untrackComponent in handleDisconnect.
 	 */
 	trackComponent(this);
+	armRenderWatch(this);
 	if (defaultLogger.debugOn) {
 		defaultLogger.debug('connectedCallback', `${this.constructor.name}<${this.localName}>`);
 	}
@@ -191,7 +213,15 @@ export async function handleDisconnect() {
 	this.isIntersecting = false;
 	this.isIntersected = false;
 	this.isVisible = false;
+	/*
+	 * clearTimeouts() native-clears ids only — it does not reset a cached
+	 * ComponentTimeout handle's `.id`. Cancel immediately after so the
+	 * handle cannot later clearTimeout a recycled id, and so the pending
+	 * popover slot dies with the timer.
+	 */
+	clearRenderWatch(this);
 	this.clearTimeouts();
+	cancelPopoverWhenReady(this);
 	this.clearIntervals();
 	this.stateUnsubs?.clear();
 	unlinkStateCarrier(this);

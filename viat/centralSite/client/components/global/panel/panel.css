@@ -41,19 +41,19 @@
 	gap: var(--space-3);
 }
 
-.panel-header .ph-id {
+.panel-header .panel-header-id {
 	color: var(--cyan);
-	font-size: var(--ph-id-font-size, 0.5rem);
-	letter-spacing: var(--ph-id-letter-spacing, 0.12em);
-	opacity: var(--ph-id-opacity, 0.8);
+	font-size: var(--panel-header-id-font-size, 0.5rem);
+	letter-spacing: var(--panel-header-id-letter-spacing, 0.12em);
+	opacity: var(--panel-header-id-opacity, 0.8);
 	margin-inline-end: var(--space-2);
 }
 
-.panel-header .ph-dot {
-	display: var(--ph-dot-display, block);
+.panel-header .panel-header-dot {
+	display: var(--panel-header-dot-display, block);
 	width: 0.3125rem;
 	height: 0.3125rem;
 	background: var(--teal);
 	border-radius: var(--indicator-radius);
-	box-shadow: var(--ph-dot-shadow, 0 0 4px var(--teal));
+	box-shadow: var(--panel-header-dot-shadow, 0 0 4px var(--teal));
 }

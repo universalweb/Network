@@ -45,31 +45,31 @@
 	Legacy in-plot tip shell (bar/scatter/pie until migrated to framework tooltip=).
 	Line/radar point marks: this.partial + chart-layer-light.css (--chart-mark-color).
 */
-.bc-bar,
-.pc-slice,
-.sc-dot,
-.gg-value {
+.bar-chart-bar,
+.pie-chart-slice,
+.scatter-chart-dot,
+.gauge-value {
 	cursor: pointer;
 	transition: filter var(--dur-fast, 0.12s) ease, opacity var(--dur-fast, 0.12s) ease;
 }
 
-.bc-bar:hover,
-.pc-slice:hover,
-.pc-slice.is-hover {
+.bar-chart-bar:hover,
+.pie-chart-slice:hover,
+.pie-chart-slice.is-hover {
 	opacity: 0.92;
 }
 
-.sc-dot:hover {
+.scatter-chart-dot:hover {
 	stroke: oklch(0.98 0.01 100);
 	stroke-width: 1.5;
 }
 
 @media (prefers-reduced-motion: reduce) {
 	.chart-tip,
-	.bc-bar,
-	.pc-slice,
-	.sc-dot,
-	.gg-value {
+	.bar-chart-bar,
+	.pie-chart-slice,
+	.scatter-chart-dot,
+	.gauge-value {
 		transition: none;
 	}
 }

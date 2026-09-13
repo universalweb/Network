@@ -1,15 +1,15 @@
 :host {
 	display: block;
 }
-.lb {
+.label {
 	display: flex;
 	flex-direction: column;
 	gap: 0.2rem;
 }
-.lb[data-disabled] {
+.label[data-disabled] {
 	opacity: 0.55;
 }
-.lb-text {
+.label-text {
 	display: inline-flex;
 	align-items: baseline;
 	gap: 0.25rem;
@@ -20,10 +20,10 @@
 	letter-spacing: -0.01em;
 	cursor: default;
 }
-.lb-req {
+.label-req {
 	color: var(--color-danger, oklch(0.58 0.2 25));
 }
-.lb-desc {
+.label-desc {
 	font-size: var(--text-xs, 0.75rem);
 	color: var(--text-muted);
 	line-height: 1.4;

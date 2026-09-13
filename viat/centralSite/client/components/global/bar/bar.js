@@ -14,10 +14,27 @@ export class UIBar extends WebComponent {
 	};
 	static state = {
 		orientation: 'horizontal',
+		/*
+		 * Corner cap: '' (square) · 'start' (block-start rounded, block-end
+		 * square) · 'end' (the inverse).
+		 */
+		cap: '',
 	};
+	onConnect() {
+		this.observe('cap', this.syncCap);
+		this.syncCap();
+	}
+	syncCap() {
+		const cap = this.state.cap;
+		if (cap === 'start' || cap === 'end') {
+			this.dataset.cap = cap;
+		} else {
+			this.removeAttribute('data-cap');
+		}
+	}
 	render() {
 		this.html`
-			<div class="bar" data-orientation=${this.state.orientation || 'horizontal'}>
+			<div class="bar" data-orientation=${this.state.orientation || 'horizontal'} data-cap=${this.state.cap || ''}>
 				<div class="bar-region bar-start"><slot name="start"></slot></div>
 				<div class="bar-region bar-center"><slot name="center"></slot></div>
 				<div class="bar-region bar-end"><slot name="end"></slot></div>

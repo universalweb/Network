@@ -1,4 +1,6 @@
-import { Router, routerStore, WebComponent } from 'webcomponent';
+import {
+	defaultLogger, Router, routerStore, WebComponent,
+} from 'webcomponent';
 import { UINotification } from '../notification/notification.js';
 /*
  * `<app-shell>` — the standard primary component shell. Every page mounts one
@@ -7,6 +9,9 @@ import { UINotification } from '../notification/notification.js';
  *
  *   - Notification stack: one top-layer <ui-notification>, fed by the `notify`
  *     delegate event from anywhere in the tree.
+ *   - Framework error isolation: descendant `renderError` / `lifecycleError`
+ *     events are preventDefault'd so emitError does not rethrow and freeze
+ *     the page. The failing component still records lastFrameworkError.
  *   - Viewport reflection into globalState.
  *   - URL routing (OPT-IN): a subclass that declares `static routes` (or a
  *     `static routerConfig`) turns the shell into the app's routing host — it
@@ -14,7 +19,8 @@ import { UINotification } from '../notification/notification.js';
  *     on mount, stops it on disconnect, and reflects the active view onto the
  *     host as `data-route-view` (subclass CSS keys off
  *     `:host([data-route-view='x'])`). A bare AppShell declares neither and
- *     stays fully routeless — the preview harness relies on this.
+ *     stays fully routeless. PreviewView is the preview subclass (routes under
+ *     `/preview/`); AppView is the wallet subclass.
  *
  * The base render is a bare <slot> — blank-slate per the defaults-tier rule;
  * subclasses replace render() with their own chrome.
@@ -57,6 +63,8 @@ export class AppShell extends WebComponent {
 	}
 	onConnect() {
 		this.reflectViewport();
+		this.on('renderError', this.handleFrameworkError);
+		this.on('lifecycleError', this.handleFrameworkError);
 		const router = this.ensureRouter();
 		if (router) {
 			// Prime BEFORE first render so a deep link paints its target page on
@@ -80,6 +88,15 @@ export class AppShell extends WebComponent {
 			return;
 		}
 		this.removeAttribute('data-route-view');
+	}
+	/*
+	 * Errors bubble+composed from any descendant. preventDefault marks them
+	 * handled so emitError does not rethrow raw on a microtask and take the
+	 * page down. The failing component still records lastFrameworkError.
+	 */
+	handleFrameworkError(domEvent) {
+		domEvent.preventDefault();
+		defaultLogger.error('frameworkError', domEvent.detail?.data);
 	}
 	onMount() {
 		this.delegate('notify', this.handleNotify);

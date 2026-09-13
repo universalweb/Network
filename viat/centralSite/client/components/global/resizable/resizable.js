@@ -6,8 +6,7 @@
 	section: minPrimary/maxPrimary for start, minSecondary/maxSecondary for end.
 	Drag uses setPointerCapture on the handle (same pattern as ui-slider).
 */
-import { isNumber } from '@universalweb/utilitylib';
-import { WebComponent } from 'webcomponent';
+import { isNumber, WebComponent } from 'webcomponent';
 function resolveBound(raw, fallback) {
 	if (isNumber(raw) && Number.isFinite(raw)) {
 		return raw;
@@ -181,11 +180,11 @@ export class UIResizable extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="rz" data-orientation=${this.state.orientation} ?data-disabled=${this.state.disabled}
+			<div class="resizable" data-orientation=${this.state.orientation} ?data-disabled=${this.state.disabled}
 				?data-collapsed-start=${this.isCollapsedStart}
 				?data-collapsed-end=${this.isCollapsedEnd}>
-				<div class="rz-pane rz-start" style=${this.primaryStyle}><slot name="start"></slot></div>
-				<div class="rz-handle" role="separator" tabindex="0"
+				<div class="resizable-pane resizable-start" style=${this.primaryStyle}><slot name="start"></slot></div>
+				<div class="resizable-handle" role="separator" tabindex="0"
 					aria-orientation=${this.ariaOrientation}
 					aria-valuemin=${this.effectiveMin}
 					aria-valuemax=${this.effectiveMax}
@@ -195,7 +194,7 @@ export class UIResizable extends WebComponent {
 					@pointerup=${this.handlePointerUp}
 					@pointercancel=${this.handlePointerUp}
 					@keydown=${this.handleKeydown}></div>
-				<div class="rz-pane rz-end"><slot name="end"></slot></div>
+				<div class="resizable-pane resizable-end"><slot name="end"></slot></div>
 			</div>
 		`;
 	}

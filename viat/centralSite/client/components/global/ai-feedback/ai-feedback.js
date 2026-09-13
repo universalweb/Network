@@ -35,9 +35,9 @@ export class UIAiFeedback extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="aifb" data-value=${this.state.value || 'none'} role="group" aria-label="Rate response">
+			<div class="ai-feedback" data-value=${this.state.value || 'none'} role="group" aria-label="Rate response">
 				<button type="button"
-					class="aifb-btn"
+					class="ai-feedback-btn"
 					data-action="up"
 					?data-active=${this.state.value === 'up'}
 					?disabled=${this.state.disabled || Boolean(this.state.value)}
@@ -46,7 +46,7 @@ export class UIAiFeedback extends WebComponent {
 					<ui-icon .state.name=${'thumbs-up'} .state.size=${'xs'}></ui-icon>
 				</button>
 				<button type="button"
-					class="aifb-btn"
+					class="ai-feedback-btn"
 					data-action="down"
 					?data-active=${this.state.value === 'down'}
 					?disabled=${this.state.disabled || Boolean(this.state.value)}

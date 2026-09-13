@@ -106,15 +106,15 @@
 .toast-viewport > * {
 	grid-area: 1 / 1;
 	pointer-events: auto;
-	/* Stack depth from --toast-i (0 = front). */
-	--toast-i: 0;
-	--toast-scale: calc(1 - (var(--toast-i) * 0.05));
-	--toast-y: calc(var(--toast-i) * var(--toast-peek) * -1);
-	z-index: calc(40 - var(--toast-i));
+	/* Stack depth from --stack-i (0 = front). */
+	--stack-i: 0;
+	--toast-scale: calc(1 - (var(--stack-i) * 0.05));
+	--toast-y: calc(var(--stack-i) * var(--toast-peek) * -1);
+	z-index: calc(40 - var(--stack-i));
 	transform: translateY(var(--toast-y)) scale(var(--toast-scale));
 	transform-origin: center bottom;
-	opacity: calc(1 - (var(--toast-i) * 0.08));
-	filter: brightness(calc(1 - (var(--toast-i) * 0.04)));
+	opacity: calc(1 - (var(--stack-i) * 0.08));
+	filter: brightness(calc(1 - (var(--stack-i) * 0.04)));
 	transition:
 		transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
 		opacity 0.24s ease,
@@ -122,15 +122,15 @@
 		margin 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 	/* Depth shadow grows for cards further back. */
 	box-shadow:
-		0 calc(0.35rem + var(--toast-i) * 0.15rem) calc(1.1rem + var(--toast-i) * 0.35rem)
-			color-mix(in oklch, #000 calc(28% + var(--toast-i) * 8%), transparent);
+		0 calc(0.35rem + var(--stack-i) * 0.15rem) calc(1.1rem + var(--stack-i) * 0.35rem)
+			color-mix(in oklch, #000 calc(28% + var(--stack-i) * 8%), transparent);
 	will-change: transform, opacity;
 }
 /* Top corners: stack peeks downward under the front toast. */
 :host([data-position='top-center']) .toast-viewport > *,
 :host([data-position='top-end']) .toast-viewport > *,
 :host([data-position='top-start']) .toast-viewport > * {
-	--toast-y: calc(var(--toast-i) * var(--toast-peek));
+	--toast-y: calc(var(--stack-i) * var(--toast-peek));
 	transform-origin: center top;
 }
 /* Expanded: readable vertical list with real gaps (hover or focus). */
@@ -188,17 +188,17 @@
 	grid-area: auto;
 }
 /* Cap visible stack depth — deeper than 3 are hidden until expand. */
-.toast-viewport > *[style*='--toast-i: 3'],
-.toast-viewport > *[style*='--toast-i:3'] {
+.toast-viewport > *[style*='--stack-i: 3'],
+.toast-viewport > *[style*='--stack-i:3'] {
 	opacity: 0;
 	pointer-events: none;
 }
-.toast-viewport:hover > *[style*='--toast-i: 3'],
-.toast-viewport:hover > *[style*='--toast-i:3'],
-.toast-viewport:focus-within > *[style*='--toast-i: 3'],
-.toast-viewport:focus-within > *[style*='--toast-i:3'],
-.toast-viewport[data-expanded] > *[style*='--toast-i: 3'],
-.toast-viewport[data-expanded] > *[style*='--toast-i:3'] {
+.toast-viewport:hover > *[style*='--stack-i: 3'],
+.toast-viewport:hover > *[style*='--stack-i:3'],
+.toast-viewport:focus-within > *[style*='--stack-i: 3'],
+.toast-viewport:focus-within > *[style*='--stack-i:3'],
+.toast-viewport[data-expanded] > *[style*='--stack-i: 3'],
+.toast-viewport[data-expanded] > *[style*='--stack-i:3'] {
 	opacity: 1;
 	pointer-events: auto;
 }

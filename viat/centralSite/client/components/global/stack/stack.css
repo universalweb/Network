@@ -25,25 +25,7 @@
 [data-dir='column-reverse'] {
 	flex-direction: column-reverse;
 }
-/* Gap — space tokens (variables.css --space-*) */
-[data-gap='none'] {
-	gap: 0;
-}
-[data-gap='xs'] {
-	gap: var(--space-2, 0.25rem);
-}
-[data-gap='sm'] {
-	gap: var(--space-3, 0.5rem);
-}
-[data-gap='md'] {
-	gap: var(--space-4, 0.75rem);
-}
-[data-gap='lg'] {
-	gap: var(--space-6, 1.25rem);
-}
-[data-gap='xl'] {
-	gap: var(--space-8, 2rem);
-}
+/* Gap tokens live in util-layout.css — same scale as ui-grid / ui-masonry. */
 /* Align */
 [data-align='start'] {
 	align-items: flex-start;

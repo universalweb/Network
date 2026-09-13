@@ -26,29 +26,23 @@ export class UIDetailList extends WebComponent {
 	};
 	/* Feature-light pair row — @click only when copyable. */
 	detailPairRow(pair) {
-		const label = pair?.label || '';
-		const value = pair?.value ?? '';
-		const mono = pair?.mono === true;
-		const copied = pair?.copied === true;
 		if (pair?.copy === true) {
-			const hint = copied ? 'copied' : 'copy';
-			const ariaLabel = `Copy ${label}`;
 			return this.partial`
-				<div class="dtl-pair">
-					<dt class="dtl-label">${label}</dt>
-					<dd class="dtl-value" ?data-mono=${mono}>
-						<button type="button" class="dtl-copy" ?data-copied=${copied}
-							aria-label=${ariaLabel}
+				<div class="detail-list-pair">
+					<dt class="detail-list-label">${pair?.label || ''}</dt>
+					<dd class="detail-list-value" ?data-mono=${pair?.mono === true}>
+						<button type="button" class="detail-list-copy" ?data-copied=${pair?.copied === true}
+							aria-label=${`Copy ${pair?.label || ''}`}
 							@click=${this.handleCopy}>
-							${value}<span class="dtl-copy-hint">${hint}</span>
+							${pair?.value ?? ''}<span class="detail-list-copy-hint">${pair?.copied === true ? 'copied' : 'copy'}</span>
 						</button>
 					</dd>
 				</div>`;
 		}
 		return this.partial`
-			<div class="dtl-pair">
-				<dt class="dtl-label">${label}</dt>
-				<dd class="dtl-value" ?data-mono=${mono}>${value}</dd>
+			<div class="detail-list-pair">
+				<dt class="detail-list-label">${pair?.label || ''}</dt>
+				<dd class="detail-list-value" ?data-mono=${pair?.mono === true}>${pair?.value ?? ''}</dd>
 			</div>`;
 	}
 	async handleCopy(_domEvent, item) {
@@ -86,8 +80,8 @@ export class UIDetailList extends WebComponent {
 	}
 	render() {
 		this.html`
-			<dl class="dtl" style=${() => {
-				return `--dtl-cols:${this.state.columns}`;
+			<dl class="detail-list" style=${() => {
+				return `--detail-list-cols:${this.state.columns}`;
 			}}>
 				${this.list('items', this.detailPairRow, this.pairKey)}
 			</dl>

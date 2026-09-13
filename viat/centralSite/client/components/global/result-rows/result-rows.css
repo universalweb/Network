@@ -1,0 +1,92 @@
+:host {
+	display: block;
+}
+.rrs {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3125rem;
+}
+.result-rows {
+	display: grid;
+	grid-template-columns: minmax(0, max-content) minmax(4rem, 1fr) max-content max-content;
+	align-items: center;
+	column-gap: 0.65rem;
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 0.75rem;
+}
+.result-rows-name {
+	min-inline-size: 0;
+	max-inline-size: 11rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-main, oklch(0.95 0 0));
+}
+.result-rows[data-tone='success'] .result-rows-name {
+	color: var(--color-success, oklch(0.72 0.17 145));
+	font-weight: 600;
+}
+.result-rows[data-tone='danger'] .result-rows-name {
+	color: var(--color-danger, oklch(0.63 0.2 25));
+	font-weight: 600;
+}
+.result-rows-bar {
+	min-inline-size: 0;
+	block-size: 0.4375rem;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: color-mix(in oklab, var(--text-muted, oklch(0.7 0 0)) 22%, var(--bg-panel, oklch(0.18 0 0)));
+	overflow: hidden;
+}
+.result-rows-fill {
+	display: block;
+	block-size: 100%;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: var(--cyan, oklch(0.72 0.12 230));
+}
+.result-rows[data-tone='success'] .result-rows-fill {
+	background: var(--color-success, oklch(0.72 0.17 145));
+}
+.result-rows[data-tone='danger'] .result-rows-fill {
+	background: var(--color-danger, oklch(0.63 0.2 25));
+}
+.result-rows-ops {
+	text-align: end;
+	color: var(--text-main, oklch(0.95 0 0));
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+.result-rows-ops em {
+	font-style: normal;
+	color: var(--text-muted, oklch(0.7 0 0));
+}
+.result-rows-verdict {
+	text-align: end;
+	min-inline-size: 4.875rem;
+	color: var(--text-muted, oklch(0.7 0 0));
+}
+.result-rows[data-tone='success'] .result-rows-verdict {
+	color: var(--color-success, oklch(0.72 0.17 145));
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	font-size: 0.625rem;
+}
+.result-rows[data-tone='danger'] .result-rows-verdict {
+	color: var(--color-danger, oklch(0.63 0.2 25));
+}
+@media (max-width: 37.5em) {
+	.result-rows {
+		grid-template-columns: minmax(0, 1fr) max-content;
+		column-gap: 0.5rem;
+		row-gap: 0.2rem;
+	}
+	.result-rows-name {
+		max-inline-size: none;
+	}
+	.result-rows-bar {
+		grid-column: 1 / -1;
+		order: 3;
+	}
+	.result-rows-verdict {
+		min-inline-size: 0;
+	}
+}

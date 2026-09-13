@@ -1,0 +1,16 @@
+/* uwc.util — focus rings off.
+ * Product decision 2026-09-05: keyboard :focus-visible rings are disabled on
+ * every component. That affordance is how keyboard users find the cursor;
+ * turning it off makes the UI hard to operate without a mouse. The user
+ * weighed that and asked for it. Reverse by deleting this entry from
+ * manifest.js, or opt one class out with
+ * `static styles = { 'uwc.util-focus': null }`. */
+@layer uwc.util {
+	:host(:focus),
+	:host(:focus-visible),
+	:focus,
+	:focus-visible {
+		outline: none;
+		box-shadow: none;
+	}
+}

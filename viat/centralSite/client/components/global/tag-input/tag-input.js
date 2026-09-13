@@ -192,10 +192,10 @@ export class UITagInput extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="ti" ?data-disabled=${this.state.disabled}
+			<div class="tag-input" ?data-disabled=${this.state.disabled}
 				@click=${this.focusInput} @chip:remove=${this.handleChipRemove}>
 				${this.list('tagItems', UIChip, this.tagKey)}
-				<input #input class="ti-input" type="text"
+				<input #input class="tag-input-input" type="text"
 					placeholder=${this.state.placeholder}
 					?disabled=${this.state.disabled}
 					@keydown=${this.handleKeydown} @paste=${this.handlePaste}>

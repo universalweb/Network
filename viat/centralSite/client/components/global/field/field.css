@@ -46,7 +46,7 @@
 [data-size='sm'] .field-label { font-size: var(--text-2xs); }
 [data-size='lg'] .field-label { font-size: var(--text-sm); }
 
-/* ── Float label (PrimeVue over) ───────────────────────────────────
+/* ── Float label ───────────────────────────────────────────────────
    Host tokens inherit into nested shadows (ui-input / ui-textarea).
    Floated = host :focus-within, host [data-filled], or a child [data-filled]. */
 :host([data-float-label]) {

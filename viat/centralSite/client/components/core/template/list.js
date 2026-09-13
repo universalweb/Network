@@ -27,6 +27,7 @@ import {
 	patchSpot,
 	realmForBinding,
 	resolveBindingValueForBinding,
+	scanSpotParent,
 	updateTemplateSpots,
 } from '../template.js';
 import {
@@ -82,9 +83,9 @@ export class ComponentPartialTemplate {
 		return source instanceof ComponentPartialTemplate;
 	}
 }
-function createRenderableElement(value, component, item, itemIndex) {
+function createRenderableElement(value, component, item, itemIndex, listSpot) {
 	if (ComponentPartialTemplate.is(value)) {
-		return instantiatePartialRow(value, component, item, itemIndex);
+		return instantiatePartialRow(value, component, item, itemIndex, listSpot);
 	}
 	if (ComponentHTMLTemplate.is(value)) {
 		return instantiateLightRow(value);
@@ -140,7 +141,7 @@ export function templatePartial(strings, ...values) {
 	return new ComponentPartialTemplate(strings, values, this);
 }
 const LIGHT_ROW_INSTANCES = new WeakMap();
-/** @type {WeakMap<Element, {spots:Array, prevExprs:Array, unsubs:Array, host:*, item:*, itemIndex:number}>} */
+/** @type {WeakMap<Element, {spots:Array, prevExprs:Array, unsubs:Array, host:*, item:*, itemIndex:number, recipe:*, listSpot:*}>} */
 export const PARTIAL_ROW_INSTANCES = new WeakMap();
 function assertLightTemplate(recipe, values) {
 	const valuesLength = values.length;
@@ -235,16 +236,27 @@ function instantiateLightRow(lightTemplate) {
 	LIGHT_ROW_INSTANCES.set(built.root, {
 		spots: built.spots,
 		prevExprs: values.slice(),
+		recipe: built.recipe,
 	});
 	return built.root;
 }
 function patchLightRow(element, lightTemplate) {
 	const instance = LIGHT_ROW_INSTANCES.get(element);
 	if (!instance) {
-		return false;
+		return element;
+	}
+	/*
+	 * strings↔recipe is 1:1 via getRecipe's WeakMap. A different literal
+	 * must replace, not patch spots built from the previous recipe.
+	 */
+	if (getRecipe(lightTemplate.strings) !== instance.recipe) {
+		cleanupTemplateNode(element);
+		const replacement = instantiateLightRow(lightTemplate);
+		element.replaceWith(replacement);
+		return replacement;
 	}
 	updateTemplateSpots(instance, lightTemplate.values, null);
-	return true;
+	return element;
 }
 function cleanupPartialRow(node) {
 	const instance = PARTIAL_ROW_INSTANCES.get(node);
@@ -301,7 +313,7 @@ function stampPartialEventRoots(spots, root) {
 		}
 	}
 }
-function instantiatePartialRow(partialTemplate, component, item, itemIndex) {
+function instantiatePartialRow(partialTemplate, component, item, itemIndex, listSpot) {
 	const host = partialTemplate.owner || component;
 	if (!host) {
 		throw new TypeError('componentPartial requires a host component at list materialize (use this.partial or a list on a component).');
@@ -318,22 +330,44 @@ function instantiatePartialRow(partialTemplate, component, item, itemIndex) {
 		host,
 		item,
 		itemIndex: itemIndex ?? 0,
+		recipe: built.recipe,
+		listSpot: listSpot ?? null,
 	};
 	PARTIAL_ROW_INSTANCES.set(built.root, instance);
 	built.root[TEMPLATE_CLEANUP] = cleanupPartialRow;
 	return built.root;
 }
-function patchPartialRow(element, partialTemplate, component, item, itemIndex) {
+function patchPartialRow(element, partialTemplate, component, item, itemIndex, listSpot) {
 	const instance = PARTIAL_ROW_INSTANCES.get(element);
 	if (!instance) {
-		return false;
+		return element;
+	}
+	const nextListSpot = listSpot ?? instance.listSpot;
+	/*
+	 * strings↔recipe is 1:1 via getRecipe's WeakMap. A different literal
+	 * must replace, not patch spots built from the previous recipe. Build
+	 * the replacement FROM the already-computed bag — do not re-invoke
+	 * the row fn.
+	 */
+	if (getRecipe(partialTemplate.strings) !== instance.recipe) {
+		const nextItemIndex = itemIndex ?? instance.itemIndex;
+		cleanupTemplateNode(element);
+		const replacement = instantiatePartialRow(
+			partialTemplate,
+			component,
+			item,
+			nextItemIndex,
+			nextListSpot
+		);
+		element.replaceWith(replacement);
+		return replacement;
 	}
 	const host = partialTemplate.owner || component || instance.host;
 	updateTemplateSpots(instance, partialTemplate.values, host);
 	instance.item = item;
 	instance.itemIndex = itemIndex ?? instance.itemIndex;
 	instance.host = host;
-	return true;
+	return element;
 }
 function resolveRenderKind(renderFn) {
 	if (isString(renderFn)) {
@@ -369,7 +403,7 @@ function invokeListRenderFn(renderFn, kind, component, item, itemIndex) {
 	 */
 	return renderFn.call(component, item, itemIndex);
 }
-function createListElementByKind(kind, renderFn, item, component, itemIndex) {
+function createListElementByKind(kind, renderFn, item, component, itemIndex, listSpot) {
 	if (kind === 'tag') {
 		const element = document.createElement(renderFn);
 		element.state = item;
@@ -387,7 +421,8 @@ function createListElementByKind(kind, renderFn, item, component, itemIndex) {
 		invokeListRenderFn(renderFn, kind, component, item, itemIndex),
 		component,
 		item,
-		itemIndex
+		itemIndex,
+		listSpot
 	);
 }
 function liveListItemKey(item, index) {
@@ -426,7 +461,7 @@ export class LiveList {
 		this.spot = null;
 	}
 	createElement(item, itemIndex = 0) {
-		return createListElementByKind(this.kind, this.renderFn, item, this.spot?.component, itemIndex);
+		return createListElementByKind(this.kind, this.renderFn, item, this.spot?.component, itemIndex, this.spot);
 	}
 	/** keyFn with absolute index (keyIndexOffset + relative). */
 	resolveKey(item, relativeIndex) {
@@ -472,6 +507,13 @@ export class LiveList {
 			const container = this.spot.anchored ? this.spot.startComment.parentNode : this.spot.element;
 			const tail = this.spot.anchored ? this.spot.endComment : null;
 			container.insertBefore(fragment, refElement ?? tail);
+			/*
+			 * Imperative row insert (splice / push / unshift) — straight to the DOM,
+			 * with neither patchSpot nor a render pass around it, so the resolver has
+			 * no other chance to see these rows. Without this a pushed row that uses a
+			 * not-yet-imported tag renders inert.
+			 */
+			scanSpotParent(this.spot);
 		}
 		return this;
 	}
@@ -608,8 +650,7 @@ function updateReusedElement(element, item, itemList, itemIndex = 0) {
 	if (PARTIAL_ROW_INSTANCES.has(element)) {
 		const bag = invokeListRenderFn(itemList.renderFn, itemList.kind, component, item, itemIndex);
 		if (ComponentPartialTemplate.is(bag)) {
-			patchPartialRow(element, bag, component, item, itemIndex);
-			return element;
+			return patchPartialRow(element, bag, component, item, itemIndex, itemList.spot);
 		}
 		const partialReplacement = itemList.createElement(item, itemIndex);
 		cleanupTemplateNode(element);
@@ -618,8 +659,7 @@ function updateReusedElement(element, item, itemList, itemIndex = 0) {
 	}
 	if (LIGHT_ROW_INSTANCES.has(element)) {
 		const lightBag = invokeListRenderFn(itemList.renderFn, itemList.kind, component, item, itemIndex);
-		patchLightRow(element, lightBag);
-		return element;
+		return patchLightRow(element, lightBag);
 	}
 	if (isFunction(element.assignState)) {
 		element.assignState(item);
@@ -1043,6 +1083,14 @@ export class ListSpot extends Spot {
 								(LIGHT_ROW_INSTANCES.has(element) || PARTIAL_ROW_INSTANCES.has(element))
 							) {
 								this.keyMap.set(itemKey, updateReusedElement(element, itemAtIndex, this.liveList, index));
+								/*
+								 * Rebuilt LIGHT markup, not a component render — this path returns
+								 * without reaching patchSpot, so the funnel's resolver scan never
+								 * sees it. Resolve here or a row that introduces a new tag renders
+								 * it inert. (The assignState branch above is a COMPONENT row; its
+								 * own render pass already scans.)
+								 */
+								scanSpotParent(this);
 								return;
 							}
 						} else if (virtual) {

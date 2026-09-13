@@ -188,3 +188,88 @@ export function positionOverlay(surface, trigger, options = {}) {
 	}, options);
 	return applyAnchor(surface, placed);
 }
+/**
+ * True when the trigger has a laid-out box. A 0×0 / origin box is the
+ * ifThen-mount flash: the popover would pin to viewport 0,0 for one frame.
+ * @param {Element|null|undefined} trigger - Anchor element.
+ * @returns {boolean} Whether getBoundingClientRect reports a real size.
+ */
+export function triggerBoxReady(trigger) {
+	if (!trigger || typeof trigger.getBoundingClientRect !== 'function') {
+		return false;
+	}
+	const box = trigger.getBoundingClientRect();
+	return box.width > 0 && box.height > 0;
+}
+/**
+ * Hide a popover surface before showPopover so the UA default origin (0,0)
+ * cannot paint. positionOverlayWhenReady reveals after a real place.
+ * @param {HTMLElement|null|undefined} surface - Floating panel.
+ */
+export function hideOverlay(surface) {
+	if (!surface?.style) {
+		return;
+	}
+	/*
+	 * Cloak is only for the pre-show 0,0 flash. An already-open popover is
+	 * placed — hiding it again (typeahead openList, syncOpen while open)
+	 * drops the list because handleToggle / positionPanel do not re-run.
+	 */
+	if (typeof surface.matches === 'function' && surface.matches(':popover-open')) {
+		return;
+	}
+	surface.style.visibility = 'hidden';
+}
+const pendingPlace = [];
+function flushPendingPlace() {
+	const queue = pendingPlace.splice(0, pendingPlace.length);
+	const queueCount = queue.length;
+	let reschedule = false;
+	for (let index = 0; index < queueCount; index++) {
+		const entry = queue[index];
+		const surface = entry.surface;
+		if (surface && triggerBoxReady(entry.trigger)) {
+			const placed = positionOverlay(surface, entry.trigger, entry.options);
+			if (placed && surface.style) {
+				surface.style.visibility = '';
+			}
+			continue;
+		}
+		if (surface && entry.retried !== true) {
+			entry.retried = true;
+			pendingPlace.push(entry);
+			reschedule = true;
+		}
+	}
+	if (reschedule && typeof globalThis.requestAnimationFrame === 'function') {
+		globalThis.requestAnimationFrame(flushPendingPlace);
+	}
+}
+/**
+ * Pin a popover after the trigger has a real box. Hides the surface until then
+ * so a native popover cannot paint at viewport 0,0. Uncloaks only after a
+ * successful place. One extra rAF if the trigger is still 0×0 — no poll.
+ * @param {HTMLElement} surface - Floating panel.
+ * @param {Element} trigger - Anchor element.
+ * @param {object} [options] - positionOverlay knobs.
+ * @returns {{top:number,left:number,placement:string}|null} Placed coords, or null when deferred.
+ */
+export function positionOverlayWhenReady(surface, trigger, options = {}) {
+	if (!surface || !trigger) {
+		return null;
+	}
+	if (triggerBoxReady(trigger)) {
+		const placed = positionOverlay(surface, trigger, options);
+		surface.style.visibility = '';
+		return placed;
+	}
+	surface.style.visibility = 'hidden';
+	if (pendingPlace.push({
+		surface,
+		trigger,
+		options,
+	}) === 1 && typeof globalThis.requestAnimationFrame === 'function') {
+		globalThis.requestAnimationFrame(flushPendingPlace);
+	}
+	return null;
+}

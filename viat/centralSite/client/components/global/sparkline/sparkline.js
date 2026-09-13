@@ -3,8 +3,8 @@
 	(zero-dep, no build). Feed it a number series; it draws a line, optionally
 	filled into an area. Stretches to its box via preserveAspectRatio="none" +
 	non-scaling-stroke (crisp 1.5px line at any width). The KPI-card gateway.
-	Tip points are this.partial mini-SVG circles with framework tooltip= —
-	same pattern as line-chart hitLayerRow.
+	Tip points are this.partial HTML dots (not SVG circles — preserveAspectRatio
+	none would squash them) with framework tooltip=.
 	── STANDARD INTERACTION ─────────────────────────────────────────────
 	  <ui-sparkline .state.values=${[3, 5, 4, 8, 7, 11]} .state.variant=${'area'} .state.tone=${'success'}></ui-sparkline>
 	`tone` maps to the shared token scale (accent/success/warning/danger/info/neutral).
@@ -17,7 +17,6 @@ const VIEW_H = 32;
 const VIEW_BOX = '0 0 100 32';
 // Vertical breathing room so peaks/troughs aren't clipped at the box edge.
 const PAD = 3;
-const HIT_R = 5;
 function toNumbers(values) {
 	if (!Array.isArray(values)) {
 		return [];
@@ -95,7 +94,6 @@ export class UISparkline extends WebComponent {
 				id: `p${index}`,
 				cx: point.x,
 				cy: point.y,
-				r: HIT_R,
 				tip: String(point.value),
 			});
 		}
@@ -124,13 +122,9 @@ export class UISparkline extends WebComponent {
 	}
 	hitLayerRow(hit) {
 		return this.partial`
-			<svg class="spark-hit-svg" viewBox=${VIEW_BOX} preserveAspectRatio="none" aria-hidden="true">
-				<circle class="spark-hit"
-					cx=${hit.cx}
-					cy=${hit.cy}
-					r=${hit.r}
-					tooltip=${hit.tip}></circle>
-			</svg>`;
+			<span class="spark-hit"
+				style=${`--hit-x:${(hit.cx / VIEW_W) * 100}%;--hit-y:${(hit.cy / VIEW_H) * 100}%`}
+				tooltip=${hit.tip}></span>`;
 	}
 	render() {
 		this.html`

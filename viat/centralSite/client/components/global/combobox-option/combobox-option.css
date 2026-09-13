@@ -1,7 +1,7 @@
 :host {
 	display: block;
 }
-.cbo {
+.combobox-option {
 	display: block;
 	inline-size: 100%;
 	padding: 0.45rem 0.65rem;
@@ -14,11 +14,11 @@
 	text-align: start;
 	cursor: pointer;
 }
-.cbo:hover:not(:disabled),
-.cbo[data-active] {
+.combobox-option:hover:not(:disabled),
+.combobox-option[data-active] {
 	background: color-mix(in oklch, var(--bg-panel) 80%, transparent);
 }
-.cbo:disabled {
+.combobox-option:disabled {
 	opacity: 0.45;
 	cursor: not-allowed;
 }

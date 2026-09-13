@@ -6,12 +6,12 @@
 	color: var(--text-main);
 }
 
-.sc {
-	--sc-series: var(--cyan, oklch(0.72 0.14 210));
+.scatter-chart {
+	--scatter-chart-series: var(--cyan, oklch(0.72 0.14 210));
 }
 
 /* Stacked partial mini-SVGs (same cell) — grid under dots under ticks. */
-.sc-svg-stack {
+.scatter-chart-svg-stack {
 	display: grid;
 	inline-size: 100%;
 	aspect-ratio: 400 / 220;
@@ -19,7 +19,7 @@
 	position: relative;
 }
 
-.sc-svg-stack > .sc-layer {
+.scatter-chart-svg-stack > .scatter-chart-layer {
 	grid-area: 1 / 1;
 	inline-size: 100%;
 	block-size: 100%;
@@ -27,34 +27,34 @@
 	pointer-events: none;
 }
 
-.sc-layer .sc-dot {
+.scatter-chart-layer .scatter-chart-dot {
 	pointer-events: auto;
 }
 
-.sc-grid {
+.scatter-chart-grid {
 	stroke: color-mix(in oklab, var(--border-color, currentColor) 30%, transparent);
 	stroke-width: 1;
 	vector-effect: non-scaling-stroke;
 }
 
-.sc-dot {
-	fill: var(--sc-series);
+.scatter-chart-dot {
+	fill: var(--scatter-chart-series);
 	stroke: color-mix(in oklab, var(--bg-body, Canvas) 55%, transparent);
 	stroke-width: 1;
 	cursor: pointer;
 }
 
-.sc-tick {
+.scatter-chart-tick {
 	fill: var(--text-muted, var(--text-main));
 	font-size: 10px;
 }
 
-.sc-legend {
+.scatter-chart-legend {
 	display: block;
 	min-inline-size: 0;
 }
 
-.sc-empty {
+.scatter-chart-empty {
 	display: grid;
 	place-items: center;
 	min-block-size: 11rem;
@@ -62,6 +62,6 @@
 	font-size: var(--text-sm, 0.875rem);
 }
 
-.sc-empty[hidden] {
+.scatter-chart-empty[hidden] {
 	display: none !important;
 }

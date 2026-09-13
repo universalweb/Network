@@ -1,13 +1,13 @@
 :host {
 	display: inline-flex;
 }
-.aiid {
+.ai-identity {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-2);
 	min-inline-size: 0;
 }
-.aiid-label {
+.ai-identity-label {
 	font-size: var(--text-xs);
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
@@ -16,9 +16,9 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-.aiid[data-author='assistant'] .aiid-label {
+.ai-identity[data-author='assistant'] .ai-identity-label {
 	color: var(--teal, var(--accent, currentColor));
 }
-.aiid[data-author='user'] .aiid-label {
+.ai-identity[data-author='user'] .ai-identity-label {
 	color: var(--text-main);
 }

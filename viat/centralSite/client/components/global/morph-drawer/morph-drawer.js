@@ -32,7 +32,7 @@ export class UIMorphDrawer extends MorphSurface {
 	render() {
 		this.html`
 			<button
-				class="dr-trigger"
+				class="morph-drawer-trigger"
 				type="button"
 				#trigger
 				aria-haspopup="dialog"
@@ -42,16 +42,16 @@ export class UIMorphDrawer extends MorphSurface {
 				@click=${this.handleTriggerClick}>
 				<slot name="trigger">${this.state.label}</slot>
 			</button>
-			<div class="dr-overlay" #overlay popover="manual">
-				<div class="dr-backdrop" @click=${this.handleBackdropClick}></div>
-				<aside class="dr-surface" #surface role="dialog" aria-label=${this.state.heading}>
-					<header class="dr-head">
-						<span class="dr-title">${this.state.heading}</span>
-						<button class="dr-close" type="button" aria-label="Close" @click=${this.handleCloseClick}>
+			<div class="morph-drawer-overlay" #overlay popover="manual">
+				<div class="morph-drawer-backdrop" @click=${this.handleBackdropClick}></div>
+				<aside class="morph-drawer-surface glass" #surface role="dialog" aria-label=${this.state.heading}>
+					<header class="morph-drawer-head">
+						<span class="morph-drawer-title">${this.state.heading}</span>
+						<button class="morph-drawer-close" type="button" aria-label="Close" @click=${this.handleCloseClick}>
 							<ui-icon .state.name=${'x'} .state.size=${'sm'}></ui-icon>
 						</button>
 					</header>
-					<div class="dr-body"><slot></slot></div>
+					<div class="morph-drawer-body"><slot></slot></div>
 				</aside>
 			</div>
 		`;

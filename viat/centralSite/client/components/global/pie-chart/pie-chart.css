@@ -6,70 +6,70 @@
 	color: var(--text-main);
 }
 
-.pc {
-	--pc-series: var(--cyan, oklch(0.72 0.14 210));
+.pie-chart {
+	--pie-chart-series: var(--cyan, oklch(0.72 0.14 210));
 }
 
-.pc-chart {
+.pie-chart-chart {
 	position: relative;
 	inline-size: 100%;
 	max-inline-size: 14rem;
 	justify-self: center;
 }
 
-.pc-svg-stack {
+.pie-chart-svg-stack {
 	display: grid;
 	inline-size: 100%;
 	aspect-ratio: 1;
 	position: relative;
 }
 
-.pc-svg-stack > svg {
+.pie-chart-svg-stack > svg {
 	grid-area: 1 / 1;
 	inline-size: 100%;
 	block-size: 100%;
 	overflow: visible;
 }
 
-.pc-slice-svg {
+.pie-chart-slice-svg {
 	pointer-events: none;
 }
 
-.pc-slice-svg .pc-slice {
+.pie-chart-slice-svg .pie-chart-slice {
 	pointer-events: auto;
 }
 
-.pc-total-svg {
+.pie-chart-total-svg {
 	pointer-events: none;
 }
 
-.pc-slice {
-	fill: var(--pc-series);
+.pie-chart-slice {
+	fill: var(--pie-chart-series);
 	stroke: color-mix(in oklab, var(--bg-body, Canvas) 70%, transparent);
 	stroke-width: 1.5;
 	cursor: pointer;
 	transition: opacity 0.15s ease, filter 0.12s ease;
 }
 
-.pc-slice:hover,
-.pc-slice.is-hover {
+.pie-chart-slice:hover,
+.pie-chart-slice.is-hover {
 	opacity: 0.88;
 	filter: brightness(1.1);
 }
 
-.pc-total {
+.pie-chart-total {
 	fill: var(--text-main);
 	font-size: 14px;
 	font-weight: 650;
 	pointer-events: none;
 }
 
-.pc-legend {
+.pie-chart-legend {
 	display: block;
 	min-inline-size: 0;
 }
 
-.pc-empty {
+.pie-chart-empty {
 	display: grid;
 	place-items: center;
 	min-block-size: 11rem;
@@ -77,13 +77,13 @@
 	font-size: var(--text-sm, 0.875rem);
 }
 
-.pc-empty[hidden],
+.pie-chart-empty[hidden],
 .chart-plot-area[hidden] {
 	display: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.pc-slice {
+	.pie-chart-slice {
 		transition: none;
 	}
 }

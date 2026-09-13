@@ -106,22 +106,84 @@ export class UIAvatar extends WebComponent {
 		status: '',
 		badge: '',
 		badgeTone: '',
+		/*
+		 * The src that FAILED to load, or '' while none has. Reactive because the
+		 * face is chosen from it; a plain field would change without repainting.
+		 *
+		 * Storing the failed URL rather than a status enum is what makes a swapped
+		 * photo recover by itself: the comparison in showImage() stops matching the
+		 * moment `src` changes, so a new image gets a fresh attempt with no reset
+		 * step to run and no render-ordering to get right. An 'error' FLAG needs
+		 * clearing at exactly the right point in the pass, which is the bug this
+		 * shape removes rather than solves.
+		 */
+		failedSrc: '',
 	};
-	faceView() {
+	handleImageLoad() {
+		this.emit('avatar:load-change', {
+			state: 'ready',
+			src: this.state.src,
+		});
+	}
+	/*
+	 * A broken src falls back to the initials face this component already knows
+	 * how to draw, rather than painting the browser's broken-image glyph. The
+	 * event lets a consumer swap in its own placeholder or log the bad URL.
+	 */
+	handleImageError(domEvent) {
+		const src = String(domEvent?.currentTarget?.getAttribute('src') ?? this.state.src ?? '').trim();
+		if (src === '' || this.state.failedSrc === src) {
+			return;
+		}
+		this.state.failedSrc = src;
+		this.emit('avatar:load-change', {
+			state: 'error',
+			src,
+		});
+	}
+	/*
+	 * The image is the face UNLESS this exact src has failed — not "once it has
+	 * loaded". Gating on a load event would leave a cached photo (no event on
+	 * some paths) hidden behind initials forever, with an <img> no screen reader
+	 * can see. Failure is the exceptional case, so failure is what is tested for.
+	 */
+	showImage() {
 		const src = String(this.state.src ?? '').trim();
-		if (src !== '') {
-			return this.htmlElement`<img class="av-img" src=${src} alt=${this.state.name || 'avatar'} loading="lazy">`;
+		return src !== '' && this.state.failedSrc !== src;
+	}
+	/*
+	 * The two faces are SEPARATE spots, not one method returning both. A content
+	 * spot mounts a single element, so returning two siblings from one
+	 * htmlElement silently drops them — the <img> never reached the tree at all.
+	 *
+	 * The image must stay MOUNTED while a src is set (hidden, not removed) so it
+	 * can load and so a failure can be observed; removing it would mean the error
+	 * that triggers the fallback could never fire.
+	 */
+	imageView() {
+		const src = String(this.state.src ?? '').trim();
+		if (src === '') {
+			return '';
+		}
+		return this.htmlElement`<img class="avatar-img" src=${src} alt=${this.state.name || 'avatar'} loading="lazy"
+			?hidden=${!this.showImage()}
+			@load=${this.handleImageLoad}
+			@error=${this.handleImageError}>`;
+	}
+	initialsView() {
+		if (this.showImage()) {
+			return '';
 		}
 		const initials = this.state.initials || initialsFor(this.state.name);
 		const hue = hueFor(this.state.name || this.state.initials);
-		return this.htmlElement`<span class="av-initials" style=${`background:oklch(0.62 0.13 ${hue})`} aria-hidden="true">${initials}</span>`;
+		return this.htmlElement`<span class="avatar-initials" style=${`background:oklch(0.62 0.13 ${hue})`} aria-hidden="true">${initials}</span>`;
 	}
 	statusView() {
 		const tone = STATUS_TONES.get(String(this.state.status));
 		if (!tone) {
 			return '';
 		}
-		return this.htmlElement`<span class="av-status" data-tone=${tone} tooltip=${this.state.status} role="img" aria-label=${this.state.status}></span>`;
+		return this.htmlElement`<span class="avatar-status" data-tone=${tone} tooltip=${this.state.status} role="img" aria-label=${this.state.status}></span>`;
 	}
 	badgeView() {
 		const resolved = resolveBadge(this.state.badge, this.state.badgeTone);
@@ -129,14 +191,15 @@ export class UIAvatar extends WebComponent {
 			return '';
 		}
 		return this.htmlElement`
-			<span class="av-badge" data-tone=${resolved.tone} tooltip=${resolved.label} role="img" aria-label=${resolved.label}>
+			<span class="avatar-badge" data-tone=${resolved.tone} tooltip=${resolved.label} role="img" aria-label=${resolved.label}>
 				<ui-icon .state.name=${resolved.icon} .state.size=${'xs'}></ui-icon>
 			</span>`;
 	}
 	render() {
 		this.html`
-			<div class="av" data-size=${SIZES.has(this.state.size) ? this.state.size : 'md'} data-shape=${this.state.shape === 'square' ? 'square' : 'circle'}>
-				${this.faceView}
+			<div class="avatar" data-size=${SIZES.has(this.state.size) ? this.state.size : 'md'} data-shape=${this.state.shape === 'square' ? 'square' : 'circle'} ?data-image-failed=${!this.showImage() && this.state.src}>
+				${this.imageView}
+				${this.initialsView}
 				${this.badgeView}
 				${this.statusView}
 			</div>

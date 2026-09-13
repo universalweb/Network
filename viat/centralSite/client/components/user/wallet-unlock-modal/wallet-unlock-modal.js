@@ -34,6 +34,7 @@ export class WalletUnlockModal extends WebComponent {
 			open: false,
 			showClose: true,
 			closeOnBackdrop: false,
+			heading: 'UNLOCK WALLET',
 		},
 	};
 	openFor(options = {}) {
@@ -117,10 +118,6 @@ export class WalletUnlockModal extends WebComponent {
 		this.html`
 			<ui-modal #modal .state=${this.state.modal} style="--ui-modal-max-width: 460px">
 				<div class="modal-shell">
-					<header class="modal-head">
-						<span class="modal-head-id">⩝VIAT</span>
-						<span class="modal-head-title">// UNLOCK WALLET</span>
-					</header>
 					<p class="modal-copy">${() => {
 						return this.state.reason || 'This action requires your wallet password to decrypt the private keys.';
 					}}</p>

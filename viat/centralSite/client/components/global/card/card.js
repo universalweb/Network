@@ -1,5 +1,5 @@
 /*
-	DESCRIPTION: ui-card — a STRUCTURED content card (the MUI "Card"): media banner +
+	DESCRIPTION: ui-card — a STRUCTURED content card: media banner +
 	header (avatar · heading/subheading · trailing action) + body + actions row,
 	composed on ui-surface for tone/elevation/border/radius. This is the opposite of
 	ui-surface (a blank Paper) and distinct from ui-panel (an opinionated id//title
@@ -62,16 +62,11 @@ export class UICard extends WebComponent {
 		sync();
 	}
 	render() {
-		const surfaceState = {
-			...this.state.surfaceState,
-			interactive: this.state.interactive,
-		};
-		const hasHead = Boolean(this.state.heading || this.state.subheading);
 		this.html`
-			<ui-surface .state=${surfaceState}>
+			<ui-surface .state=${this.state.surfaceState} .state.interactive=${this.state.interactive}>
 				<article class="card" ?data-interactive=${this.state.interactive}>
 					<div class="card-media" #mediawrap><slot name="media"></slot></div>
-					<header class="card-header" ?data-show=${hasHead}>
+					<header class="card-header" ?data-show=${Boolean(this.state.heading || this.state.subheading)}>
 						<div class="card-avatar" #avatarwrap><slot name="avatar"></slot></div>
 						<div class="card-heads">
 							<h3 class="card-heading">${this.state.heading}</h3>

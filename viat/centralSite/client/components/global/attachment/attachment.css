@@ -1,0 +1,128 @@
+:host {
+	display: block;
+	min-inline-size: 0;
+}
+/*
+ * The row is the surface: fill, border, radius and clip together, so the
+ * thumbnail's square corners cannot poke past the curve (the surface-frame
+ * rule — see window-title-bar for the version of this that went wrong).
+ */
+.attachment {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	min-inline-size: 0;
+	padding: var(--space-2) var(--space-3);
+	background: var(--bg-panel);
+	border: 1px solid color-mix(in oklch, var(--text-muted) 16%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	overflow: clip;
+	color: var(--text-main);
+	text-decoration: none;
+	transition: background 0.16s ease, border-color 0.16s ease;
+}
+/* Only the LINK form is interactive chrome; a plain row should not pretend. */
+a.attachment:hover {
+	background: color-mix(in oklch, var(--cyan) 6%, var(--bg-panel));
+	border-color: color-mix(in oklch, var(--cyan) 24%, transparent);
+}
+a.attachment:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--cyan));
+	outline-offset: 2px;
+}
+.attachment[data-disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+/*
+ * Fixed square well. Both the thumbnail and the fallback icon sit in the SAME
+ * box, so swapping between them never reflows the row — which is what makes a
+ * late-failing image a non-event rather than a visible jump.
+ */
+.attachment-figure {
+	position: relative;
+	display: grid;
+	place-items: center;
+	flex: 0 0 auto;
+	inline-size: var(--attachment-figure-size, 2rem);
+	block-size: var(--attachment-figure-size, 2rem);
+	border-radius: var(--radius-sm, 0.25rem);
+	background: color-mix(in oklch, var(--text-muted) 10%, transparent);
+	overflow: clip;
+}
+.attachment-thumb {
+	inline-size: 100%;
+	block-size: 100%;
+	object-fit: cover;
+	display: block;
+}
+.attachment-thumb[hidden],
+.attachment-icon[hidden] {
+	display: none;
+}
+.attachment-icon {
+	color: var(--text-muted);
+}
+.attachment-copy {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	min-inline-size: 0;
+	flex: 1 1 auto;
+}
+/* The name is the one thing that must never wrap into a second line. */
+.attachment-name {
+	font-size: var(--text-sm);
+	font-weight: var(--weight-medium, 500);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-inline-size: 0;
+}
+.attachment-meta {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-inline-size: 0;
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+}
+.attachment-size {
+	flex: 0 0 auto;
+	font-variant-numeric: tabular-nums;
+}
+.attachment-description {
+	min-inline-size: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.attachment-size[hidden],
+.attachment-description[hidden],
+.attachment-remove[hidden] {
+	display: none;
+}
+.attachment-remove {
+	flex: 0 0 auto;
+}
+/* Size scale — the figure and the type ramp move together. */
+.attachment[data-size='sm'] {
+	--attachment-figure-size: 1.5rem;
+	padding: var(--space-1) var(--space-2);
+	gap: var(--space-2);
+}
+.attachment[data-size='sm'] .attachment-name {
+	font-size: var(--text-xs);
+}
+.attachment[data-size='lg'] {
+	--attachment-figure-size: 2.75rem;
+	padding: var(--space-3) var(--space-4);
+}
+.attachment[data-size='lg'] .attachment-name {
+	font-size: var(--text-md);
+}
+@media (prefers-reduced-motion: reduce) {
+	.attachment {
+		transition: none;
+	}
+}

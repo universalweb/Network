@@ -167,11 +167,14 @@
 	}
 
 	.fx-glass {
-		background: rgba(255, 255, 255, 0.06);
-		backdrop-filter: blur(12px) saturate(1.4);
-		-webkit-backdrop-filter: blur(12px) saturate(1.4);
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		border-radius: var(--radius-lg);
+		background: var(--popup-glass-bg);
+		backdrop-filter: var(--popup-glass-blur);
+		-webkit-backdrop-filter: var(--popup-glass-blur);
+	}
+	.fx-light-glass {
+		background: var(--popup-light-glass-bg);
+		backdrop-filter: var(--popup-glass-blur);
+		-webkit-backdrop-filter: var(--popup-glass-blur);
 	}
 
 	@keyframes uwc-fx-shimmer-sweep {
@@ -199,13 +202,46 @@
 		animation: uwc-fx-shimmer-sweep 1.8s linear infinite;
 		pointer-events: none;
 	}
+	/* Hover recipes — pick per control. Never una-animated lift. */
+	[data-hover='ink'],
+	[data-hover='wash'],
+	[data-hover='hairline'],
+	[data-hover='glow'] {
+		transition:
+			color var(--dur-fast, 0.16s) var(--ease-out, ease),
+			background var(--dur-fast, 0.16s) var(--ease-out, ease),
+			border-color var(--dur-fast, 0.16s) var(--ease-out, ease),
+			box-shadow var(--dur-fast, 0.18s) var(--ease-out, ease);
+	}
+	[data-hover='ink']:hover {
+		color: var(--text-main);
+	}
+	[data-hover='wash']:hover {
+		background: color-mix(in oklab, var(--text-main) 8%, transparent);
+	}
+	[data-hover='hairline']:hover {
+		border-color: color-mix(in oklab, var(--text-main) 28%, transparent);
+	}
+	[data-hover='glow']:hover {
+		box-shadow: 0 0 0 1px color-mix(in oklab, var(--text-main) 16%, transparent);
+	}
 }
 /* Accessibility kill-switch — unlayered + !important. */
 @media (prefers-reduced-motion: reduce) {
+	[data-hover='ink'],
+	[data-hover='wash'],
+	[data-hover='hairline'],
+	[data-hover='glow'] {
+		transition: none !important;
+	}
 	.fx-gradient-animate,
 	.fx-aurora::before,
 	.fx-border-beam::before,
 	.fx-shimmer::after {
 		animation: none !important;
+	}
+	.fx-glass {
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
 	}
 }

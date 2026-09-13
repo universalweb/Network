@@ -4,7 +4,7 @@
 :host {
 	display: block;
 }
-.ad-shell {
+.account-detail-shell {
 	display: flex;
 	flex-direction: column;
 	/* Shared page pad — chrome clearance is on .shell-scroll, not here. */
@@ -15,16 +15,16 @@
 	color: var(--dark-text-medium);
 	font-family: var(--font-mono, monospace);
 }
-.ad-shell > *,
-.ad-shell .ad-stats,
-.ad-shell .ad-section {
+.account-detail-shell > *,
+.account-detail-shell .account-detail-stats,
+.account-detail-shell .account-detail-section {
 	width: 100%;
 	max-width: 51.25rem;
 	margin-inline-start: auto;
 	margin-inline-end: auto;
 	box-sizing: border-box;
 }
-.ad-header {
+.account-detail-header {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
@@ -33,27 +33,27 @@
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	border-radius: var(--radius-sm);
 }
-.ad-title-block {
+.account-detail-title-block {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-3);
 	color: var(--teal);
 }
-.ad-title-icon {
+.account-detail-title-icon {
 	color: var(--teal);
 }
-.ad-label-tag {
+.account-detail-label-tag {
 	font-size: var(--text-2xs);
 	letter-spacing: 0.14em;
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 	text-transform: uppercase;
 }
-.ad-title {
+.account-detail-title {
 	font-size: var(--text-base);
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 }
-.ad-address {
+.account-detail-address {
 	background: transparent;
 	border: 1px dashed var(--dark-divider, rgba(255, 255, 255, 0.18));
 	color: var(--dark-text-medium);
@@ -64,24 +64,24 @@
 	transition: border-color 0.15s ease, color 0.15s ease;
 	width: 100%;
 }
-.ad-address:hover {
+.account-detail-address:hover {
 	border-color: var(--teal);
 	color: var(--teal);
 }
-.ad-address > * {
+.account-detail-address > * {
 	pointer-events: none;
 }
-.ad-address-text {
+.account-detail-address-text {
 	font-size: var(--text-sm);
 	word-break: break-all;
 }
-.ad-stats {
+.account-detail-stats {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
 	gap: var(--space-3);
 }
-.ad-stats-missing,
-.ad-stats-loading {
+.account-detail-stats-missing,
+.account-detail-stats-loading {
 	grid-template-columns: 1fr;
 	border: 1px dashed var(--dark-divider, rgba(255, 255, 255, 0.18));
 	padding: var(--space-4);
@@ -89,33 +89,33 @@
 	font-size: var(--text-base);
 	text-align: center;
 }
-.ad-stat {
+.account-detail-stat {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-2);
 	padding: var(--space-3) var(--space-4);
 	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.06));
 }
-.ad-stat-key {
+.account-detail-stat-key {
 	font-size: var(--text-2xs);
 	text-transform: uppercase;
 	letter-spacing: 0.16em;
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 }
-.ad-stat-val {
+.account-detail-stat-val {
 	font-size: var(--text-lg);
 	color: var(--dark-text-medium);
 	font-variant-numeric: tabular-nums;
 }
-.ad-stat-val.ad-stat-good {
+.account-detail-stat-val.account-detail-stat-good {
 	color: var(--color-success);
 }
-.ad-section {
+.account-detail-section {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
 }
-.ad-section-head {
+.account-detail-section-head {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;

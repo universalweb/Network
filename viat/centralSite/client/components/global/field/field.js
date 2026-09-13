@@ -1,7 +1,7 @@
 /*
 	DESCRIPTION: ui-field — labelled control wrapper (hint / error / required /
-	inline / size). `floatLabel` overlays the label on the nested control
-	(PrimeVue FloatLabel). Nested ui-input (and any host with data-filled)
+	inline / size). `floatLabel` overlays the label on the nested control.
+	Nested ui-input (and any host with data-filled)
 	upgrade automatically via inherited --uwc-float-* tokens + :has().
 	── STANDARD USAGE ───────────────────────────────────────────────────
 	  <ui-field .state.label=${'Email'} .state.hint=${'Never shared'} .state.required=${true}>
@@ -12,8 +12,20 @@
 	  </ui-field>
 	─────────────────────────────────────────────────────────────────────
 */
-import { hasValue } from '@universalweb/utilitylib';
-import { WebComponent } from 'webcomponent';
+import { hasValue, WebComponent } from 'webcomponent';
+const VALUE_EVENTS = [
+	'input:input',
+	'input:change',
+	'textarea:input',
+	'textarea:change',
+	'select:change',
+	'search-input:input',
+	'search-input:change',
+	'date-input:input',
+	'date-input:change',
+	'time-input:input',
+	'time-input:change',
+];
 function isFilledValue(value) {
 	if (!hasValue(value)) {
 		return false;
@@ -63,11 +75,10 @@ export class UIField extends WebComponent {
 			'floatLabel',
 			'filled',
 		], this.syncHostFlags);
-		this.on('input:input', this.handleNestedValue);
-		this.on('input:change', this.handleNestedValue);
-		this.on('textarea:input', this.handleNestedValue);
-		this.on('textarea:change', this.handleNestedValue);
-		this.on('select:change', this.handleNestedValue);
+		const eventCount = VALUE_EVENTS.length;
+		for (let index = 0; index < eventCount; index += 1) {
+			this.on(VALUE_EVENTS[index], this.handleNestedValue);
+		}
 	}
 	onMount() {
 		this.syncFilledFromSlot();

@@ -19,14 +19,16 @@ import {
  *       { key: 'connect', cells: ['connect', 500] },
  *       { key: 'render', cells: ['render', 320] },
  *     ],
+ *     density: 'compact',
  *   }}></ui-stat-table>.
+ * density: normal | compact. Row or stat-table-cell `tone` paints bid/ask color.
  *
  * Rows (`items`) accept three shapes:
  *   - Array of cells:           [cell0, cell1, …]
  *   - Object with .cells array: { key, cells: [cell0, …] }
  *   - Object keyed by column id: { key, [col.id]: cellValue, … }.
  */
-export class UiStatTable extends WebComponent {
+export class UIStatTable extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
 		statTable: './stat-table.css',
@@ -37,6 +39,7 @@ export class UiStatTable extends WebComponent {
 		columns: [],
 		items: [],
 		emptyMessage: 'no rows',
+		density: 'normal',
 		// Flat grid cells for list() — rebuilt when columns/items change.
 		cells: [],
 	};
@@ -44,7 +47,12 @@ export class UiStatTable extends WebComponent {
 		this.observe('columns', this.syncCells);
 		this.observe('items', this.syncCells);
 		this.observe('emptyMessage', this.syncCells);
+		this.observe('density', this.reflectDensity);
 		this.syncCells();
+		this.reflectDensity();
+	}
+	reflectDensity() {
+		this.dataset.density = this.state.density || 'normal';
 	}
 	gridTemplate() {
 		const columns = this.state.columns;
@@ -100,12 +108,25 @@ export class UiStatTable extends WebComponent {
 		for (let rowIndex = 0; rowIndex < itemsLength; rowIndex += 1) {
 			const row = items[rowIndex];
 			const rowKey = isObject(row) && row.key != null ? row.key : rowIndex;
+			const rowTone = isObject(row) && row.tone ? String(row.tone) : '';
 			const values = this.resolveCells(row, columns);
 			const valuesLength = values.length;
 			for (let cellIndex = 0; cellIndex < valuesLength; cellIndex += 1) {
+				const raw = values[cellIndex];
+				let text = '';
+				let tone = rowTone;
+				if (isObject(raw) && !isArray(raw)) {
+					text = raw.text ?? raw.value ?? '';
+					if (raw.tone) {
+						tone = String(raw.tone);
+					}
+				} else {
+					text = raw == null ? '' : String(raw);
+				}
 				next.push({
 					id: `c-${rowKey}-${cellIndex}`,
-					text: values[cellIndex] == null ? '' : String(values[cellIndex]),
+					text: String(text),
+					tone,
 					head: false,
 					empty: false,
 				});
@@ -117,25 +138,24 @@ export class UiStatTable extends WebComponent {
 		if (item.empty) {
 			return html`<div class="empty">${item.text}</div>`;
 		}
-		const className = item.head ? 'cell head-cell' : 'cell data-cell';
-		return html`<span class=${className}>${item.text}</span>`;
+		const className = item.head ? 'stat-table-cell stat-table-head-cell' : 'stat-table-cell stat-table-data-cell';
+		return html`<span class=${className} data-tone=${item.tone || ''}>${item.text}</span>`;
 	}
 	cellKey(item) {
 		return item.id;
 	}
 	render() {
-		const template = this.gridTemplate();
 		this.html`
-			<section class="table-wrap">
-				<header class=${`table-head${this.state.heading ? '' : ' is-empty'}`}>
+			<section class="stat-table-wrap" data-density=${this.state.density || 'normal'}>
+				<header class=${`stat-table-head${this.state.heading ? '' : ' is-empty'}`}>
 					<h3>${this.state.heading}</h3>
 					<p class="hint">${this.state.hint}</p>
 				</header>
-				<div class="grid-table" style=${`grid-template-columns: ${template};`}>
+				<div class="stat-table-grid" style=${`grid-template-columns: ${this.gridTemplate()};`}>
 					${this.list('cells', this.cellRow, this.cellKey)}
 				</div>
 			</section>
 		`;
 	}
 }
-customElements.define('ui-stat-table', UiStatTable);
+customElements.define('ui-stat-table', UIStatTable);

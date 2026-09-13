@@ -11,8 +11,10 @@
 	    @map-leaflet:select=${this.handlePick}></ui-map-leaflet>
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent } from 'webcomponent';
+import { armLazy, onLazyVisible, syncLazy } from 'webcomponent';
 import { isFiniteNumber, reuseLatLng, toLatLng } from '../map/map-geo.js';
+import { MapPhase } from '../map/map-phase.js';
+import { markerInfoContent } from '../map/map-popup.js';
 import { ensureLeafletStyles, loadLeaflet } from './loader.js';
 const DEFAULT_CENTER = {
 	lat: 20,
@@ -20,6 +22,8 @@ const DEFAULT_CENTER = {
 };
 const DEFAULT_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const DEFAULT_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const PLANE_PATH_D = 'M12 2.5 L15.2 10.5 L21 12 L15.2 13.5 L12 21.5 L8.8 13.5 L3 12 L8.8 10.5 Z';
 function toLatLngLiteral(input) {
 	return toLatLng(input);
 }
@@ -38,6 +42,30 @@ function itemId(item, index) {
 function itemPosition(item) {
 	return toLatLngLiteral(item) || toLatLngLiteral(item?.position) || toLatLngLiteral(item?.coords);
 }
+function planeMarkerElement(item, active) {
+	const color = item.iconColor || (active ? '#f59e0b' : '#22c55e');
+	const heading = isFiniteNumber(item.heading) ? item.heading : 0;
+	const label = item.label || item.description || '';
+	const root = document.createElement('div');
+	root.className = active ? 'lf-plane is-active' : 'lf-plane';
+	root.style.transform = `rotate(${heading}deg)`;
+	root.title = label;
+	const svg = document.createElementNS(SVG_NS, 'svg');
+	svg.setAttribute('viewBox', '0 0 24 24');
+	svg.setAttribute('width', '22');
+	svg.setAttribute('height', '22');
+	svg.setAttribute('aria-hidden', 'true');
+	const path = document.createElementNS(SVG_NS, 'path');
+	/* Inline fill/stroke — DivIcon HTML is not always styled by host CSS reliably. */
+	path.setAttribute('fill', String(color));
+	path.setAttribute('stroke', '#f8fafc');
+	path.setAttribute('stroke-width', '1.2');
+	path.setAttribute('paint-order', 'stroke fill');
+	path.setAttribute('d', PLANE_PATH_D);
+	svg.append(path);
+	root.append(svg);
+	return root;
+}
 function pathFromItem(path) {
 	if (!Array.isArray(path)) {
 		return [];
@@ -55,7 +83,7 @@ function pathFromItem(path) {
 	}
 	return out;
 }
-export class UIMapLeaflet extends WebComponent {
+export class UIMapLeaflet extends MapPhase {
 	static url = import.meta.url;
 	static styles = {
 		leaflet: './leaflet.css',
@@ -86,6 +114,8 @@ export class UIMapLeaflet extends WebComponent {
 		panOnActive: true,
 		showInfo: true,
 		loading: false,
+		lazy: true,
+		loaded: false,
 		errorMessage: '',
 		ready: false,
 		emptyLabel: 'Map',
@@ -151,9 +181,25 @@ export class UIMapLeaflet extends WebComponent {
 			'fitItems',
 		], this.scheduleOverlaySync);
 		this.observe(['activeIndex'], this.onActiveIndexChange);
+		this.observe('lazy', this.onLazyFlag);
+		this.observe('loaded', this.onLoadedChange);
+		armLazy(this);
+	}
+	onVisible() {
+		onLazyVisible(this);
+	}
+	onLazyFlag() {
+		syncLazy(this);
+	}
+	onLoadedChange() {
+		if (this.state.loaded === true && !this.mapInstance) {
+			this.bootMap();
+		}
 	}
 	onMount() {
-		this.bootMap();
+		if (this.state.loaded === true) {
+			this.bootMap();
+		}
 		this.attachResizeObserver();
 	}
 	onDisconnect() {
@@ -328,7 +374,7 @@ export class UIMapLeaflet extends WebComponent {
 		try {
 			this.teardownMapLayersOnly();
 			if (this.mapInstance) {
-				this.mapInstance.remove();
+				this.disposeLeafletMap(this.mapInstance);
 				this.mapInstance = null;
 			}
 			const center = toLatLngLiteral(this.state.center) || DEFAULT_CENTER;
@@ -346,7 +392,7 @@ export class UIMapLeaflet extends WebComponent {
 				attributionControl: Boolean(this.state.attributionControl),
 			});
 			if (generation !== this.bootGeneration) {
-				map.remove();
+				this.disposeLeafletMap(map);
 				return;
 			}
 			this.mapInstance = map;
@@ -542,17 +588,9 @@ export class UIMapLeaflet extends WebComponent {
 		return item?.marker === 'plane' || item?.kind === 'aircraft' || item?.icon === 'plane';
 	}
 	planeIcon(leaflet, item, active) {
-		const color = escapeHtml(item.iconColor || (active ? '#f59e0b' : '#22c55e'));
-		const heading = isFiniteNumber(item.heading) ? item.heading : 0;
-		const label = escapeHtml(item.label || item.description || '');
-		// Inline fill/stroke — DivIcon HTML is not always styled by host CSS reliably.
-		const html = `<div class="lf-plane${active ? ' is-active' : ''}" style="transform:rotate(${heading}deg)" title="${label}">` +
-			'<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">' +
-			`<path fill="${color}" stroke="#f8fafc" stroke-width="1.2" paint-order="stroke fill" d="M12 2.5 L15.2 10.5 L21 12 L15.2 13.5 L12 21.5 L8.8 13.5 L3 12 L8.8 10.5 Z"></path>` +
-			'</svg></div>';
 		return leaflet.divIcon({
 			className: 'lf-plane-marker',
-			html,
+			html: planeMarkerElement(item, active),
 			iconSize: [
 				28,
 				28,
@@ -668,7 +706,7 @@ export class UIMapLeaflet extends WebComponent {
 				}
 			}
 			if (active && this.state.showInfo && (item.info || item.description || item.label)) {
-				marker.bindPopup(item.info || `<strong>${escapeHtml(item.label || id)}</strong>${item.description ? `<div>${escapeHtml(item.description)}</div>` : ''}`);
+				marker.bindPopup(markerInfoContent(item, id));
 			}
 		}
 		for (const [
@@ -903,6 +941,17 @@ export class UIMapLeaflet extends WebComponent {
 			this.tileLayer = null;
 		}
 	}
+	/*
+	 * Leaflet's zoom CSS transition calls _getMapPanePos after the pane is
+	 * gone if remove() races an in-flight _move. stop() cancels that animation.
+	 */
+	disposeLeafletMap(map) {
+		if (!map) {
+			return;
+		}
+		map.stop?.();
+		map.remove();
+	}
 	teardownMap() {
 		this.bootGeneration += 1;
 		this.resizeObserver?.disconnect();
@@ -914,51 +963,10 @@ export class UIMapLeaflet extends WebComponent {
 			this.mapInstance.off('zoom', this.mapViewForwarder);
 			this.mapInstance.off('moveend', this.mapMoveForwarder);
 			this.mapInstance.off('zoomend', this.mapZoomForwarder);
-			this.mapInstance.remove();
+			this.disposeLeafletMap(this.mapInstance);
 			this.mapInstance = null;
 		}
 		this.syncScheduled = false;
 	}
-	hostPhase() {
-		if (this.state.loading) {
-			return 'loading';
-		}
-		if (this.state.errorMessage) {
-			return 'error';
-		}
-		if (this.state.ready) {
-			return 'ready';
-		}
-		return 'idle';
-	}
-	render() {
-		const phase = this.hostPhase();
-		this.html`
-			<div class="lf-root" data-phase=${phase}>
-				<div #map class="lf-canvas" role="application" aria-label=${this.state.emptyLabel || 'Map'}></div>
-				<div class="lf-overlay" ?hidden=${phase === 'ready'} ?data-interactive=${phase === 'error'}>
-					<div class="lf-status" data-tone=${phase === 'error' ? 'danger' : 'neutral'}>
-						<span class="lf-status-label">${() => {
-							if (phase === 'loading') {
-								return this.loadingLabel();
-							}
-							if (phase === 'error') {
-								return 'Map unavailable';
-							}
-							return this.state.emptyLabel || 'Map';
-						}}</span>
-						<span class="lf-status-msg" ?hidden=${!this.state.errorMessage}>${this.state.errorMessage}</span>
-					</div>
-				</div>
-			</div>
-		`;
-	}
-}
-function escapeHtml(value) {
-	return String(value ?? '')
-		.replaceAll('&', '&amp;')
-		.replaceAll('<', '&lt;')
-		.replaceAll('>', '&gt;')
-		.replaceAll('"', '&quot;');
 }
 customElements.define('ui-map-leaflet', UIMapLeaflet);

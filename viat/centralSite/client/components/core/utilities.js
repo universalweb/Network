@@ -50,6 +50,30 @@ export function isTypeUndefined(type) {
 export function isNull(value) {
 	return value === null;
 }
+/**
+ * Strict `true` only — not truthy.
+ * @param {unknown} value - Candidate.
+ * @returns {boolean} True when `value === true`.
+ */
+export function isTrue(value) {
+	return value === true;
+}
+/**
+ * Strict `false` only — not falsy.
+ * @param {unknown} value - Candidate.
+ * @returns {boolean} True when `value === false`.
+ */
+export function isFalse(value) {
+	return value === false;
+}
+/**
+ * Native `typeof === 'number'` (`NaN` is a number).
+ * @param {unknown} value - Candidate.
+ * @returns {boolean} True when `typeof value === 'number'`.
+ */
+export function isNumber(value) {
+	return typeof value === 'number';
+}
 export function noValue(value) {
 	return Boolean(isUndefined(value) || isNull(value));
 }
@@ -325,6 +349,10 @@ const ERROR_EMIT_OPTIONS = {
  * @param {unknown} error - The failure, delivered as `detail.data`.
  */
 export function emitError(component, eventName, error) {
+	component.lastFrameworkError = {
+		channel: eventName,
+		error,
+	};
 	if (component.emit(eventName, error, ERROR_EMIT_OPTIONS)) {
 		queueAsyncError(error);
 	}

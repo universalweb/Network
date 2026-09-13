@@ -1,6 +1,21 @@
-import { WebComponent } from '../../core/index.js';
-const SNAP_MS = 320;
-const SNAP_CURVE = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+import { SNAP_CURVE, SNAP_MS, WebComponent } from '../../core/index.js';
+/*
+ * `<ui-pulldown>` — full-viewport top sheet. Opens off the `pulldown:toggle`
+ * document-bus event; drag-to-close through `dragSnap` (axis y, opensToward down).
+ *
+ * NOT BUILT ON ui-slideout, deliberately — and this has been asked twice.
+ * The mechanic is ALREADY shared: core/gestures/dragSnap.js is the one
+ * drag-to-snap engine, and its header records that this sheet's handle and the
+ * sidebar's swipe were the two private line-for-line copies it absorbed. The
+ * engine owns the pointer lifecycle, threshold, snap verdict and click
+ * suppression; each consumer owns only its own visuals, through callbacks.
+ *
+ * What remains DIFFERS rather than duplicates: slideout is an inline-axis (x)
+ * edge panel, this is a y-axis full-viewport sheet, and `isDragSurface` is one
+ * NAME over two unrelated policies — slideout allows its panel minus an
+ * interactive deny-list, this allows four specific refs. A shared base would
+ * force one policy onto both callers and break one of them.
+ */
 export class UIPullDown extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -43,6 +58,19 @@ export class UIPullDown extends WebComponent {
 	}
 	syncOpenAttr() {
 		this.toggleAttribute('data-open', this.state.open === true);
+	}
+	/*
+	 * Host visibility is data-open OR data-active. data-open is the committed
+	 * rest state; data-active is the in-flight drawer (bar-driven open drag
+	 * and close snap). handleState writes both in the same tick — data-active
+	 * first — so close never hits a frame where both are off (display:none
+	 * would kill the snap-out). observe('open') is async; syncOpenAttr here
+	 * is the CSS-contract write, not a duplicate of the observer.
+	 */
+	syncActiveAttr() {
+		const drawer = this.refs.drawer;
+		const isActive = drawer?.classList.contains('is-active') === true;
+		this.toggleAttribute('data-active', isActive);
 	}
 	// Drag-up-to-close, built into the base component (bottom-sheet style). The
 	// gesture binds to the whole DRAWER, not just the handle, so any empty area of
@@ -150,6 +178,7 @@ export class UIPullDown extends WebComponent {
 		drawer.classList.remove('is-active', 'is-fully-open', 'is-open');
 		drawer.style.transform = '';
 		drawer.style.transition = '';
+		this.syncActiveAttr();
 	}
 	handleDragStart(domEvent) {
 		// Kill any pending settle from the PREVIOUS snap. A close→reopen inside
@@ -167,6 +196,7 @@ export class UIPullDown extends WebComponent {
 		drawer.style.transition = 'none';
 		drawer.classList.add('is-active');
 		drawer.classList.remove('is-fully-open');
+		this.syncActiveAttr();
 		// Local dragSnap onStart calls this with no event. Re-emitting that
 		// onto the bus would re-enter this handler via delegate and loop.
 		if (domEvent) {
@@ -197,7 +227,12 @@ export class UIPullDown extends WebComponent {
 		drawer.style.transition = `transform ${SNAP_MS}ms ${SNAP_CURVE}`;
 		drawer.style.transform = isOpen ? 'translateY(0)' : 'translateY(-100%)';
 		drawer.classList.toggle('is-open', isOpen);
+		if (isOpen) {
+			drawer.classList.add('is-active');
+		}
+		this.syncActiveAttr();
 		this.state.open = isOpen;
+		this.syncOpenAttr();
 		// One settle timer at a time. A rapid open→close→open lands three
 		// transitions inside SNAP_MS; a stale close-settle firing on the drawer
 		// that has since reopened would strip `is-active`/transform off it,
@@ -223,6 +258,7 @@ export class UIPullDown extends WebComponent {
 			drawer.style.transform = '';
 			drawer.style.transition = '';
 		}
+		component.syncActiveAttr();
 	}
 	render() {
 		this.html`

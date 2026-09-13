@@ -34,26 +34,26 @@ export class UIAiPlan extends WebComponent {
 	}
 	renderStep(step) {
 		// Light rows can't embed a nested html`` fragment (it serializes), so the
-		// detail span is always emitted and hidden via `.aip-detail:empty` in CSS.
+		// detail span is always emitted and hidden via `.ai-plan-detail:empty` in CSS.
 		const status = step.status || 'pending';
 		return html`
-			<li class="aip-step" data-status=${status}>
-				<ui-icon class="aip-mark" .state.name=${statusIcon(status)} .state.size=${'sm'} ?spin=${status === 'active'}></ui-icon>
-				<span class="aip-text">
-					<span class="aip-label">${step.label}</span>
-					<span class="aip-detail">${step.detail || ''}</span>
+			<li class="ai-plan-step" data-status=${status}>
+				<ui-icon class="ai-plan-mark" .state.name=${statusIcon(status)} .state.size=${'sm'} ?spin=${status === 'active'}></ui-icon>
+				<span class="ai-plan-text">
+					<span class="ai-plan-label">${step.label}</span>
+					<span class="ai-plan-detail">${step.detail || ''}</span>
 				</span>
 			</li>
 		`;
 	}
 	render() {
 		this.html`
-			<section class="aip">
-				<header class="aip-head" ?hidden=${!this.state.label}>
-					<ui-icon class="aip-head-icon" .state.name=${'list-checks'} .state.size=${'sm'}></ui-icon>
-					<span class="aip-title">${this.state.label}</span>
+			<section class="ai-plan">
+				<header class="ai-plan-head" ?hidden=${!this.state.label}>
+					<ui-icon class="ai-plan-head-icon" .state.name=${'list-checks'} .state.size=${'sm'}></ui-icon>
+					<span class="ai-plan-title">${this.state.label}</span>
 				</header>
-				<ol class="aip-list">${this.list('items', this.renderStep, this.stepKey)}</ol>
+				<ol class="ai-plan-list">${this.list('items', this.renderStep, this.stepKey)}</ol>
 			</section>
 		`;
 	}

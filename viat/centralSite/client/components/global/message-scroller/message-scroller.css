@@ -2,9 +2,6 @@
 	display: block;
 	min-inline-size: 0;
 }
-:host([hidden]) {
-	display: none;
-}
 .ms {
 	display: flex;
 	flex-direction: column;

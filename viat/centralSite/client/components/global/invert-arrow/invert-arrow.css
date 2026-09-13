@@ -1,0 +1,34 @@
+:host {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	line-height: 0;
+	color: inherit;
+	--icon-color-hover: currentColor;
+	--icon-color-active: currentColor;
+	container-name: invert-arrow;
+}
+.invert-arrow-icon::part(stroke) {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: var(--icon-stroke-width, 2);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	d: path('M 6,9 L 12,15 L 18,9');
+	transition: d 0.55s cubic-bezier(0.45, 0, 0.55, 1);
+}
+:host(:hover) .invert-arrow-icon::part(stroke),
+:host([data-inverted]) .invert-arrow-icon::part(stroke) {
+	d: path('M 6,15 L 12,9 L 18,15');
+}
+@container invert-arrow style(--ui-invert-arrow-turn: 180deg) {
+	.invert-arrow-icon::part(stroke) {
+		d: path('M 6,15 L 12,9 L 18,15');
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.invert-arrow-icon::part(stroke) {
+		transition: none;
+	}
+}

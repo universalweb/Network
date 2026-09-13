@@ -5,6 +5,9 @@ import {
 	routerStore, SNAP_CURVE, SNAP_MS, WebComponent,
 } from 'webcomponent';
 import { clampOffset, offsetIsOpen } from './pulldownOffset.js';
+/* Pulldown travel uses --z-modal so the bar paints above --z-floating (the
+   sheet). Resting chrome is --z-dock and would sit under the sheet. */
+const PULLDOWN_Z = 'var(--z-modal)';
 // `<global-top-bar>` — the Viat top bar. A thin composition over `<ui-app-bar>`:
 // it slots the brand block + theme select and supplies the three action items.
 // The drag-to-open-pulldown coupling lives *here*, not in the built-in — it
@@ -23,31 +26,27 @@ export class GlobalTopBar extends WebComponent {
 			items: [
 				{
 					id: 'agent',
-					icon: 'bot',
+					icon: 'anim-rainbow',
 					tooltip: 'Local Agent',
 					emitName: 'toggle-pulldown',
-					animated: 'rainbow',
 				},
 				{
 					id: 'notifications',
 					icon: 'bell',
 					tooltip: 'Notifications',
 					emitName: 'notification-center:toggle',
-					animated: '',
 				},
 				{
 					id: 'settings',
-					icon: 'settings',
+					icon: 'anim-settings',
 					tooltip: 'Settings',
 					emitName: 'open-settings',
-					animated: 'settings',
 				},
 				{
 					id: 'sidebar',
-					icon: 'panel-left',
+					icon: 'anim-sidebar',
 					tooltip: 'Sidebar',
 					emitName: 'sidebar:toggle',
-					animated: 'sidebar',
 				},
 			],
 		},
@@ -64,19 +63,8 @@ export class GlobalTopBar extends WebComponent {
 		this.delegate('pulldown:drag', this.handleExternalDrag);
 		this.reflectViewport();
 		/*
-		 * Adaptive flat → float, driven by the inner content scroll surface. The page
-		 * itself no longer scrolls (app.css / index.css lock it); `.shell-scroll` carries
-		 * the `scroll-report` behavior, which publishes its scrolled state to
-		 * `globalState.environment.scrolled`. Bind that flag here — `scroll` events are
-		 * composed:false and never escape the scroller's shadow, so the shared flag is the
-		 * relay. Auto-swept on disconnect (no listener / AbortController to manage).
-		 */
-		this.observeGlobal('environment.scrolled', (scrolled) => {
-			this.applyScrolled(Boolean(scrolled));
-		});
-		/*
 		 * A route change lands a fresh page; AppView resets the scroll surface to top,
-		 * so reset the bar to flat instantly here to avoid a one-frame float before the
+		 * so reset the bar to float instantly here to avoid a one-frame dock before the
 		 * scroll-report flag catches up.
 		 */
 		this.observeStore('router', 'view', this.handleRouteChange);
@@ -91,16 +79,22 @@ export class GlobalTopBar extends WebComponent {
 		this.delegate('viewport:resize', this.handleResize);
 	}
 	handleRouteChange() {
-		this.applyScrolled(false);
-	}
-	applyScrolled(scrolled) {
-		this.refs.appbar?.toggleAttribute('data-scrolled', scrolled);
+		/*
+		 * AppView resets .shell-scroll to top on the same router tick.
+		 * Write the shared flag here so ScrollDock floats before scroll-report
+		 * sees the programmatic scrollTo (or if that scroll event is skipped).
+		 */
+		const environment = this.global.environment;
+		if (environment) {
+			environment.scrolled = false;
+		}
 	}
 	onMount() {
 		const appBar = this.refs.appbar;
 		if (appBar) {
 			appBar.style.touchAction = 'none';
 			appBar.style.cursor = 'grab';
+			appBar.setScrollRoot('global');
 		}
 		// The pulldown drag — the shared engine, attached to the app bar. The
 		// top bar's flip ratio is measured against the viewport height while
@@ -272,7 +266,7 @@ export class GlobalTopBar extends WebComponent {
 		appBar.style.transition = 'none';
 		appBar.style.transform = `translateY(${this.dragStartOffset}px)`;
 		appBar.style.cursor = 'grabbing';
-		appBar.style.zIndex = '100';
+		appBar.style.zIndex = PULLDOWN_Z;
 		this.emit('pulldown:dragstart', {
 			open: this.open,
 		});
@@ -308,7 +302,7 @@ export class GlobalTopBar extends WebComponent {
 		appBar.style.cursor = 'grab';
 		const wasOpen = this.open;
 		this.open = willOpen;
-		appBar.style.zIndex = willOpen ? '100' : '';
+		appBar.style.zIndex = PULLDOWN_Z;
 		this.emit('pulldown:toggle', {
 			open: willOpen,
 		});
@@ -332,16 +326,16 @@ export class GlobalTopBar extends WebComponent {
 	render() {
 		this.html`
 			<ui-app-bar #appbar .state=${this.state.appBar}>
-				<a slot="start" class="tb-logo" href="/" aria-label="Back to dashboard">
-					<svg class="tb-logo-mark" viewBox="0 0 64 64" aria-hidden="true">
+				<a slot="start" class="top-bar-logo" href="/" aria-label="Back to dashboard">
+					<svg class="top-bar-logo-mark" viewBox="0 0 64 64" aria-hidden="true">
 						<path fill="currentColor" d="M 11.54 15.23 L 16.46 12.77 L 32.8 43.85 L 32 56.14 Z"></path>
 						<path fill="currentColor" d="M 52.46 15.23 L 47.54 12.77 L 31.2 43.85 L 32 56.14 Z"></path>
 						<line stroke="currentColor" stroke-width="5.5" stroke-linecap="square" x1="16" y1="32" x2="48" y2="32"></line>
 					</svg>
 				</a>
-				<span slot="start" class="tb-logo-text">VIAT</span>
-				<ui-icon slot="start" class="tb-logo-sep" .state.name=${'chevron-right'} .state.size=${'xs'}></ui-icon>
-				<span slot="start" class="tb-subtitle">${this.state.subtitle}</span>
+				<span slot="start" class="top-bar-logo-text">VIAT</span>
+				<ui-icon slot="start" class="top-bar-logo-sep" .state.name=${'chevron-right'} .state.size=${'xs'}></ui-icon>
+				<span slot="start" class="top-bar-subtitle">${this.state.subtitle}</span>
 				<ui-theme-select slot="end"></ui-theme-select>
 			</ui-app-bar>
 		`;

@@ -26,17 +26,61 @@
 		justify-content: center;
 		margin: 0;
 		min-inline-size: 0;
-		/* Press scale is overridable (split-button sets 1 so halves don't squash alone). */
-		--ui-btn-press-scale: 0.92;
-		transform: scale(1);
-		transform-origin: center;
+		/*
+		 * MD3 press: state-layer (::after) + expanding ripple (::before) in
+		 * currentColor — not a squash. Overlays paint ON TOP of the label
+		 * (8–10% opacity); z-index:-1 would hide them behind a solid fill.
+		 * Overflow clips the ripple to the control shape.
+		 */
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		-webkit-tap-highlight-color: transparent;
 		transition:
 			background 0.18s ease,
 			border-color 0.18s ease,
 			color 0.18s ease,
-			box-shadow 0.18s ease,
-			transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+			box-shadow 0.18s ease;
 		white-space: nowrap;
+		text-transform: var(--ui-btn-text-transform, uppercase);
+		letter-spacing: var(--ui-btn-letter-spacing, 0.04em);
+	}
+	:is(button, a)[data-variant]::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: currentColor;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1);
+	}
+	:is(button, a)[data-variant]::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: radial-gradient(circle at center, currentColor 0%, transparent 68%);
+		opacity: 0;
+		pointer-events: none;
+		transform: scale(0.35);
+		transition:
+			transform 0s linear 0.28s,
+			opacity 0.28s cubic-bezier(0.2, 0, 0, 1);
+	}
+	:is(button, a)[data-variant]:hover:not(:disabled):not([aria-disabled='true'])::after {
+		opacity: var(--ui-btn-hover-opacity, 0.08);
+	}
+	:is(button, a)[data-variant]:active:not(:disabled):not([aria-disabled='true'])::after {
+		opacity: var(--ui-btn-pressed-opacity, 0.1);
+		transition-duration: 0.08s;
+	}
+	:is(button, a)[data-variant]:active:not(:disabled):not([aria-disabled='true'])::before {
+		opacity: var(--ui-btn-ripple-opacity, 0.16);
+		transform: scale(2.4);
+		transition:
+			transform 0.32s cubic-bezier(0.2, 0, 0, 1),
+			opacity 0.08s linear;
 	}
 	:is(button, a)[data-variant]:focus-visible {
 		outline: 1px solid var(--focus-ring-color, var(--teal));
@@ -46,15 +90,6 @@
 	a[data-variant] {
 		text-decoration: none;
 		box-sizing: border-box;
-	}
-	/* Neutralize generic form-button hover lift; keep scale-only press model. */
-	:is(button, a)[data-variant]:hover:not(:disabled):not([aria-disabled='true']) {
-		transform: scale(1);
-	}
-	:is(button, a)[data-variant]:active:not(:disabled):not([aria-disabled='true']) {
-		transform: scale(var(--ui-btn-press-scale, 0.92));
-		transition-duration: 0.07s;
-		transition-timing-function: cubic-bezier(0.55, 0, 0.85, 0.5);
 	}
 
 	/* Sizes — font-size drives both text and the inherited icon glyph. */
@@ -95,15 +130,19 @@
 		background: rgba(255, 255, 255, 0.13);
 		color: var(--text-main);
 	}
+	/* Primary solid: achromatic pill. A theme that declares nothing inverts
+	   by polarity (--text-light fill / --bg-body ink). Border tracks fill;
+	   hover recedes by mixing page ground into the pill; text holds across
+	   rest/hover so nested icons never flash. */
 	:is(button, a)[data-variant='solid'][data-tone='primary'] {
-		background: var(--btn-primary-bg, var(--teal));
-		border-color: var(--btn-primary-border, var(--teal));
-		color: var(--btn-primary-color, #06151a);
+		background: var(--btn-primary-bg, var(--text-light, #fff));
+		border-color: var(--btn-primary-border, var(--btn-primary-bg, var(--text-light, #fff)));
+		color: var(--btn-primary-color, var(--bg-body, #000));
 	}
 	:is(button, a)[data-variant='solid'][data-tone='primary']:hover:not(:disabled):not([aria-disabled='true']) {
-		background: var(--btn-primary-hover-bg, #7cf2dd);
-		border-color: var(--btn-primary-hover-border, var(--btn-primary-hover-bg, #7cf2dd));
-		color: var(--btn-primary-hover-color, var(--btn-primary-color, #06151a));
+		background: var(--btn-primary-hover-bg, color-mix(in oklab, var(--btn-primary-bg, var(--text-light, #fff)) 90%, var(--bg-body, #000)));
+		border-color: var(--btn-primary-hover-border, var(--btn-primary-hover-bg, color-mix(in oklab, var(--btn-primary-bg, var(--text-light, #fff)) 90%, var(--bg-body, #000))));
+		color: var(--btn-primary-color, var(--bg-body, #000));
 	}
 	:is(button, a)[data-variant='solid'][data-tone='success'] {
 		background: var(--btn-success-bg, var(--color-success));
@@ -206,8 +245,12 @@
 		text-decoration-thickness: 1px;
 		text-underline-offset: 0.18em;
 		color: var(--link-color, var(--teal));
-		/* No press squash on links. */
-		--ui-btn-press-scale: 1;
+		overflow: visible;
+		isolation: auto;
+	}
+	:is(button, a)[data-variant='link']::before,
+	:is(button, a)[data-variant='link']::after {
+		content: none;
 	}
 	:is(button, a)[data-variant='link'][data-size] {
 		/* Size attrs must not re-inflate padding/min-height on links. */
@@ -241,8 +284,7 @@
 		color: var(--text-main);
 	}
 	:is(button, a)[data-variant='link']:active:not(:disabled):not([aria-disabled='true']) {
-		transform: none;
-		opacity: 0.85;
+		opacity: 0.72;
 	}
 
 	/* ICON — square chrome-light button. */
@@ -253,31 +295,53 @@
 		color: inherit;
 	}
 	:is(button, a)[data-variant='icon']:hover:not(:disabled):not([aria-disabled='true']) {
-		background: rgba(255, 255, 255, 0.08);
+		background: var(--btn-icon-hover-bg, rgba(255, 255, 255, 0.08));
 	}
 
-	/* Icon-only — guarantee a square hit area regardless of glyph metrics. `--btn-hit`
-	   (inherits across the shadow boundary) lets a host raise the floor — e.g. a dock
-	   sets a WCAG ≥44px touch target on mobile. */
+	/* Icon-only — square hit floor. `--btn-hit` (inherits) is the tap target;
+	   `--btn-face` (optional) keeps the painted disc at the old size so a 44px
+	   floor does not grow ink. Dock sets `--btn-hit` and leaves `--btn-face`
+	   unset so paint fills the floor. `--btn-face-clip: content-box` on a
+	   host that sets `--btn-face`. */
 	:is(button, a)[data-variant].is-icon-only {
-		padding: 0.5rem;
-		min-inline-size: var(--btn-hit, 2rem);
-		min-block-size: var(--btn-hit, 2rem);
+		--_hit: var(--btn-hit, var(--hit-min, max(2.75rem, 44px)));
+		--_face: var(--btn-face, var(--_hit));
+		--_pad: 0.5rem;
+		padding: max(var(--_pad), calc((var(--_hit) - var(--_face)) / 2));
+		min-inline-size: var(--_hit);
+		min-block-size: var(--_hit);
+		background-origin: var(--btn-face-clip, border-box);
+		background-clip: var(--btn-face-clip, border-box);
 	}
 	:is(button, a)[data-variant].is-icon-only[data-size='xs'] {
-		padding: 0.3rem;
-		min-inline-size: var(--btn-hit, 1.6rem);
-		min-block-size: var(--btn-hit, 1.6rem);
+		--_pad: 0.3rem;
+		--_step: 1.75rem;
 	}
 	:is(button, a)[data-variant].is-icon-only[data-size='sm'] {
-		padding: 0.4rem;
-		min-inline-size: var(--btn-hit, 1.8rem);
-		min-block-size: var(--btn-hit, 1.8rem);
+		--_pad: 0.4rem;
+		--_step: 2rem;
 	}
 	:is(button, a)[data-variant].is-icon-only[data-size='lg'] {
-		padding: 0.6rem;
-		min-inline-size: var(--btn-hit, 2.4rem);
-		min-block-size: var(--btn-hit, 2.4rem);
+		--_pad: 0.6rem;
+		--_step: 3rem;
+	}
+
+	/*
+	 * `data-size` used to move ONLY the padding, so every icon-only button was
+	 * pinned at the 44px tap floor and `sm` looked identical to `md` — ui-tracker's
+	 * detail header rendered a 49.5px close beside a 17.9px title, 2.8x taller than
+	 * the text it sat next to.
+	 *
+	 * The 44px floor is a TOUCH requirement, so it is kept wherever the pointer is
+	 * coarse. On a fine pointer (mouse / trackpad) it is not required, and density
+	 * is the better trade — so there the size step drives the box. An explicit
+	 * `--btn-hit` from a consumer still wins in both cases.
+	 */
+	@media (pointer: fine) {
+		:is(button, a)[data-variant].is-icon-only[data-size],
+		:is(button, a)[data-variant].is-circle[data-size] {
+			--_hit: var(--btn-hit, var(--_step, var(--hit-min, max(2.75rem, 44px))));
+		}
 	}
 
 	/* Circle — true disc for single-icon controls. Opt-in via ui-button `circle`
@@ -285,28 +349,29 @@
 	   radius-only hacks (`--ui-btn-radius: 999px`) then paint a pill, not a circle.
 	   Equal pad + equal mins + aspect-ratio locks the disc. */
 	:is(button, a)[data-variant].is-circle {
+		--_hit: var(--btn-hit, var(--hit-min, max(2.75rem, 44px)));
+		--_face: var(--btn-face, var(--_hit));
+		--_pad: 0.5rem;
 		aspect-ratio: 1;
 		border-radius: 999px;
-		padding: 0.5rem;
-		min-inline-size: var(--btn-hit, 2rem);
-		min-block-size: var(--btn-hit, 2rem);
-		inline-size: var(--btn-hit, auto);
-		block-size: var(--btn-hit, auto);
+		padding: max(var(--_pad), calc((var(--_hit) - var(--_face)) / 2));
+		min-inline-size: var(--_hit);
+		min-block-size: var(--_hit);
+		inline-size: var(--_hit);
+		block-size: var(--_hit);
+		background-origin: var(--btn-face-clip, border-box);
+		background-clip: var(--btn-face-clip, border-box);
 	}
 	:is(button, a)[data-variant].is-circle[data-size='xs'] {
-		padding: 0.3rem;
-		min-inline-size: var(--btn-hit, 1.6rem);
-		min-block-size: var(--btn-hit, 1.6rem);
+		--_pad: 0.3rem;
+		--_step: 1.75rem;
 	}
 	:is(button, a)[data-variant].is-circle[data-size='sm'] {
-		padding: 0.4rem;
-		min-inline-size: var(--btn-hit, 1.8rem);
-		min-block-size: var(--btn-hit, 1.8rem);
+		--_pad: 0.4rem;
+		--_step: 2rem;
 	}
 	:is(button, a)[data-variant].is-circle[data-size='lg'] {
-		padding: 0.6rem;
-		min-inline-size: var(--btn-hit, 2.4rem);
-		min-block-size: var(--btn-hit, 2.4rem);
+		--_pad: 0.6rem;
 	}
 
 	/* States. No pointer-events:none — the inner control carries tooltip= and
@@ -326,9 +391,13 @@
 
 	@media (prefers-reduced-motion: reduce) {
 		:is(button, a)[data-variant],
-		:is(button, a)[data-variant]:active:not(:disabled):not([aria-disabled='true']) {
-			transform: none;
+		:is(button, a)[data-variant]::before,
+		:is(button, a)[data-variant]::after {
 			transition: none;
+		}
+		:is(button, a)[data-variant]::before {
+			transform: none;
+			opacity: 0;
 		}
 	}
 }

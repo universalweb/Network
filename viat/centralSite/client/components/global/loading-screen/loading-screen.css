@@ -5,18 +5,43 @@
 	align-items: center;
 	background: rgba(0, 0, 0, 0.45);
 	backdrop-filter: blur(6px);
-	display: flex;
+	display: none;
 	inset: 0;
 	justify-content: center;
 	opacity: 0;
 	pointer-events: none;
 	position: fixed;
-	transition: opacity 0.18s ease-out;
+	transform: translate3d(0, 0.35rem, 0);
+	transition:
+		opacity var(--dur-fast, 0.18s) var(--ease-out, ease),
+		transform var(--dur-fast, 0.18s) var(--ease-out, ease),
+		display var(--dur-fast, 0.18s) var(--ease-out, ease) allow-discrete;
 	z-index: calc(var(--z-max) - 1);
 }
-.loading-screen[data-open] {
+:host([data-open]) .loading-screen {
+	/* Open state is the host data-open attr — an inner ?data-open= can miss
+	   a patch pass. display:none when closed so the overlay does not occupy
+	   the viewport; allow-discrete holds it until the out transition ends. */
+	display: flex;
 	opacity: 1;
 	pointer-events: auto;
+	transform: none;
+}
+@starting-style {
+	:host([data-open]) .loading-screen {
+		opacity: 0;
+		transform: translate3d(0, 0.35rem, 0);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.loading-screen,
+	:host([data-open]) .loading-screen {
+		transform: none;
+		transition: none;
+	}
+	:host([data-open]) .loading-screen {
+		opacity: 1;
+	}
 }
 .loading-screen[data-blocking] { cursor: wait; }
 [data-variant='inline'] {

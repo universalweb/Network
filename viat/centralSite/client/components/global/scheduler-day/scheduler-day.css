@@ -1,0 +1,37 @@
+:host {
+	display: flex;
+	min-inline-size: 0;
+	min-block-size: 0;
+}
+.scheduler-day {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	inline-size: 100%;
+	min-inline-size: 0;
+	padding: 0.45rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 16%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: color-mix(in oklch, var(--bg-panel) 70%, transparent);
+}
+.scheduler-day-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.35rem;
+	font-size: var(--text-xs, 0.75rem);
+	font-weight: var(--weight-semibold, 600);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+.scheduler-day-iso {
+	font-variant-numeric: tabular-nums;
+	color: var(--text-main);
+}
+.scheduler-day-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	min-block-size: 4rem;
+}

@@ -27,7 +27,7 @@ import '../ai-scroll-bottom/ai-scroll-bottom.js';
 import '../ai-new-messages/ai-new-messages.js';
 import '../ai-model-select/ai-model-select.js';
 import '../ai-usage/ai-usage.js';
-import { WebComponent } from 'webcomponent';
+import { isTrue, WebComponent } from 'webcomponent';
 import { UIAiMessage } from '../ai-message/ai-message.js';
 import { probeModels, streamChat } from './bridge.js';
 const HEALTH_TIMEOUT_MS = 2500;
@@ -217,11 +217,30 @@ export class UIAiChat extends WebComponent {
 		this.markOnline();
 	}
 	finishAssistant(id) {
-		// Settle the message → <ui-ai-message> parses the completed content once.
 		if (this.streamingMessageId === id) {
 			this.streamingMessageId = null;
 		}
 		this.state.waiting = false;
+		const index = this.findMessage(id);
+		if (index < 0) {
+			return;
+		}
+		const msg = this.state.items[index];
+		if (isTrue(msg?.hidden)) {
+			this.patchMessage(id, {
+				streaming: false,
+			});
+			return;
+		}
+		const content = String(msg?.content ?? '').trim();
+		const reasoning = String(msg?.reasoning ?? '').trim();
+		if (!content && !reasoning) {
+			this.state.items.splice(index, 1);
+			if (this.state.newMessageCount > 0) {
+				this.state.newMessageCount -= 1;
+			}
+			return;
+		}
 		this.patchMessage(id, {
 			streaming: false,
 		});
@@ -449,14 +468,14 @@ export class UIAiChat extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="aic">
-				<header class="aic-header">
-					<div class="aic-titlebar">
-						<div class="aic-title-group">
-							<span class="aic-title">${this.state.heading}</span>
+			<div class="ai-chat">
+				<header class="ai-chat-header">
+					<div class="ai-chat-titlebar">
+						<div class="ai-chat-title-group">
+							<span class="ai-chat-title">${this.state.heading}</span>
 							<ui-status-indicator .state.status=${this.state.status}></ui-status-indicator>
 						</div>
-						<div class="aic-header-actions">
+						<div class="ai-chat-header-actions">
 							<ui-ai-usage
 								?hidden=${this.usageHidden}
 								.state.promptTokens=${this.state.promptTokens}
@@ -464,11 +483,11 @@ export class UIAiChat extends WebComponent {
 								.state.totalTokens=${this.state.totalTokens}
 								.state.cost=${this.state.usageCost}></ui-ai-usage>
 							<ui-ai-export .state.items=${this.state.items} .state.filename=${'ai-chat'}></ui-ai-export>
-							<button class="aic-clear" type="button" @click=${this.handleClear} ?disabled=${this.clearDisabled}>CLEAR</button>
+							<button class="ai-chat-clear" type="button" @click=${this.handleClear} ?disabled=${this.clearDisabled}>CLEAR</button>
 						</div>
 					</div>
-					<div class="aic-subheader">
-						<span class="aic-endpoint" ?hidden=${!this.state.endpoint}>${this.state.endpoint}</span>
+					<div class="ai-chat-subheader">
+						<span class="ai-chat-endpoint" ?hidden=${!this.state.endpoint}>${this.state.endpoint}</span>
 						<ui-ai-model-select
 							?hidden=${this.modelSelectHidden}
 							.state.value=${this.state.model}
@@ -476,9 +495,9 @@ export class UIAiChat extends WebComponent {
 							@ai-model-select:change=${this.handleModelChange}></ui-ai-model-select>
 					</div>
 				</header>
-				<div class="aic-log-wrap">
-					<div #log class="aic-log" @scroll=${this.handleLogUserScroll}>
-						<div class="aic-empty" ?hidden=${this.emptyHidden}>
+				<div class="ai-chat-log-wrap">
+					<div #log class="ai-chat-log" @scroll=${this.handleLogUserScroll}>
+						<div class="ai-chat-empty" ?hidden=${this.emptyHidden}>
 							<ui-empty-state
 								.state.heading=${this.state.emptyHeading}
 								.state.hint=${this.state.emptyHint}></ui-empty-state>
@@ -490,7 +509,7 @@ export class UIAiChat extends WebComponent {
 						${this.filter('items', UIAiMessage, 'hidden')}
 						<ui-ai-typing .state.active=${this.state.waiting}></ui-ai-typing>
 					</div>
-					<div class="aic-log-float">
+					<div class="ai-chat-log-float">
 						<ui-ai-new-messages
 							.state.count=${this.state.newMessageCount}
 							@ai-new-messages:click=${this.handleNewMessagesClick}></ui-ai-new-messages>
@@ -502,16 +521,16 @@ export class UIAiChat extends WebComponent {
 					.state.kind=${this.state.errorKind}
 					@ai-error:retry=${this.handleErrorRetry}
 					@ai-error:dismiss=${this.handleErrorDismiss}></ui-ai-error>
-				<footer class="aic-input-row">
+				<footer class="ai-chat-input-row">
 					<textarea #input
 						name="ai-chat-input"
-						class="aic-input autosize"
+						class="ai-chat-input autosize"
 						placeholder=${this.state.placeholder}
 						rows="2"
 						$value="inputValue"
 						?disabled=${this.state.streaming}
 						@keydown=${this.handleKeyDown}></textarea>
-					<button class="aic-btn" type="button" ?data-streaming=${this.state.streaming} @click=${this.handleSubmit}>
+					<button class="ai-chat-btn" type="button" ?data-streaming=${this.state.streaming} @click=${this.handleSubmit}>
 						${this.ifThen('streaming', 'STOP', 'SEND')}
 					</button>
 				</footer>

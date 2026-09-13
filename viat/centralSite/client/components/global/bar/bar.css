@@ -10,6 +10,20 @@
 	border: var(--bar-border, none);
 	padding: var(--bar-padding, 0);
 }
+:host([data-cap='start']) .bar,
+.bar[data-cap='start'] {
+	border-start-start-radius: var(--bar-radius, var(--radius-lg, 0.75rem));
+	border-start-end-radius: var(--bar-radius, var(--radius-lg, 0.75rem));
+	border-end-start-radius: 0;
+	border-end-end-radius: 0;
+}
+:host([data-cap='end']) .bar,
+.bar[data-cap='end'] {
+	border-start-start-radius: 0;
+	border-start-end-radius: 0;
+	border-end-start-radius: var(--bar-radius, var(--radius-lg, 0.75rem));
+	border-end-end-radius: var(--bar-radius, var(--radius-lg, 0.75rem));
+}
 /* No gap on `.bar` itself — gap lives inside each region, so an empty region
    contributes neither space nor a stray gap between its neighbours. */
 [data-orientation='horizontal'] {
@@ -34,8 +48,21 @@
 [data-orientation='vertical'] .bar-region {
 	flex-direction: column;
 }
-/* The centre region is the flexible spacer; start and end stay intrinsic. */
+/*
+ * Region flex/justify are token-driven so composers (app-bar, window-title-bar)
+ * can reweight start/center/end without a second layout. Defaults match the
+ * original: center is the flexible spacer, start and end stay intrinsic and
+ * pack toward flex-start (vertical docks rely on that).
+ */
+.bar-start {
+	flex: var(--bar-start-flex, 0 1 auto);
+	justify-content: var(--bar-start-justify, flex-start);
+}
 .bar-center {
-	flex: 1 1 auto;
-	justify-content: center;
+	flex: var(--bar-center-flex, 1 1 auto);
+	justify-content: var(--bar-center-justify, center);
+}
+.bar-end {
+	flex: var(--bar-end-flex, 0 1 auto);
+	justify-content: var(--bar-end-justify, flex-start);
 }

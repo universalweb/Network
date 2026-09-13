@@ -1,0 +1,106 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	min-inline-size: 0;
+}
+.video-short {
+	position: relative;
+	display: grid;
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: 0;
+	overflow: hidden;
+	border-radius: var(--radius-lg, 0.75rem);
+	background: var(--bg-panel);
+	color: var(--text-main);
+	box-shadow: none;
+	container-type: inline-size;
+	container-name: video-short;
+}
+.video-short-media {
+	grid-area: 1 / 1;
+	inline-size: 100%;
+	block-size: 100%;
+	object-fit: cover;
+	background: var(--bg-panel);
+}
+.video-short-live {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+.video-short-empty,
+.video-short-error {
+	display: none;
+	grid-area: 1 / 1;
+	place-self: center;
+	align-items: center;
+	gap: var(--space-3, 0.75rem);
+	padding: var(--space-4, 1rem);
+	color: var(--text-muted);
+	font-size: var(--text-sm, 0.75rem);
+	z-index: 1;
+}
+.video-short[data-phase='empty'] .video-short-empty,
+.video-short[data-phase='error'] .video-short-error {
+	display: flex;
+}
+.video-short[data-phase='empty'] .video-short-play,
+.video-short[data-phase='empty'] .video-short-copy,
+.video-short[data-phase='error'] .video-short-play,
+.video-short[data-phase='error'] .video-short-copy {
+	display: none;
+}
+.video-short-error {
+	color: var(--color-danger, var(--text-muted));
+}
+.video-short-status-title {
+	font-weight: var(--weight-medium, 500);
+	color: inherit;
+}
+.video-short-status-hint {
+	color: var(--text-muted);
+}
+.video-short-status-hint:empty {
+	display: none;
+}
+.video-short-play {
+	grid-area: 1 / 1;
+	place-self: center;
+	z-index: 1;
+	--btn-hit: var(--hit-min, max(2.75rem, 44px));
+	--btn-face: var(--hit-min, max(2.75rem, 44px));
+	--ui-btn-radius: var(--radius-pill, 999px);
+}
+.video-short-copy {
+	grid-area: 1 / 1;
+	align-self: end;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1, 0.25rem);
+	padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+	padding-inline-end: calc(var(--space-4, 1rem) + var(--hit-min, 2.75rem));
+	background: color-mix(in oklab, var(--bg-panel) 72%, transparent);
+	z-index: 1;
+	pointer-events: none;
+}
+.video-short-heading {
+	margin: 0;
+	font-size: var(--text-sm, 0.75rem);
+	font-weight: var(--weight-semibold, 600);
+	line-height: var(--leading-tight, 1.2);
+	text-wrap: balance;
+}
+.video-short-caption {
+	margin: 0;
+	color: var(--text-muted);
+	font-size: var(--text-xs, 0.6875rem);
+	line-height: var(--leading-snug, 1.35);
+}
+.video-short-play:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal));
+	outline-offset: 2px;
+}

@@ -1,4 +1,5 @@
 import '../icon/icon.js';
+import '../invert-arrow/invert-arrow.js';
 import { html, WebComponent } from 'webcomponent';
 import { setTheme, THEMES } from './theme-manager.js';
 /*
@@ -53,13 +54,13 @@ export class UIThemeSelect extends WebComponent {
 	}
 	render() {
 		this.html`
-			<button #btn class="ts-btn" popovertarget="theme-drop">
-				<span class="ts-label">${() => {
+			<button #btn class="theme-select-button" popovertarget="theme-drop">
+				<span class="theme-select-label">${() => {
 					return this.currentLabel;
 				}}</span>
-				<ui-icon class="ts-arrow" .state.name=${'chevron-down'} .state.size=${'xs'}></ui-icon>
+				<ui-invert-arrow class="theme-select-arrow" .state.size=${'xs'}></ui-invert-arrow>
 			</button>
-			<div #drop class="theme-drop" id="theme-drop" popover="auto"
+			<div #drop class="theme-drop glass" id="theme-drop" popover="auto"
 				@click=${this.handlePopupClick}>
 				${this.list('items', this.themeOption, this.themeKey)}
 			</div>

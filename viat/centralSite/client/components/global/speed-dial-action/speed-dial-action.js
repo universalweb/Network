@@ -1,4 +1,4 @@
-import '../button/button.js';
+import '../icon/icon.js';
 import { WebComponent } from '../../core/index.js';
 export class UISpeedDialAction extends WebComponent {
 	static url = import.meta.url;
@@ -11,6 +11,18 @@ export class UISpeedDialAction extends WebComponent {
 		value: '',
 		tone: 'neutral',
 	};
+	hideIcon() {
+		return !this.state.icon;
+	}
+	hideLabel() {
+		return !this.state.label;
+	}
+	hasIcon() {
+		return Boolean(this.state.icon);
+	}
+	hasLabel() {
+		return Boolean(this.state.label);
+	}
 	handleClick() {
 		this.emit('speed-dial-action:click', {
 			value: this.state.value,
@@ -18,17 +30,17 @@ export class UISpeedDialAction extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="sd-action">
-				<span class="sd-action-label" ?hidden=${!this.state.label}>${this.state.label}</span>
-				<ui-button class="sd-action-btn"
-					.state.variant=${'solid'}
-					.state.tone=${this.state.tone}
-					.state.size=${'sm'}
-					.state.circle=${true}
-					.state.leadicon=${this.state.icon}
-					.state.tooltip=${this.state.label}
-					@button:click=${this.handleClick}></ui-button>
-			</div>
+			<button type="button" class="speed-dial-action" part="action"
+				data-tone=${this.state.tone || 'neutral'}
+				?data-icon=${this.hasIcon}
+				?data-label=${this.hasLabel}
+				tooltip=${this.state.label}
+				@click=${this.handleClick}>
+				<span class="speed-dial-action-icon" ?hidden=${this.hideIcon}>
+					<ui-icon .state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>
+				</span>
+				<span class="speed-dial-action-label" ?hidden=${this.hideLabel}>${this.state.label}</span>
+			</button>
 		`;
 	}
 }

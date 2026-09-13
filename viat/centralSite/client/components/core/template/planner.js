@@ -360,7 +360,26 @@ function buildSpotPlan(map, entry) {
 		};
 	}
 	if (entry.type === SPOT_TYPE.ATTR) {
-		const lookup = lookupMarker(map, entry.attr, `expr${entry.i}`);
+		/*
+		 * The HTML parser lowercases attribute names, so a camelCase attribute
+		 * binding (`tooltipPlacement=${…}`) is in the marker map under its
+		 * lowercased name while `entry.attr` still holds the case the template
+		 * was written in. Looking up only the original case silently produced NO
+		 * SPOT — the attribute was stripped and the value never applied, which
+		 * reads exactly like a broken component.
+		 *
+		 * BOTH spellings are tried, and the plan keeps the WRITTEN case either
+		 * way. That case is load-bearing twice over: `attr` is what later reaches
+		 * setAttribute — and SVG attribute names are case-SENSITIVE, so `viewBox`
+		 * must stay `viewBox` — and it is what applySubeventAttr matches against
+		 * the behavior registry. A lowercase-only lookup would fix the HTML case
+		 * by breaking the SVG one.
+		 *
+		 * The BOOL_ATTR / PROP arm below already carries this fix and the same
+		 * note; this arm was missed.
+		 */
+		const lookup = lookupMarker(map, entry.attr, `expr${entry.i}`) ??
+			lookupMarker(map, entry.attr.toLowerCase(), `expr${entry.i}`);
 		if (!lookup) {
 			return null;
 		}

@@ -8,12 +8,12 @@
 	color: var(--text-main);
 }
 
-/* ?hidden must beat .gm-overlay { display: grid } — same footgun as poll/ai-inquire. */
+/* ?hidden must beat .map-overlay { display: grid } — same footgun as poll/ai-inquire. */
 [hidden] {
 	display: none !important;
 }
 
-.gm-root {
+.map-root {
 	position: relative;
 	inline-size: 100%;
 	block-size: 100%;
@@ -25,18 +25,18 @@
 		color-mix(in oklab, var(--border-color, currentColor) 40%, transparent);
 }
 
-.gm-canvas {
+.map-canvas {
 	position: absolute;
 	inset: 0;
 	inline-size: 100%;
 	block-size: 100%;
 }
 
-.gm-canvas:empty {
+.map-canvas:empty {
 	/* Keep layout before the Maps API mounts into the node. */
 }
 
-.gm-overlay {
+.map-overlay {
 	position: absolute;
 	inset-inline: 0;
 	inset-block-start: 0;
@@ -51,34 +51,34 @@
 	pointer-events: none;
 }
 
-.gm-overlay[data-interactive] {
+.map-overlay[data-interactive] {
 	pointer-events: auto;
 }
 
-.gm-status {
+.map-status {
 	display: grid;
 	gap: var(--space-2, 0.5rem);
 	justify-items: center;
 	max-inline-size: 28rem;
 }
 
-.gm-status-label {
+.map-status-label {
 	font-size: var(--text-sm, 0.875rem);
 	font-weight: var(--weight-semibold, 600);
 	color: var(--text-main);
 }
 
-.gm-status-msg {
+.map-status-msg {
 	font-size: var(--text-xs, 0.75rem);
 	color: var(--text-muted, var(--text-main));
 	line-height: 1.4;
 }
 
-.gm-status[data-tone='danger'] .gm-status-label {
+.map-status[data-tone='danger'] .map-status-label {
 	color: var(--color-danger, oklch(0.62 0.2 25));
 }
 
-.gm-marker-pin {
+.map-google-marker-pin {
 	display: grid;
 	place-items: center;
 	inline-size: 1.75rem;
@@ -92,7 +92,7 @@
 	cursor: pointer;
 }
 
-.gm-marker-pin > span {
+.map-google-marker-pin > span {
 	transform: rotate(45deg);
 	font-size: 0.65rem;
 	font-weight: 700;
@@ -103,13 +103,13 @@
 	white-space: nowrap;
 }
 
-.gm-marker-pin[data-active] {
+.map-google-marker-pin[data-active] {
 	outline: 2px solid var(--color-accent, oklch(0.7 0.16 250));
 	outline-offset: 2px;
 	scale: 1.12;
 }
 
-.gm-cluster {
+.map-google-cluster {
 	display: grid;
 	place-items: center;
 	inline-size: 2.25rem;
@@ -129,7 +129,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.gm-marker-pin[data-active] {
+	.map-google-marker-pin[data-active] {
 		scale: 1;
 	}
 }

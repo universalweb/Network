@@ -24,27 +24,23 @@ export class GlobalDock extends WebComponent {
 			items: [
 				{
 					id: 'wallet',
-					icon: 'wallet',
+					icon: 'anim-bob',
 					tooltip: 'Wallet',
-					animated: 'bob',
 				},
 				{
 					id: 'explorer',
-					icon: 'compass',
+					icon: 'anim-compass',
 					tooltip: 'Explorer',
-					animated: 'compass',
 				},
 				{
 					id: 'accounts',
-					icon: 'users',
+					icon: 'anim-hop',
 					tooltip: 'Accounts',
-					animated: 'hop',
 				},
 				{
 					id: 'swap',
-					icon: 'repeat-2',
+					icon: 'anim-flip',
 					tooltip: 'Swap',
-					animated: 'flip',
 				},
 				{
 					id: 'exchange',

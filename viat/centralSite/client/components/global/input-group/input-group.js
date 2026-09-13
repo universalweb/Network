@@ -45,11 +45,11 @@ export class UIInputGroup extends WebComponent {
 	render() {
 		this.dataset.tone = this.state.tone || 'default';
 		this.html`
-			<div class="ig" data-size=${this.state.size} data-tone=${this.state.tone}
+			<div class="input-group" data-size=${this.state.size} data-tone=${this.state.tone}
 				?data-disabled=${this.state.disabled}>
-				<span class="ig-addon ig-leading"><slot #lead name="leading"></slot></span>
-				<div class="ig-control"><slot></slot></div>
-				<span class="ig-addon ig-trailing"><slot #trail name="trailing"></slot></span>
+				<span class="input-group-addon input-group-leading"><slot #lead name="leading"></slot></span>
+				<div class="input-group-control"><slot></slot></div>
+				<span class="input-group-addon input-group-trailing"><slot #trail name="trailing"></slot></span>
 			</div>
 		`;
 	}

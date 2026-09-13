@@ -1,17 +1,16 @@
-import '../button/button.js';
-import '../icon-button/icon-button.js';
-import '../slideout/slideout.js';
+import '../notification-panel/notification-panel.js';
 import { WebComponent } from '../../core/index.js';
-import { NotificationCenterItem } from '../notification-center-item/notification-center-item.js';
+import { normalizeNoticeType, stampStackDepth } from '../notice-stack.js';
 import { NotificationItem } from '../notification-item/notification-item.js';
 const DEFAULT_TIMEOUT = 3200;
 const POSITIONS = new Set([
 	'top-end', 'top-start', 'bottom-end', 'bottom-start',
 ]);
 /**
- * `<ui-notification>` — toast stack + Tahoe-style notification center.
+ * `<ui-notification>` — toast stack + history pane.
  *
- * Center pane is a composed `<ui-slideout>` (header via `<ui-panel-header>`).
+ * Center pane is a composed `<ui-notification-panel>`. Toasts hide while the
+ * pane is open (`centerOpen`) so they do not double-show.
  *
  * Config (static state / `.state=`):
  * - `position` — toast corner: `top-end` | `top-start` | `bottom-end` | `bottom-start`
@@ -25,38 +24,25 @@ export class UINotification extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
 		notificationStack: './notification-stack.css',
-		notificationCenter: './notification-center.css',
 	};
 	static state = {
 		items: [],
 		position: 'top-end',
 		clickAction: 'hide',
 		centerOpen: false,
-		/* Child slideout knobs — reactive bag bound bare. */
-		slideoutState: {
-			open: false,
-			side: 'end',
-			heading: 'Notifications',
-			showClose: true,
-			closeLabel: 'Close notifications',
-			dragClose: true,
-			backdrop: true,
-		},
+		/*
+		 * How many cards stay on screen. Beyond this the stack LAYERS rather than
+		 * growing: deeper cards scale back and peek out behind the front one, so a
+		 * burst of notifications reads as a pile instead of a column that runs off
+		 * the viewport. Hover or focus fans the pile back out. Nothing is dropped
+		 * — the overflow is still in `items` and still in the centre.
+		 */
+		stackLimit: 4,
 	};
 	nextId = 0;
 	onConnect() {
-		/*
-		 * The host owns its top-layer requirement: manual popover so the toast
-		 * stack lands above any open <dialog>. Mounters must not need an external
-		 * setAttribute('popover') dance. Explicit popover= markup still wins;
-		 * engines without popover support fall back to z-index stacking.
-		 */
-		if (typeof this.showPopover === 'function' && !this.hasAttribute('popover')) {
-			this.setAttribute('popover', 'manual');
-		}
-		if (typeof this.showPopover === 'function' && !this.matches(':popover-open')) {
-			this.showPopover();
-		}
+		this.ensureManualPopover();
+		this.observe('items', this.queueStampStack);
 		this.delegate('notification-center:toggle', this.toggleCenter);
 		this.delegate('notification-center:open', this.openCenter);
 		this.delegate('notification-center:close', this.closeCenter);
@@ -65,10 +51,24 @@ export class UINotification extends WebComponent {
 		this.observe('position', this.syncPositionAttr);
 		this.syncPositionAttr(this.state.position);
 	}
+	/* Depth is stamped AFTER the list paints — list() owns the children, this
+	   only writes a CSS var onto each one. */
+	queueStampStack() {
+		this.nextFrame().then(() => {
+			if (!this.isDisconnected) {
+				this.stampStackIndexes();
+			}
+		});
+	}
+	stampStackIndexes() {
+		stampStackDepth(this, 'ui-notification-item');
+		this.style.setProperty('--stack-limit', String(this.state.stackLimit));
+	}
+	onRender() {
+		this.stampStackIndexes();
+	}
 	syncCenterOpen(isOpen) {
-		const centerOpen = Boolean(isOpen);
-		this.toggleAttribute('data-center-open', centerOpen);
-		this.state.slideoutState.open = centerOpen;
+		this.toggleAttribute('data-center-open', Boolean(isOpen));
 	}
 	syncPositionAttr(position) {
 		const next = POSITIONS.has(position) ? position : 'top-end';
@@ -90,7 +90,9 @@ export class UINotification extends WebComponent {
 		this.state.items.unshift({
 			id: itemId,
 			itemId,
-			itemType: spec.itemType ?? 'default',
+			/* Same six kinds ui-toast accepts — one vocabulary for the notice family,
+			   so a "warning" cannot mean different things in the two surfaces. */
+			itemType: normalizeNoticeType(spec.itemType ?? spec.type ?? 'default'),
 			message,
 			timeout: spec.timeout ?? DEFAULT_TIMEOUT,
 			heading: spec.heading ?? 'Notification',
@@ -99,24 +101,11 @@ export class UINotification extends WebComponent {
 			seen: false,
 			createdAt: Date.now(),
 		});
-		this.repromotePopover();
+		this.repromoteManualPopover();
 		this.emit('notification:show', {
 			id: itemId,
 		});
 		return itemId;
-	}
-	repromotePopover() {
-		if (typeof this.hidePopover !== 'function' || typeof this.showPopover !== 'function') {
-			return;
-		}
-		try {
-			if (this.matches?.(':popover-open')) {
-				this.hidePopover();
-			}
-			this.showPopover();
-		} catch (error) {
-			console.warn('[notify] re-promote failed', error);
-		}
 	}
 	hide(itemId) {
 		const items = this.state.items;
@@ -140,7 +129,6 @@ export class UINotification extends WebComponent {
 	}
 	openCenter() {
 		this.state.centerOpen = true;
-		this.markAllSeen();
 	}
 	closeCenter() {
 		this.state.centerOpen = false;
@@ -182,10 +170,24 @@ export class UINotification extends WebComponent {
 			this.remove(itemId);
 		}
 	}
-	handleSlideoutClose() {
+	/*
+	 * The panel emits BOTH `:open` and `:close`; handling only the latter meant a
+	 * consumer calling `panel.open()` directly — a public method — left the host
+	 * unaware, so `centerOpen` stayed false and the toast stack kept showing
+	 * alongside the very panel that already lists everything. Both directions are
+	 * handled now, and openCenter/closeCenter are idempotent, so the host-driven
+	 * path does not bounce back through here.
+	 */
+	handlePanelOpen() {
+		this.openCenter();
+	}
+	handlePanelClose() {
 		this.closeCenter();
 	}
-	handleClearAll() {
+	handlePanelClear() {
+		this.markAllSeen();
+	}
+	handlePanelDelete() {
 		this.clear();
 	}
 	isToastVisible(item) {
@@ -202,47 +204,24 @@ export class UINotification extends WebComponent {
 		}
 		return count;
 	}
-	hasItems() {
-		return this.state.items.length > 0;
-	}
 	render() {
 		this.html`
 			<div
 				class="notification-stack"
 				data-position=${this.state.position}
+				?hidden=${this.state.centerOpen}
 				@notification:activate=${this.handleActivate}
 				@notification:hide=${this.handleHide}
 				@notification:remove=${this.handleRemove}>
 				${this.filter('items', NotificationItem, this.isToastVisible)}
 			</div>
-			<portal to="body">
-				<ui-slideout
-					.state=${this.state.slideoutState}
-					@slideout:close=${this.handleSlideoutClose}
-					@notification:activate=${this.handleActivate}
-					@notification:remove=${this.handleRemove}>
-					<ui-icon-button
-						slot="header-end"
-						class="nc-clear"
-						?hidden=${() => {
-							return !this.hasItems();
-						}}
-						.state.icon=${'trash-2'}
-						.state.tooltip=${'Clear all'}
-						.state.variant=${'ghost'}
-						.state.tone=${'primary'}
-						.state.size=${'sm'}
-						@icon-button:click=${this.handleClearAll}></ui-icon-button>
-					<div class="nc-list">
-						${this.list('items', NotificationCenterItem)}
-						<div class="nc-empty" ?hidden=${() => {
-							return this.hasItems();
-						}}>
-							No notifications
-						</div>
-					</div>
-				</ui-slideout>
-			</portal>
+			<ui-notification-panel
+				.state.items=${this.state.items}
+				.state.open=${this.state.centerOpen}						@notification-panel:open=${this.handlePanelOpen}				@notification-panel:close=${this.handlePanelClose}
+				@notification-panel:clear=${this.handlePanelClear}
+				@notification-panel:delete=${this.handlePanelDelete}
+				@notification:activate=${this.handleActivate}
+				@notification:remove=${this.handleRemove}></ui-notification-panel>
 		`;
 	}
 }

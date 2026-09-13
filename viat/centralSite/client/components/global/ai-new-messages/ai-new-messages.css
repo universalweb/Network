@@ -3,7 +3,7 @@
 	justify-content: center;
 	pointer-events: none;
 }
-.ainm {
+.ai-new-messages {
 	pointer-events: auto;
 	display: inline-flex;
 	align-items: center;
@@ -22,18 +22,18 @@
 	box-shadow: 0 0.35rem 1rem color-mix(in oklab, #000 35%, transparent);
 	transition: background 0.15s ease, border-color 0.15s ease;
 }
-.ainm:hover {
+.ai-new-messages:hover {
 	background: color-mix(in oklab, var(--teal, var(--accent, currentColor)) 22%, var(--bg-panel, #0a0c12));
 }
-.ainm:focus-visible {
+.ai-new-messages:focus-visible {
 	outline: 2px solid var(--cyan, currentColor);
 	outline-offset: 2px;
 }
-.ainm[hidden] {
+.ai-new-messages[hidden] {
 	display: none;
 }
 @media (prefers-reduced-motion: reduce) {
-	.ainm {
+	.ai-new-messages {
 		transition: none;
 	}
 }

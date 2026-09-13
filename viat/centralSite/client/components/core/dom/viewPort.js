@@ -35,7 +35,7 @@ function dispatchEntries(entries) {
 			continue;
 		}
 		if (entry.isIntersecting) {
-			enterView(element, meta);
+			enterView(element, meta, entry);
 			if (meta.once === true) {
 				unobserve(element);
 			}
@@ -92,16 +92,29 @@ function unlockLazy(element, meta) {
 		meta.onReady(element);
 	}
 }
-function enterView(element, meta) {
+function enterView(element, meta, entry) {
 	if (meta.mode === 'lazy' && meta.ready !== true) {
 		unlockLazy(element, meta);
 	}
 	if (typeof meta.onEnter === 'function') {
-		meta.onEnter(element);
+		meta.onEnter(element, entry);
+	}
+	if (meta.emit === true) {
+		element.dispatchEvent(new CustomEvent('view:enter', {
+			bubbles: true,
+			composed: true,
+			detail: {
+				data: {
+					ratio: entry?.intersectionRatio ?? 0,
+				},
+			},
+		}));
 	}
 }
 /**
  * Observe an element for viewport (or scroll-root) entry.
+ * Pass emit:true for a composed `view:enter` (detail.data.ratio) — the
+ * delegated near-view surface; do not add a second observer module.
  * @param {Element} element - Target.
  * @param {object} [options] - Options.
  * @param {Element|null} [options.root] - Scroll root (null = viewport).
@@ -109,6 +122,8 @@ function enterView(element, meta) {
  * @param {number} [options.threshold] - IO threshold.
  * @param {'paint'|'lazy'} [options.mode] - Visibility strategy.
  * @param {boolean} [options.once] - Unobserve after first enter.
+ * @param {boolean} [options.applyStyles] - Apply content-visibility (default true).
+ * @param {boolean} [options.emit] - Dispatch composed view:enter on the element.
  * @param {string} [options.blockSize] - contain-intrinsic-block-size.
  * @param {Function} [options.onReady] - Lazy unlock callback.
  * @param {Function} [options.onEnter] - Every enter (if not once).
@@ -127,14 +142,18 @@ export function observeInView(element, options) {
 	const threshold = options?.threshold ?? DEFAULT_THRESHOLD;
 	const mode = options?.mode === 'lazy' ? 'lazy' : 'paint';
 	const once = options?.once !== false;
-	if (mode === 'lazy') {
-		applyViewLazy(element, options?.blockSize);
-	} else {
-		applyViewPaint(element, options?.blockSize);
+	const applyStyles = options?.applyStyles !== false;
+	if (applyStyles) {
+		if (mode === 'lazy') {
+			applyViewLazy(element, options?.blockSize);
+		} else {
+			applyViewPaint(element, options?.blockSize);
+		}
 	}
 	const meta = {
 		mode,
 		once,
+		emit: options?.emit === true,
 		ready: mode !== 'lazy',
 		onReady: options?.onReady,
 		onEnter: options?.onEnter,

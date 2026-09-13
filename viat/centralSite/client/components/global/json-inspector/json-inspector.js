@@ -293,16 +293,16 @@ export class UIJsonInspector extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="ji">
-				<div class="ji-toolbar">
-					<input #search class="ji-search" type="search" placeholder="Filter keys & values…" $value="filter" aria-label="Filter">
-					<button type="button" class="ji-btn ji-clear" ?hidden=${this.clearHidden} @click=${this.clearFilter}>Clear</button>
-					<button type="button" class="ji-btn" @click=${this.expandAll}>Expand all</button>
-					<button type="button" class="ji-btn" @click=${this.collapseAll}>Collapse all</button>
+			<div class="json-inspector">
+				<div class="json-inspector-toolbar">
+					<input #search class="json-inspector-search" type="search" placeholder="Filter keys & values…" $value="filter" aria-label="Filter">
+					<button type="button" class="json-inspector-btn json-inspector-clear" ?hidden=${this.clearHidden} @click=${this.clearFilter}>Clear</button>
+					<button type="button" class="json-inspector-btn" @click=${this.expandAll}>Expand all</button>
+					<button type="button" class="json-inspector-btn" @click=${this.collapseAll}>Collapse all</button>
 				</div>
-				<div class="ji-tree" role="tree" @json-row:toggle=${this.handleToggle}>
+				<div class="json-inspector-tree" role="tree" @json-row:toggle=${this.handleToggle}>
 					${this.list('items', UIJsonRow, this.rowKey)}
-					<div class="ji-empty" ?hidden=${this.hasRows}>No matches</div>
+					<div class="json-inspector-empty" ?hidden=${this.hasRows}>No matches</div>
 				</div>
 			</div>
 		`;

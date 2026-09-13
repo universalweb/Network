@@ -1,0 +1,8 @@
+/*
+	ui-grid host structure only. Track / gap / flow / span rules live in
+	core util-layout.css so stack, grid, and masonry share one packing sheet.
+*/
+:host {
+	display: block;
+	inline-size: 100%;
+}

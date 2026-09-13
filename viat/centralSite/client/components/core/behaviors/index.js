@@ -7,13 +7,16 @@ import { autofocus } from './autofocus.js';
 import { autoResize } from './autoResize.js';
 import { autoselect } from './autoselect.js';
 import { hotkey } from './hotkey.js';
+import { parallax } from './parallax.js';
 import { registerBehavior } from './registry.js';
 import { reveal } from './reveal.js';
 import { scrollReport } from './scrollReport.js';
 import { tooltip } from './tooltip.js';
+import { tooltipPlacement } from './tooltipPlacement.js';
 import { viewLazy } from './viewLazy.js';
 import { viewPaint } from './viewPaint.js';
 registerBehavior(tooltip.name, tooltip);
+registerBehavior(tooltipPlacement.name, tooltipPlacement);
 registerBehavior(hotkey.name, hotkey);
 registerBehavior(autofocus.name, autofocus);
 registerBehavior(autoselect.name, autoselect);
@@ -22,6 +25,7 @@ registerBehavior(reveal.name, reveal);
 registerBehavior(scrollReport.name, scrollReport);
 registerBehavior(viewPaint.name, viewPaint);
 registerBehavior(viewLazy.name, viewLazy);
+registerBehavior(parallax.name, parallax);
 export {
 	behaviorAttrNames,
 	BehaviorTeardown,

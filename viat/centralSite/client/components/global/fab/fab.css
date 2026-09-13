@@ -32,7 +32,6 @@
 	--ui-btn-radius: 999px;
 }
 .fab-btn:hover {
-	transform: translateY(-2px) scale(1.03);
 	box-shadow: var(--elev-hover, 0 18px 42px rgba(0, 0, 0, 0.45));
 }
 .fab-btn:active {

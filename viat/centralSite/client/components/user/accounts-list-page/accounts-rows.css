@@ -2,7 +2,7 @@
    `.importStyles` so the header row + data rows (rendered there) are styled and
    column-aligned. Kept separate from the page's chrome CSS (title header) which
    stays in the page's own shadow. */
-.al-row {
+.accounts-list-row {
 	display: grid;
 	grid-template-columns: 1.7fr 1fr 1fr 1fr 1.5fr;
 	gap: var(--space-3);
@@ -11,10 +11,10 @@
 	font-size: var(--text-sm);
 	align-items: center;
 }
-.al-row:hover:not(.al-head) {
+.accounts-list-row:hover:not(.accounts-list-head) {
 	background: color-mix(in oklab, var(--teal) 6%, transparent);
 }
-.al-row.al-head {
+.accounts-list-row.accounts-list-head {
 	font-size: var(--text-2xs);
 	letter-spacing: 0.16em;
 	text-transform: uppercase;
@@ -24,35 +24,35 @@
 	background: var(--bg-dark);
 	z-index: 1;
 }
-.al-cell {
+.accounts-list-cell {
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
-.al-addr {
+.accounts-list-addr {
 	text-decoration: none;
 	color: var(--dark-text-medium);
 	border-block-end: 1px dashed transparent;
 }
-a.al-addr:hover {
+a.accounts-list-addr:hover {
 	color: var(--teal);
 	border-block-end-color: var(--teal);
 }
-.al-balance {
+.accounts-list-balance {
 	text-align: right;
 	color: var(--color-success);
 	font-variant-numeric: tabular-nums;
 }
-.al-totin {
+.accounts-list-totin {
 	text-align: right;
 	color: var(--dark-text-medium);
 	font-variant-numeric: tabular-nums;
 }
-.al-totout {
+.accounts-list-totout {
 	text-align: right;
 	color: var(--color-warning);
 	font-variant-numeric: tabular-nums;
 }
-.al-time {
+.accounts-list-time {
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 }

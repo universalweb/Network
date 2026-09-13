@@ -54,16 +54,17 @@
 		}
 		select::picker-icon {
 			color: var(--select-chevron-color, var(--text-muted));
-			transition: rotate var(--transition-base);
+			transition: scale var(--transition-base);
 		}
+		select:hover::picker-icon,
 		select:open::picker-icon {
-			rotate: 180deg;
+			scale: 1 -1;
 		}
 		select::picker(select) {
 			appearance: base-select;
-			background: var(--select-picker-bg, var(--popup-glass-bg, var(--popup-bg)));
-			backdrop-filter: var(--popup-glass-blur, none);
-			-webkit-backdrop-filter: var(--popup-glass-blur, none);
+			background: var(--select-picker-bg, var(--popup-glass-bg));
+			backdrop-filter: var(--popup-glass-blur);
+			-webkit-backdrop-filter: var(--popup-glass-blur);
 			border: var(--border-width) solid
 				var(--select-picker-border, var(--popup-border));
 			border-radius: var(--select-picker-radius, var(--radius-md));
@@ -112,22 +113,102 @@
 		block-size: var(--space-2);
 	}
 
-	/* Native date / time / month / week inputs already inherit the text-input
-	   chrome above (themed background / color / border, so the in-field text reads
-	   in every theme). The pop-up calendar itself is UA-drawn — unreachable by CSS
-	   — so it follows `color-scheme` (set per theme on :root). accent-color tints
-	   the picker's selected day and the spin arrows to the active accent, matching
-	   the rest of the form controls with no custom-control rebuild. */
+	/* Native date / time / month / week / color — in-field chrome + picker popover.
+	   color-scheme: inherit is load-bearing: the UA calendar/time/color popup
+	   follows the input's scheme (theme :root sets it). accent-color tints the
+	   selected day / clock hands. ::picker(<type>) skins the popover where the
+	   engine exposes it (Chromium; gated). FF/Safari keep the OS popup. */
 	input[type='date'],
 	input[type='time'],
 	input[type='datetime-local'],
 	input[type='month'],
-	input[type='week'] {
+	input[type='week'],
+	input[type='color'] {
 		accent-color: var(--cyan, var(--teal));
+		color-scheme: inherit;
+	}
+	input::-webkit-datetime-edit {
+		color: inherit;
+		padding: 0;
+	}
+	input::-webkit-datetime-edit-fields-wrapper {
+		padding: 0;
+	}
+	input::-webkit-datetime-edit-text {
+		color: var(--text-muted, currentColor);
+		padding-inline: 0.15em;
+	}
+	input::-webkit-datetime-edit-year-field:focus,
+	input::-webkit-datetime-edit-month-field:focus,
+	input::-webkit-datetime-edit-day-field:focus,
+	input::-webkit-datetime-edit-week-field:focus,
+	input::-webkit-datetime-edit-hour-field:focus,
+	input::-webkit-datetime-edit-minute-field:focus,
+	input::-webkit-datetime-edit-second-field:focus,
+	input::-webkit-datetime-edit-millisecond-field:focus,
+	input::-webkit-datetime-edit-ampm-field:focus {
+		background: color-mix(in oklab, var(--cyan, var(--teal)) 28%, transparent);
+		color: inherit;
+		border-radius: var(--radius-xs);
+		outline: none;
 	}
 	input::-webkit-calendar-picker-indicator {
 		cursor: pointer;
+		opacity: 0.8;
 		border-radius: var(--radius-xs);
+	}
+	input::-webkit-calendar-picker-indicator:hover {
+		opacity: 1;
+	}
+	@supports selector(::picker-icon) {
+		input[type='date']::picker-icon,
+		input[type='time']::picker-icon,
+		input[type='datetime-local']::picker-icon,
+		input[type='month']::picker-icon,
+		input[type='week']::picker-icon,
+		input[type='color']::picker-icon {
+			color: var(--text-muted, currentColor);
+			cursor: pointer;
+		}
+	}
+	@supports selector(::picker(date)) {
+		input[type='date']::picker(date),
+		input[type='datetime-local']::picker(datetime-local),
+		input[type='month']::picker(month),
+		input[type='week']::picker(week) {
+			background: var(--select-picker-bg, var(--popup-glass-bg));
+			color: var(--popup-text, var(--text-main));
+			border: var(--border-width) solid
+				var(--select-picker-border, var(--popup-border));
+			border-radius: var(--select-picker-radius, var(--radius-md));
+			box-shadow: var(--select-picker-shadow, var(--popup-shadow));
+			color-scheme: inherit;
+			accent-color: var(--cyan, var(--teal));
+		}
+	}
+	@supports selector(::picker(time)) {
+		input[type='time']::picker(time),
+		input[type='datetime-local']::picker(time) {
+			background: var(--select-picker-bg, var(--popup-glass-bg));
+			color: var(--popup-text, var(--text-main));
+			border: var(--border-width) solid
+				var(--select-picker-border, var(--popup-border));
+			border-radius: var(--select-picker-radius, var(--radius-md));
+			box-shadow: var(--select-picker-shadow, var(--popup-shadow));
+			color-scheme: inherit;
+			accent-color: var(--cyan, var(--teal));
+		}
+	}
+	@supports selector(::picker(color)) {
+		input[type='color']::picker(color) {
+			background: var(--select-picker-bg, var(--popup-glass-bg));
+			color: var(--popup-text, var(--text-main));
+			border: var(--border-width) solid
+				var(--select-picker-border, var(--popup-border));
+			border-radius: var(--select-picker-radius, var(--radius-md));
+			box-shadow: var(--select-picker-shadow, var(--popup-shadow));
+			color-scheme: inherit;
+		}
 	}
 
 	/* Universal button: themed via the per-theme --btn-* token set (the same
@@ -152,8 +233,7 @@
 			background var(--transition-base),
 			border-color var(--transition-base),
 			box-shadow var(--transition-base),
-			color var(--transition-base),
-			transform var(--transition-base);
+			color var(--transition-base);
 	}
 	button:not([data-variant]):hover:not([disabled]) {
 		background: var(--btn-hover-bg, var(--btn-bg, transparent));
@@ -161,10 +241,6 @@
 		box-shadow: var(--btn-hover-inset, var(--btn-inset, none)),
 			var(--btn-hover-glow, transparent 0 0);
 		color: var(--btn-hover-color, var(--popup-text, var(--text-main)));
-		transform: translateY(-1px);
-	}
-	button:not([data-variant]):active:not([disabled]) {
-		transform: translateY(0);
 	}
 	button:not([data-variant]):focus-visible {
 		outline: 2px solid var(--focus-ring-color, var(--cyan));
@@ -177,9 +253,6 @@
 				border-color var(--transition-base),
 				box-shadow var(--transition-base),
 				color var(--transition-base);
-		}
-		button:not([data-variant]):hover:not([disabled]) {
-			transform: none;
 		}
 	}
 

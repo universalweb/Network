@@ -9,8 +9,7 @@
 	  <ui-progress-ring .state.value=${94} .state.thresholds=${[{ at: 90, tone: 'danger' }]}></ui-progress-ring>
 	─────────────────────────────────────────────────────────────────────
 */
-import { isArray } from '@universalweb/utilitylib';
-import { WebComponent } from 'webcomponent';
+import { isArray, WebComponent } from 'webcomponent';
 const RADIUS = 42;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 const DOT_COUNT = 18;
@@ -92,14 +91,35 @@ export class UIProgressRing extends WebComponent {
 	get circumference() {
 		return CIRCUMFERENCE.toFixed(2);
 	}
+	/*
+	 * ONE reading of the caller's bounds. The arc ratio, the announced value and
+	 * the announced range all have to agree, and they cannot if each parses
+	 * min/max for itself — which is how aria-valuenow came to be a 0..100
+	 * percentage sitting inside a 0..200 declared range.
+	 */
+	bounds() {
+		const min = Number(this.state.min) || 0;
+		const max = Number(this.state.max) || 100;
+		return {
+			min,
+			max,
+			span: max > min ? max - min : 1,
+		};
+	}
+	ringMin() {
+		return this.bounds().min;
+	}
+	ringMax() {
+		return this.bounds().max;
+	}
 	get ratio() {
 		if (this.isIndeterminate()) {
 			// Partial arc for spin/indeterminate chrome.
 			return 0.28;
 		}
-		const min = Number(this.state.min) || 0;
-		const max = Number(this.state.max) || 100;
-		const span = max > min ? max - min : 1;
+		const {
+			min, span,
+		} = this.bounds();
 		return clamp((Number(this.state.value) - min) / span, 0, 1);
 	}
 	get dashOffset() {
@@ -121,7 +141,10 @@ export class UIProgressRing extends WebComponent {
 			const count = thresholds.length;
 			for (let index = 0; index < count; index += 1) {
 				const rule = thresholds[index] || {};
-				if (value >= rule.at && rule.at > best) {
+				/* A rule with no tone cannot WIN the scan — it used to claim `best`
+				   and then contribute nothing, which threw away a lower rule that had
+				   a perfectly good colour and dropped the ring to its base tone. */
+				if (rule.tone && value >= rule.at && rule.at > best) {
 					best = rule.at;
 					chosen = rule.tone;
 				}
@@ -146,6 +169,16 @@ export class UIProgressRing extends WebComponent {
 	}
 	showCenterValue() {
 		return this.state.showValue && !this.isIndeterminate();
+	}
+	/*
+	 * The `?hidden` spot needs a method it can CALL. Writing
+	 * `?hidden=${!this.showCenterValue}` negates the function OBJECT, which is
+	 * always truthy, so the flag was a hard-coded false and the readout could
+	 * never hide — showValue:false did nothing and an indeterminate ring still
+	 * showed its (empty) centre. Same shape as ui-filter-bar's hideClear.
+	 */
+	hideCenterValue() {
+		return !this.showCenterValue();
 	}
 	useUnits() {
 		return usesUnits(normalizeVariant(this.state.variant));
@@ -223,27 +256,49 @@ export class UIProgressRing extends WebComponent {
 		}
 		return markup;
 	}
+	/*
+	 * Announced on the CALLER'S scale, not as a percentage. aria-valuemin/max
+	 * carry the raw bounds, so a 0..200 gauge that is half full must report 100,
+	 * not 50 — reporting the percentage told a screen reader "a quarter" while
+	 * the ring painted half. The centre readout stays a percentage; that is a
+	 * different thing and it is allowed to differ.
+	 */
+	ringNow() {
+		if (this.isIndeterminate()) {
+			return false;
+		}
+		const {
+			min, span,
+		} = this.bounds();
+		return Number((min + (this.ratio * span)).toFixed(2));
+	}
+	ringValueText() {
+		if (this.isIndeterminate()) {
+			return 'Loading';
+		}
+		return this.displayValue;
+	}
+	ringVariant() {
+		return normalizeVariant(this.state.variant);
+	}
 	render() {
-		const indeterminate = this.isIndeterminate();
-		const variant = normalizeVariant(this.state.variant);
-		const now = indeterminate ? false : Math.round(this.ratio * 100);
 		this.html`
 			<div
 				class="ring"
 				data-size=${normalizeSize(this.state.size)}
 				data-tone=${this.effectiveTone}
-				data-variant=${variant}
+				data-variant=${this.ringVariant}
 				data-status=${this.statusFlag}
-				?data-indeterminate=${indeterminate}
+				?data-indeterminate=${this.isIndeterminate}
 				?data-animated=${this.state.animated !== false}
 				?data-units=${this.useUnits}
 				style=${`--ring-p:${this.ratio};--ring-c:${this.circumference};--ring-sw:${this.state.thickness}`}
 				role="progressbar"
 				aria-label=${this.state.label || 'Progress'}
-				aria-valuemin=${this.state.min || 0}
-				aria-valuemax=${this.state.max || 100}
-				aria-valuenow=${now}
-				aria-valuetext=${indeterminate ? 'Loading' : this.displayValue}>
+				aria-valuemin=${this.ringMin}
+				aria-valuemax=${this.ringMax}
+				aria-valuenow=${this.ringNow}
+				aria-valuetext=${this.ringValueText}>
 				<svg class="ring-svg" viewBox="0 0 100 100" overflow="visible" aria-hidden="true">
 					<circle
 						class="ring-track"
@@ -258,7 +313,7 @@ export class UIProgressRing extends WebComponent {
 					^html${this.unitsSvg()}
 				</svg>
 				<div class="ring-center">
-					<span class="ring-value" ?hidden=${!this.showCenterValue}>${this.displayValue}</span>
+					<span class="ring-value" ?hidden=${this.hideCenterValue}>${this.displayValue}</span>
 					<slot></slot>
 				</div>
 			</div>

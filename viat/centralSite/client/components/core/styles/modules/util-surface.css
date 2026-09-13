@@ -11,6 +11,17 @@
 		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-2);
 	}
+	/* Fill + blur only. Callers own radius/border. Tokens live on every theme. */
+	.glass {
+		background: var(--popup-glass-bg);
+		backdrop-filter: var(--popup-glass-blur);
+		-webkit-backdrop-filter: var(--popup-glass-blur);
+	}
+	.light-glass {
+		background: var(--popup-light-glass-bg);
+		backdrop-filter: var(--popup-glass-blur);
+		-webkit-backdrop-filter: var(--popup-glass-blur);
+	}
 	.border {
 		border: var(--border-width) solid var(--border-light-color);
 	}
@@ -25,14 +36,26 @@
 		border-top: var(--border-width) solid
 			var(--dark-divider, var(--border-light-color));
 	}
+	/*
+	 * TEXT tones. The class vocabulary matches the `data-tone` ATTRIBUTE
+	 * vocabulary below (accent / danger / info / neutral / success / warning) so
+	 * one tone is never spelled two ways — this was `.tone-warn` against a
+	 * `data-tone="warning"` attribute, in this same file.
+	 *
+	 * Only success and warning have a softer `-text` variant defined in the
+	 * themes; `--color-danger-text` and `--color-info-text` do not exist in ANY
+	 * of the seven, so those two read their base colour. That is a real gap in
+	 * the token set rather than an oversight here — adding them means choosing
+	 * fourteen new colour values, which is a design call, not a mechanical one.
+	 */
 	.tone-success {
 		color: var(--color-success-text);
 	}
+	.tone-warning {
+		color: var(--color-warn-text);
+	}
 	.tone-danger {
 		color: var(--color-danger);
-	}
-	.tone-warn {
-		color: var(--color-warn-text);
 	}
 	.tone-info {
 		color: var(--cyan);
@@ -41,7 +64,8 @@
 	   dots, tracker segments, bar fills). Carry `data-tone="success"` on the
 	   element and read `var(--tone-fill)`; each component applies its own
 	   treatment (solid fill, color-mix, border). Distinct from the `.tone-*`
-	   CLASSES above, which set TEXT color via the softer `-text` variants — a
+	   CLASSES above, which set TEXT color (via the softer `-text` variant where
+	   the theme defines one) — a
 	   fill needs the pure `--color-*` token, not the text variant. Attribute
 	   selector, so no class-name collision and no inherited `color` leak. */
 	[data-tone='accent']  { --tone-fill: var(--cyan); }
@@ -77,5 +101,12 @@
 	/* migrated from base.css */
 	.green-hover:hover {
 		color: var(--green-hover);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.glass,
+	.light-glass {
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
 	}
 }

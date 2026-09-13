@@ -9,10 +9,16 @@
 	-webkit-user-select: none;
 	display: inline-flex;
 	flex: 0 0 auto;
-	box-sizing: border-box;
+	max-inline-size: 100%;
 }
-:host([hidden]) {
-	display: none;
+/*
+ * Inner control fills the host so a stretched group child (vertical
+ * ui-button-group) paints the full slot — host can grow via flex, the
+ * painted <button>/<a> stays content-sized without this.
+ */
+:is(button, a)[data-variant] {
+	flex: 1 1 auto;
+	inline-size: 100%;
 }
 /*
  * Nested icons ALWAYS track the button's text color (incl. solid primary/success
@@ -33,10 +39,15 @@
 	/* Glyph tracks the button font-size; 0.8em keeps it subordinate to the label so
 	   the label leads. Icon-only buttons restore the absolute size class. */
 	--icon-size: 0.8em;
-	/* Spin glyph only (speed-dial + / ×, split caret). Parent sets
-	   --ui-btn-icon-rotate on the host — custom props pierce the shadow; host
-	   transform would rotate chrome. */
+	/* Direction via --ui-btn-icon-rotate (transform). Motion via
+	   --ui-btn-icon-spin (independent rotate) so they compose: a 180deg
+	   arrow fidgets 180→540, not 0→360. Parent sets both on the host —
+	   custom props pierce; host transform would rotate chrome.
+	   --ui-btn-icon-spin is document-registered in button.js; @property
+	   in this shadow-adopted sheet is ignored. Do not transition `rotate`
+	   here — the registered property interpolates on the parent. */
 	transform: rotate(var(--ui-btn-icon-rotate, 0deg));
+	rotate: var(--ui-btn-icon-spin, 0deg);
 	transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 button.is-icon-only .btn-icon,
@@ -49,19 +60,24 @@ a.is-icon-only ::slotted(ui-icon) {
 	.btn-icon,
 	::slotted(ui-icon) {
 		transition: none;
+		rotate: 0deg;
 	}
 }
 .btn-label {
 	line-height: 1;
 }
-:host(.is-full) {
-	width: 100%;
+/*
+ * is-full is on the INNER control (framework .is-full → inline-size 100%).
+ * :host(.is-full) never matches. :has() stretches the host from that token.
+ */
+:host(:has(.is-full)) {
+	inline-size: 100%;
 	display: flex;
 }
 /* Loading spinner — borrows the button's (now correctly contrasting) text color. */
 .btn-spinner {
-	width: 1em;
-	height: 1em;
+	inline-size: 1em;
+	block-size: 1em;
 	border: 2px solid currentColor;
 	border-inline-end-color: transparent;
 	border-radius: 50%;

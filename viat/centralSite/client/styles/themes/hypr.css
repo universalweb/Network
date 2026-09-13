@@ -37,6 +37,7 @@
   --text-muted: #5f6c94;
   --text-light: #ffffff;
   --text-offwhite: #a8b4d4;
+  --text-subtle: rgba(255, 255, 255, 0.4);
 
   /* ── Fonts ───────────────────────────────────────── */
   --font-mono: 'JetBrains Mono', monospace;
@@ -148,10 +149,14 @@
   --btn-hover-inset: none;
   --btn-hover-glow: 0 0 14px rgba(51, 204, 255, 0.15);
   --btn-hover-color: var(--text-light);
-  /* Primary solid hover stays in the aqua family (base fallback is mint). */
-  --btn-primary-hover-bg: #7ae7ff;
   --focus-ring-color: rgba(51, 204, 255, 0.75);
   --green-hover: #00e69a;
+
+  /* ── Icon chrome ─────────────────────────────────── */
+  --icon-color: var(--text-offwhite);
+  --icon-color-hover: var(--text-light);
+  --icon-color-active: var(--text-light);
+  --icon-color-disabled: var(--dark-text-faint);
 
   /* ── Flyout ──────────────────────────────────────── */
   --flyout-bg: rgba(9, 12, 19, 0.96);
@@ -174,14 +179,13 @@
   --topbar-border: rgba(122, 231, 255, 0.09);
   --topbar-accent: var(--teal);
   --topbar-bottom-border: 1px solid rgba(51, 204, 255, 0.15);
-  --tb-badge-radius: 20px;
+  --theme-select-chip-radius: 20px;
   --logo-mark-pattern: linear-gradient(135deg, #33ccff 0%, #00ff99 100%);
 
   /* ── Popups (tooltip + notification) ─────────────── */
   --popup-bg: rgba(8, 10, 16, 0.94);
   --popup-bg-hover: rgba(11, 14, 21, 0.97);
-  --popup-glass-bg: rgba(8, 10, 16, 0.78);
-  --popup-glass-blur: blur(0.75rem) saturate(1.3);
+  --popup-glass-color: rgb(8, 10, 16);
   --popup-border: rgba(51, 204, 255, 0.22);
   --popup-border-hover: rgba(51, 204, 255, 0.42);
   --popup-accent: var(--teal);
@@ -191,7 +195,7 @@
   --popup-text: var(--text-main);
 
   /* ── Glow Scale (restrained neon) ────────────────── */
-  --ph-dot-shadow: 0 0 6px var(--teal);
+  --panel-header-dot-shadow: 0 0 6px var(--teal);
   --tab-indicator-shadow: 0 0 8px rgba(51, 204, 255, 0.45);
   --logo-mark-text-shadow: 0 0 10px rgba(51, 204, 255, 0.45);
   --subtitle-text-shadow: none;

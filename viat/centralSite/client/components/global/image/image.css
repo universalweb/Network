@@ -2,14 +2,14 @@
 	display: block;
 	max-inline-size: 100%;
 }
-.im {
+.image {
 	display: flex;
 	flex-direction: column;
 	gap: 0.4rem;
 	margin: 0;
 	min-inline-size: 0;
 }
-.im-hit {
+.image-hit {
 	display: block;
 	margin: 0;
 	padding: 0;
@@ -19,50 +19,57 @@
 	cursor: zoom-in;
 	border-radius: inherit;
 }
-.im-hit:focus-visible {
+.image-hit:focus-visible {
 	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
 	outline-offset: 2px;
 }
-.im-img {
+.image-img {
 	display: block;
 	inline-size: 100%;
 	block-size: auto;
 	max-inline-size: 100%;
 	object-fit: cover;
 }
-.im[data-fit='contain'] .im-img {
+.image-ph {
+	inline-size: 100%;
+	min-block-size: 10rem;
+	aspect-ratio: 16 / 9;
+	background: color-mix(in oklab, var(--text-muted) 10%, transparent);
+	border-radius: inherit;
+}
+.image[data-fit='contain'] .image-img {
 	object-fit: contain;
 }
-.im[data-radius='none'] .im-img,
-.im[data-radius='none'] .im-hit {
+.image[data-radius='none'] .image-img,
+.image[data-radius='none'] .image-hit {
 	border-radius: 0;
 }
-.im[data-radius='sm'] .im-img,
-.im[data-radius='sm'] .im-hit {
+.image[data-radius='sm'] .image-img,
+.image[data-radius='sm'] .image-hit {
 	border-radius: var(--radius-sm, 0.25rem);
 }
-.im[data-radius='md'] .im-img,
-.im[data-radius='md'] .im-hit {
+.image[data-radius='md'] .image-img,
+.image[data-radius='md'] .image-hit {
 	border-radius: var(--radius-md, 0.5rem);
 }
-.im[data-radius='lg'] .im-img,
-.im[data-radius='lg'] .im-hit {
+.image[data-radius='lg'] .image-img,
+.image[data-radius='lg'] .image-hit {
 	border-radius: var(--radius-lg, 0.75rem);
 }
-.im[data-radius='full'] .im-img,
-.im[data-radius='full'] .im-hit {
+.image[data-radius='full'] .image-img,
+.image[data-radius='full'] .image-hit {
 	border-radius: 999px;
 }
-.im[data-shadow='sm'] .im-img {
+.image[data-shadow='sm'] .image-img {
 	box-shadow: var(--shadow-soft-sm, var(--shadow-1));
 }
-.im[data-shadow='md'] .im-img {
+.image[data-shadow='md'] .image-img {
 	box-shadow: var(--shadow-soft-md, var(--shadow-3));
 }
-.im[data-shadow='lg'] .im-img {
+.image[data-shadow='lg'] .image-img {
 	box-shadow: var(--shadow-soft-lg, var(--shadow-5));
 }
-.im-cap {
+.image-cap {
 	margin: 0;
 	color: var(--text-muted);
 	font-size: 0.8125rem;

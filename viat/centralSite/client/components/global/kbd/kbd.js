@@ -58,6 +58,7 @@ export class UIKbd extends WebComponent {
 	static state = {
 		values: [],
 		separator: '+',
+		tooltip: '',
 	};
 	sepStyle() {
 		/* Feed the rows' ::before; single quotes in the separator are escaped so
@@ -70,13 +71,23 @@ export class UIKbd extends WebComponent {
 	keyCap(token) {
 		return html`<span class="kbd-cap"><kbd class="kbd-key">${capFor(token)}</kbd></span>`;
 	}
+	/*
+	 * A token that caps to nothing must not become a row. The separator is a CSS
+	 * ::before on every cap after the first, so an empty / whitespace / nullish
+	 * entry does not render as "nothing" — it renders as an empty 1.9em key box
+	 * WITH a leading separator. Lists built by split() or filter() hand those
+	 * over routinely, so the guard belongs here rather than at every call site.
+	 */
+	hasCap(token) {
+		return capFor(token) !== '';
+	}
 	keyId(token) {
 		return token;
 	}
 	render() {
 		this.html`
-			<kbd class="kbd" role="group" style=${this.sepStyle}>
-				${this.list('values', this.keyCap, this.keyId)}
+			<kbd class="kbd" role="group" style=${this.sepStyle} tooltip=${this.state.tooltip}>
+				${this.filter('values', this.keyCap, this.hasCap, this.keyId)}
 			</kbd>
 		`;
 	}

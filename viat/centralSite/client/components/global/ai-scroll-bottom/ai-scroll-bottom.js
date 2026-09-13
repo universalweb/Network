@@ -6,7 +6,7 @@
  * Emits `ai-scroll-bottom:click` {}.
  */
 import '../button/button.js';
-import { WebComponent } from 'webcomponent';
+import { rafCoalesce, rafCoalesceCancel, WebComponent } from 'webcomponent';
 const DEFAULT_THRESHOLD = 48;
 function resolveScrollSelector(selector) {
 	if (!selector) {
@@ -54,6 +54,7 @@ export class UIAiScrollBottom extends WebComponent {
 		this.attachScrollTarget();
 	}
 	onDisconnect() {
+		rafCoalesceCancel(this);
 		this.detachScrollTarget();
 	}
 	handleScrollSelectorChange() {
@@ -64,7 +65,7 @@ export class UIAiScrollBottom extends WebComponent {
 	}
 	handleEvent(domEvent) {
 		if (domEvent.type === 'scroll') {
-			this.syncVisible();
+			rafCoalesce(this, this.syncVisible);
 		}
 	}
 	resolveScrollContainer() {
@@ -143,12 +144,12 @@ export class UIAiScrollBottom extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="aisb"
+			<div class="ai-scroll-bottom"
 				data-position=${this.state.position}
 				?data-visible=${this.showControl}
 				?aria-hidden=${this.controlAriaHidden}>
 				<ui-button
-					class="aisb-btn"
+					class="ai-scroll-bottom-btn"
 					.state.variant=${'solid'}
 					.state.tone=${this.state.tone}
 					.state.size=${this.state.size}

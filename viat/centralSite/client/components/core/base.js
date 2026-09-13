@@ -31,12 +31,25 @@ import {
 } from './dom/delegate.js';
 import * as dom from './dom/dom.js';
 import { setInert } from './dom/inert.js';
+import {
+	ensureManualPopover,
+	hideSurfacePopover,
+	repromoteManualPopover,
+	showSurfacePopover,
+} from './dom/manualPopover.js';
+import { parallax } from './dom/parallax.js';
 import { getRef, makeRefsProxy } from './dom/refs.js';
 import {
 	findComponent, findComponentGlobal, findComponents, findComponentsGlobal,
 } from './dom/search.js';
 import { applyViewportBucket, reflectViewport } from './environment/reflectViewport.js';
-import { applyThemeStyles, handleThemeChange, syncThemeStyles } from './environment/themeStyles.js';
+import {
+	applyThemeStyles,
+	handleThemeChange,
+	handleThemePreload,
+	preloadThemeStyles,
+	syncThemeStyles,
+} from './environment/themeStyles.js';
 import * as eventMethods from './events/events.js';
 import { dragSnap } from './gestures/dragSnap.js';
 import { dragTrack } from './gestures/dragTrack.js';
@@ -45,6 +58,10 @@ import * as lifecycle from './lifecycle/lifecycle.js';
 import { Lifecycle } from './lifecycle/lifecyclePromises.js';
 import { handleObserverCallback, installObserver, uninstallObserver } from './lifecycle/observer.js';
 import { atPhase, PHASE, phaseGetters } from './lifecycle/phase.js';
+import {
+	enterCustomElementReaction,
+	leaveCustomElementReaction,
+} from './lifecycle/reactionDepth.js';
 import { nextFrame } from './lifecycle/scheduler.js';
 import { createBound, getById, preRender } from './render/factory.js';
 import * as renderMethods from './render/render.js';
@@ -104,6 +121,7 @@ import {
 	keysOf,
 	smartClone,
 } from './utilities.js';
+export * from './utilities.js';
 /*
  * The promise-state tail of `WebComponent.create` — split out so the dominant
  * plain-object create never enters an async frame.
@@ -476,7 +494,12 @@ export class WebComponent extends HTMLElement {
 		if (oldValue === newValue || !this.isConnected) {
 			return;
 		}
-		notifyAttrChange(this, attributeName);
+		enterCustomElementReaction();
+		try {
+			notifyAttrChange(this, attributeName);
+		} finally {
+			leaveCustomElementReaction();
+		}
 	}
 	/**
 	 * Compile this class's `static styles` into constructable stylesheets.
@@ -776,6 +799,8 @@ const PROTO_METHODS = {
 	applyViewportBucket,
 	atPhase,
 	handleThemeChange,
+	handleThemePreload,
+	preloadThemeStyles,
 	syncThemeStyles,
 	/*
 	 * `this.bind` — the binding callable (bind / bind.text / .html /
@@ -807,6 +832,7 @@ const PROTO_METHODS = {
 	delegateTo,
 	dragSnap,
 	dragTrack,
+	parallax,
 	forkStyleMap,
 	handleObserverCallback,
 	hasStyle,
@@ -827,6 +853,10 @@ const PROTO_METHODS = {
 	resolveStyle,
 	setTimeout: setComponentTimeout,
 	setInert,
+	ensureManualPopover,
+	repromoteManualPopover,
+	showSurfacePopover,
+	hideSurfacePopover,
 	stopInterval,
 	/*
 	 * Deep subtree search (dom/search.js) — breadth-first over the child

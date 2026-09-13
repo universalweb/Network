@@ -13,11 +13,7 @@
 	─────────────────────────────────────────────────────────────────────
 */
 import '../icon/icon.js';
-import {
-	isFalse,
-	isTrue,
-} from '@universalweb/utilitylib';
-import { WebComponent } from 'webcomponent';
+import { isFalse, isTrue, WebComponent } from 'webcomponent';
 const SIZES = new Set([
 	'sm',
 	'md',

@@ -68,6 +68,7 @@ export class SettingsModal extends WebComponent {
 			open: false,
 			showClose: true,
 			showMaximize: true,
+			heading: 'Settings',
 		},
 	};
 	onConnect() {
@@ -181,10 +182,17 @@ export class SettingsModal extends WebComponent {
 		}
 	}
 	open() {
+		this.state.modal.open = true;
 		this.refs.modal?.open();
 	}
 	close() {
+		this.state.modal.open = false;
 		this.refs.modal?.close();
+	}
+	handleModalClose() {
+		if (this.state.modal.open) {
+			this.state.modal.open = false;
+		}
 	}
 	getWalletInfo() {
 		return this.global.wallet ?? {};
@@ -667,10 +675,12 @@ export class SettingsModal extends WebComponent {
 	}
 	render() {
 		this.html`
-			<ui-modal #modal class="sm-modal" .state=${this.state.modal}>
+			<ui-modal #modal class="sm-modal" .state=${this.state.modal} @modal:close=${this.handleModalClose}>
 				<ui-tabs class="sm-tabs"
 					.state.items=${this.tabsList}
 					.state.orientation=${'vertical'}
+					.state.variant=${'generic'}
+					.state.stripBorder=${true}
 					.state.activeIndex=${this.state.activeSection}
 					@tabs:change=${this.handleTabChange}>
 					<section slot="profile" class="sm-body">${this.renderProfileSection}</section>

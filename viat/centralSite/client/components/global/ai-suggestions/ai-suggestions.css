@@ -1,9 +1,6 @@
 :host {
 	display: block;
 }
-:host([hidden]) {
-	display: none;
-}
 .aisug {
 	display: flex;
 	flex-direction: column;

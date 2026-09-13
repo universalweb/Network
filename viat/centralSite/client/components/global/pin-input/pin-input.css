@@ -3,11 +3,12 @@
 }
 .pin-row {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 0.5rem;
 	align-items: center;
 }
 .pin-box {
-	inline-size: 2.75rem;
+	inline-size: var(--hit-min, max(2.75rem, 44px));
 	block-size: 3.25rem;
 	padding: 0;
 	border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.18));

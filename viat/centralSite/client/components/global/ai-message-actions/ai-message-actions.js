@@ -44,7 +44,7 @@ export class UIAiMessageActions extends WebComponent {
 		// Light list rows forbid tooltip= (behavior) and #refs — aria-label only.
 		return html`
 			<button type="button"
-				class="aima-btn"
+				class="ai-message-actions-btn"
 				data-action=${action.id}
 				aria-label=${action.label}
 				?disabled=${this.state.disabled}>
@@ -67,7 +67,7 @@ export class UIAiMessageActions extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="aima" role="toolbar" aria-label="Message actions" @click=${this.handleClick}>
+			<div class="ai-message-actions" role="toolbar" aria-label="Message actions" @click=${this.handleClick}>
 				${this.list('actions', this.renderAction, this.actionKey)}
 			</div>
 		`;

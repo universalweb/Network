@@ -3,6 +3,7 @@
 	user-select: none;
 	-webkit-user-select: none;
 	display: inline-block;
+	--menu-trigger-hit: var(--hit-min, max(2.75rem, 44px));
 }
 /* ── Trigger ─────────────────────────────────────────────────────────────── */
 .menu-trigger {
@@ -10,6 +11,8 @@
 	align-items: center;
 	gap: 0.4rem;
 	padding: 0.4rem 0.7rem;
+	min-block-size: var(--menu-trigger-hit, var(--hit-min, max(2.75rem, 44px)));
+	min-inline-size: var(--menu-trigger-hit, var(--hit-min, max(2.75rem, 44px)));
 	border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.14));
 	border-radius: var(--radius-md, 0.5rem);
 	background: transparent;
@@ -26,8 +29,40 @@
 	outline: 2px solid var(--color-info, #3b82f6);
 	outline-offset: 2px;
 }
+.menu-trigger[data-icon] {
+	padding: 0;
+	border: 0;
+	background: transparent;
+	inline-size: var(--menu-trigger-hit);
+	block-size: var(--menu-trigger-hit);
+	min-inline-size: var(--menu-trigger-hit);
+	min-block-size: var(--menu-trigger-hit);
+	justify-content: center;
+	color: inherit;
+	box-shadow: none;
+}
+.menu-trigger[data-icon]:hover {
+	background: transparent;
+	border: 0;
+}
+.menu-trigger-icon,
+.menu-trigger-label {
+	display: inline-flex;
+	align-items: center;
+}
 @media (prefers-reduced-motion: reduce) {
 	.menu-trigger {
 		transition: none;
 	}
+}
+:host(.nav-slim-flyout) .menu-trigger {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	min-inline-size: 0;
+	min-block-size: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	padding: 0;
+	border: 0;
 }

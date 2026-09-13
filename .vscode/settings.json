@@ -1,6 +1,7 @@
 {
 	"editor.cursorBlinking": "solid",
 	"editor.formatOnType": false,
+	"editor.experimental.preferTreeSitter.css": false,
 	"editor.autoClosingOvertype": "always",
 	"editor.hideCursorInOverviewRuler": true,
 	"editor.tabCompletion": "on",
@@ -286,5 +287,6 @@
 	"cSpell.autocorrect": true,
 	"cSpell.spellCheckOnlyWorkspaceFiles": true,
 	"cSpell.allowCompoundWords": true,
+	"github.copilot.chat.summarizeAgentConversationHistory.enabled": false,
 	
 }

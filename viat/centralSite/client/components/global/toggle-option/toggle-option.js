@@ -35,12 +35,12 @@ export class UIToggleOption extends WebComponent {
 		   style hook). Bare compounds throughout: reactive via the patch pass. */
 		this.html`
 			<button #button
-				class="tg-btn"
+				class="toggle-option-button"
 				type="button"
 				aria-pressed=${this.state.active ? 'true' : 'false'}
 				?disabled=${this.state.disabled === true}
 				@click=${this.handleClick}>
-				<span class="tg-label">${this.state.label || String(this.state.value ?? '')}</span>
+				<span class="toggle-option-label">${this.state.label || String(this.state.value ?? '')}</span>
 			</button>
 		`;
 	}

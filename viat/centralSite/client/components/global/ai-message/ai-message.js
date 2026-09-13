@@ -116,27 +116,27 @@ export class UIAiMessage extends WebComponent {
 			return html`<ui-code-block .state.code=${part.code} .state.language=${part.lang}></ui-code-block>`;
 		}
 		if (part.kind === 'plain') {
-			return html`<div class="aim-plain">${part.text}</div>`;
+			return html`<div class="ai-message-plain">${part.text}</div>`;
 		}
-		return html`<div class="aim-md">^html${part.html}</div>`;
+		return html`<div class="ai-message-md">^html${part.html}</div>`;
 	}
 	partKey(part) {
 		return part.id;
 	}
 	render() {
 		this.html`
-			<div class="aim" data-role=${this.state.author}>
-				<header class="aim-head">
-					<span class="aim-dot" aria-hidden="true"></span>
-					<span class="aim-role">${this.roleLabel}</span>
-					<time class="aim-time" ?hidden=${!this.state.time}>${this.timeLabel}</time>
-					<button class="aim-copy" type="button" ?hidden=${this.state.streaming} tooltip="Copy message" @click=${this.handleCopy}>
-						<ui-icon class="aim-copy-icon" .state.name=${this.state.copied ? 'check' : 'copy'} .state.size=${'xs'}></ui-icon>
+			<div class="ai-message" data-role=${this.state.author}>
+				<header class="ai-message-head">
+					<span class="ai-message-dot" aria-hidden="true"></span>
+					<span class="ai-message-role">${this.roleLabel}</span>
+					<time class="ai-message-time" ?hidden=${!this.state.time}>${this.timeLabel}</time>
+					<button class="ai-message-copy" type="button" ?hidden=${this.state.streaming} tooltip="Copy message" @click=${this.handleCopy}>
+						<ui-icon class="ai-message-copy-icon" .state.name=${this.state.copied ? 'check' : 'copy'} .state.size=${'xs'}></ui-icon>
 					</button>
 				</header>
-				<ui-ai-reasoning class="aim-reasoning" ?hidden=${!this.state.reasoning} .state.text=${this.state.reasoning} .state.streaming=${this.state.streaming} .state.expanded=${this.state.streaming}></ui-ai-reasoning>
-				<div class="aim-stream" ?hidden=${!this.state.streaming}>${this.state.content}</div>
-				<div class="aim-rich" ?hidden=${this.state.streaming}>${this.list('parts', this.renderPart, this.partKey)}</div>
+				<ui-ai-reasoning class="ai-message-reasoning" ?hidden=${!this.state.reasoning} .state.text=${this.state.reasoning} .state.streaming=${this.state.streaming} .state.expanded=${this.state.streaming}></ui-ai-reasoning>
+				<div class="ai-message-stream" ?hidden=${!this.state.streaming}>${this.state.content}</div>
+				<div class="ai-message-rich" ?hidden=${this.state.streaming}>${this.list('parts', this.renderPart, this.partKey)}</div>
 			</div>
 		`;
 	}

@@ -12,13 +12,15 @@
  * .state.center=${{ lat: 37.77, lng: -122.42 }}
  * .state.zoom=${11}
  * .state.items=${[{ id: 'a', lat: 37.78, lng: -122.41, label: 'HQ' }]}
-	    * @map-google:select=${this.handlePick}
-	    @map-google:ready=${this.handleReady}></ui-map-google>
-	  // Fly from outside: el.state.activeIndex = 'a'  (or .panTo / .flyTo)
-	─────────────────────────────────────────────────────────────────────
+ * @map-google:select=${this.handlePick}
+ * @map-google:ready=${this.handleReady}></ui-map-google>
+ * // Fly from outside: el.state.activeIndex = 'a'  (or .panTo / .flyTo)
+	* ─────────────────────────────────────────────────────────────────────
  */
-import { WebComponent } from 'webcomponent';
+import { armLazy, onLazyVisible, syncLazy } from 'webcomponent';
 import { isFiniteNumber, reuseLatLng, toLatLng } from '../map/map-geo.js';
+import { MapPhase } from '../map/map-phase.js';
+import { markerInfoContent } from '../map/map-popup.js';
 import { loadGoogleMapsApi } from './loader.js';
 const MAP_TYPE_IDS = new Set([
 	'roadmap',
@@ -69,7 +71,7 @@ function pathFromItem(path) {
 	}
 	return out;
 }
-export class UIMapGoogle extends WebComponent {
+export class UIMapGoogle extends MapPhase {
 	static url = import.meta.url;
 	static styles = {
 		googleMap: './map-google.css',
@@ -130,6 +132,8 @@ export class UIMapGoogle extends WebComponent {
 		errorMessage: '',
 		ready: false,
 		emptyLabel: 'Map',
+		lazy: true,
+		loaded: false,
 	};
 	// Imperative Google objects — plain fields (identity), not reactive state.
 	mapInstance = null;
@@ -236,9 +240,25 @@ export class UIMapGoogle extends WebComponent {
 			'routes',
 			'layers',
 		], this.scheduleOverlaySync);
+		this.observe('lazy', this.onLazyFlag);
+		this.observe('loaded', this.onLoadedChange);
+		armLazy(this);
+	}
+	onVisible() {
+		onLazyVisible(this);
+	}
+	onLazyFlag() {
+		syncLazy(this);
+	}
+	onLoadedChange() {
+		if (this.state.loaded === true && !this.mapInstance) {
+			this.bootMap();
+		}
 	}
 	onMount() {
-		this.bootMap();
+		if (this.state.loaded === true) {
+			this.bootMap();
+		}
 		this.attachResizeObserver();
 	}
 	onDisconnect() {
@@ -917,7 +937,7 @@ export class UIMapGoogle extends WebComponent {
 	}
 	buildAdvancedContent(item, active) {
 		const root = document.createElement('div');
-		root.className = 'gm-marker-pin';
+		root.className = 'map-google-marker-pin';
 		if (active) {
 			root.dataset.active = '';
 		}
@@ -1110,10 +1130,7 @@ export class UIMapGoogle extends WebComponent {
 		if (!entry || !this.infoWindow || !maps) {
 			return;
 		}
-		const html = item.info ||
-			`<strong>${escapeHtml(item.label || id)}</strong>${
-				item.description ? `<div>${escapeHtml(item.description)}</div>` : ''}`;
-		this.infoWindow.setContent(html);
+		this.infoWindow.setContent(markerInfoContent(item, id));
 		const position = itemPosition(item);
 		if (entry.marker.position) {
 			this.infoWindow.open({
@@ -1495,46 +1512,5 @@ export class UIMapGoogle extends WebComponent {
 		}
 		return null;
 	}
-	hostPhase() {
-		if (this.state.loading) {
-			return 'loading';
-		}
-		if (this.state.errorMessage) {
-			return 'error';
-		}
-		if (this.state.ready) {
-			return 'ready';
-		}
-		return 'idle';
-	}
-	render() {
-		const phase = this.hostPhase();
-		this.html`
-			<div class="gm-root" data-phase=${phase}>
-				<div #map class="gm-canvas" role="application" aria-label=${this.state.emptyLabel || 'Map'}></div>
-				<div class="gm-overlay" ?hidden=${phase === 'ready'} ?data-interactive=${phase === 'error'}>
-					<div class="gm-status" data-tone=${phase === 'error' ? 'danger' : 'neutral'}>
-						<span class="gm-status-label">${() => {
-							if (phase === 'loading') {
-								return 'Loading map…';
-							}
-							if (phase === 'error') {
-								return 'Map unavailable';
-							}
-							return this.state.emptyLabel || 'Map';
-						}}</span>
-						<span class="gm-status-msg" ?hidden=${!this.state.errorMessage}>${this.state.errorMessage}</span>
-					</div>
-				</div>
-			</div>
-		`;
-	}
-}
-function escapeHtml(value) {
-	return String(value ?? '')
-		.replaceAll('&', '&amp;')
-		.replaceAll('<', '&lt;')
-		.replaceAll('>', '&gt;')
-		.replaceAll('"', '&quot;');
 }
 customElements.define('ui-map-google', UIMapGoogle);

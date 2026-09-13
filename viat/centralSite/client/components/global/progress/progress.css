@@ -3,110 +3,168 @@
 	inline-size: 100%;
 }
 
-.pg {
+.progress {
 	display: flex;
 	flex-direction: column;
 	gap: 0.4rem;
-	--pg-fill: var(--cyan, oklch(0.72 0.12 200));
-	--pg-track: color-mix(in oklch, var(--text-muted, oklch(0.6 0 0)) 22%, transparent);
-	--pg-h: 0.5rem;
-	--pg-r: 999px;
+	--progress-fill: var(--cyan, oklch(0.72 0.12 200));
+	/*
+	 * Lighter than it was (22%). The old track competed with the fill for
+	 * attention; a quieter groove plus the hairline below reads as a channel
+	 * the fill travels through rather than a second coloured bar.
+	 */
+	--progress-track: color-mix(in oklch, var(--text-muted, oklch(0.6 0 0)) 15%, transparent);
+	--progress-h: 0.5rem;
+	--progress-r: 999px;
 }
 
 /* ── size ─────────────────────────────────────────────────────────── */
-.pg[data-size='sm'] { --pg-h: 0.35rem; }
-.pg[data-size='lg'] { --pg-h: 0.75rem; }
-.pg {
-	--pg-value-size: clamp(0.62rem, calc(var(--pg-h) * 1.15 + 0.3rem), 0.875rem);
+.progress[data-size='sm'] { --progress-h: 0.35rem; }
+.progress[data-size='lg'] { --progress-h: 0.75rem; }
+.progress {
+	--progress-value-size: clamp(0.62rem, calc(var(--progress-h) * 1.15 + 0.3rem), 0.875rem);
 }
-.pg[data-value-position='auto'],
-.pg[data-value-position='above']:not(:has(.pg-label:not([hidden]))) {
+.progress[data-value-position='auto'],
+.progress[data-value-position='above']:not(:has(.progress-label:not([hidden]))),
+.progress[data-value-position='follow'] {
 	padding-block-start: 1.1rem;
 }
-.pg[data-size='sm'] {
-	--pg-value-size: clamp(0.58rem, calc(var(--pg-h) * 1.35 + 0.28rem), 0.78rem);
+.progress[data-size='sm'] {
+	--progress-value-size: clamp(0.58rem, calc(var(--progress-h) * 1.35 + 0.28rem), 0.78rem);
 }
-.pg[data-size='lg'] {
-	--pg-value-size: clamp(0.75rem, calc(var(--pg-h) * 0.95 + 0.2rem), 0.95rem);
+.progress[data-size='lg'] {
+	--progress-value-size: clamp(0.75rem, calc(var(--progress-h) * 0.95 + 0.2rem), 0.95rem);
 }
 
 /* ── tone → fill ──────────────────────────────────────────────────── */
-.pg[data-tone='primary'] { --pg-fill: var(--text-main, oklch(0.92 0 0)); }
-.pg[data-tone='accent'],
-.pg[data-tone='cyan'] { --pg-fill: var(--cyan, oklch(0.72 0.12 200)); }
-.pg[data-tone='success'] { --pg-fill: var(--color-success, oklch(0.7 0.15 150)); }
-.pg[data-tone='danger'] { --pg-fill: var(--color-danger, oklch(0.58 0.2 25)); }
-.pg[data-tone='warning'] { --pg-fill: var(--color-warning, oklch(0.78 0.15 85)); }
-.pg[data-tone='info'] { --pg-fill: var(--color-info, oklch(0.7 0.12 240)); }
-.pg[data-tone='neutral'] { --pg-fill: var(--text-muted, oklch(0.65 0 0)); }
+.progress[data-tone='primary'] { --progress-fill: var(--text-main, oklch(0.92 0 0)); }
+.progress[data-tone='accent'],
+.progress[data-tone='cyan'] { --progress-fill: var(--cyan, oklch(0.72 0.12 200)); }
+.progress[data-tone='success'] { --progress-fill: var(--color-success, oklch(0.7 0.15 150)); }
+.progress[data-tone='danger'] { --progress-fill: var(--color-danger, oklch(0.58 0.2 25)); }
+.progress[data-tone='warning'] { --progress-fill: var(--color-warning, oklch(0.78 0.15 85)); }
+.progress[data-tone='info'] { --progress-fill: var(--color-info, oklch(0.7 0.12 240)); }
+.progress[data-tone='neutral'] { --progress-fill: var(--text-muted, oklch(0.65 0 0)); }
 
-.pg-head {
+.progress-head {
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
 	gap: 0.75rem;
 }
-.pg-head[hidden] { display: none !important; }
+.progress-head[hidden] { display: none !important; }
 
-.pg-label {
+.progress-label {
 	font-size: var(--text-xs, 0.75rem);
 	font-weight: var(--weight-medium, 500);
 	color: var(--text-main);
 	letter-spacing: 0.02em;
 }
 
-.pg-row {
+.progress-row {
 	display: flex;
 	align-items: center;
 	gap: 0.65rem;
 }
 
-.pg-track {
+.progress-track {
 	position: relative;
 	flex: 1 1 auto;
 	min-inline-size: 0;
-	block-size: var(--pg-h);
-	border-radius: var(--pg-r);
-	background: var(--pg-track);
+	block-size: var(--progress-h);
+	border-radius: var(--progress-r);
+	background: var(--progress-track);
 	overflow: hidden;
 	isolation: isolate;
 }
-.pg[data-value-position='auto'] .pg-track,
-.pg[data-value-position='above'] .pg-track {
+/*
+ * Hairline groove. Scoped to the SOLID track only — a segmented track sets
+ * `background: transparent` and is just a row wrapper, so an inset hairline
+ * there would draw a box around empty space.
+ */
+.progress[data-shape='none'] .progress-track {
+	box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--text-muted) 11%, transparent);
+}
+/*
+ * A floating readout has to escape the track, so the track stops clipping. The
+ * FILL is still contained — .progress-fill owns that — so nothing else leaks out.
+ *
+ * `container-type: size` used to live here to drive a `@container` lift. It is
+ * gone, and deliberately so: it never actually fired, and size-containment
+ * COLLAPSED the containing block of a `fit-content` segmented track, so the
+ * readout's `inset-inline-start: 50%` resolved against zero width and landed at
+ * the very start of the bar, on top of the first segments.
+ */
+.progress[data-value-position='auto'] .progress-track,
+.progress[data-value-position='above'] .progress-track,
+.progress[data-value-position='follow'] .progress-track {
 	overflow: visible;
-	container-type: size;
-	container-name: pg-track;
 }
 /* Segmented hug — track shrinks to the segment row instead of stretching full width. */
-.pg[data-fit='content'] .pg-track {
+.progress[data-fit='content'] .progress-track {
 	flex: 0 1 auto;
 	inline-size: fit-content;
 	max-inline-size: 100%;
 }
-.pg[data-fit='fill'] .pg-track {
+.progress[data-fit='fill'] .progress-track {
 	flex: 1 1 auto;
 	inline-size: auto;
 }
 
+/*
+ * The fill's own clipping layer. The TRACK cannot do this job: a value label in
+ * the `auto` / `above` position must sit OUTSIDE the track, which forces
+ * `.progress-track { overflow: visible }` — and that freed the indeterminate bar to
+ * sweep straight out of the component (it translates -120% → 320% of its own
+ * width, so it only ever stays put because something clips it).
+ *
+ * Clipping the fill here keeps the two concerns apart: the bar is contained, its
+ * label sibling stays free to escape. The axes cannot be split on one element —
+ * CSS forces `overflow: visible` to compute to `auto` when the other axis is
+ * clipped — so a dedicated layer is the only correct shape.
+ */
+.progress-fill {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	border-radius: inherit;
+}
+.progress-fill[hidden] {
+	display: none !important;
+}
 /* solid / continuous fill */
-.pg-bar {
+.progress-bar {
 	block-size: 100%;
 	border-radius: inherit;
-	background: var(--pg-fill);
+	/*
+	 * A single flat tone reads as a painted rectangle. A shallow ramp — shaded
+	 * at the origin, brightening toward the leading edge — gives the fill
+	 * direction and a sense of travel. Built with color-mix off --progress-fill, so
+	 * it derives from whatever the tone already is: every tone and every theme
+	 * gets it without a second palette to keep in sync. The `striped` and
+	 * `liquid` variants still override this outright.
+	 */
+	background:
+		linear-gradient(
+			90deg,
+			color-mix(in oklab, var(--progress-fill) 86%, black) 0%,
+			var(--progress-fill) 62%,
+			color-mix(in oklab, var(--progress-fill) 84%, white) 100%
+		);
 	transform-origin: inline-start center;
 	overflow: hidden;
 }
-.pg[data-animated] .pg-bar {
+.progress[data-animated] .progress-bar {
 	transition:
 		inline-size 0.55s cubic-bezier(0.22, 1, 0.36, 1),
 		background 0.28s ease,
 		filter 0.28s ease,
 		opacity 0.28s ease;
 }
-.pg-bar[hidden] { display: none !important; }
+.progress-bar[hidden] { display: none !important; }
 
 /* ── animation variants (solid track) ─────────────────────────────── */
-.pg[data-variant='striped'] .pg-bar {
+.progress[data-variant='striped'] .progress-bar {
 	background-image: repeating-linear-gradient(
 		-45deg,
 		transparent 0,
@@ -115,79 +173,85 @@
 		color-mix(in oklab, white 18%, transparent) 0.7rem
 	);
 	background-size: 1.4rem 1.4rem;
-	background-color: var(--pg-fill);
-	animation: pg-stripe 0.9s linear infinite;
+	background-color: var(--progress-fill);
+	animation: progress-stripe 0.9s linear infinite;
 }
-.pg[data-variant='glow'] .pg-bar {
+.progress[data-variant='glow'] .progress-bar {
 	box-shadow:
-		0 0 0.65rem color-mix(in oklab, var(--pg-fill) 55%, transparent),
-		0 0 1.25rem color-mix(in oklab, var(--pg-fill) 28%, transparent);
+		0 0 0.65rem color-mix(in oklab, var(--progress-fill) 55%, transparent),
+		0 0 1.25rem color-mix(in oklab, var(--progress-fill) 28%, transparent);
 	filter: saturate(1.15);
 }
-.pg[data-variant='pulse'] .pg-bar {
-	animation: pg-pulse 1.4s ease-in-out infinite;
+.progress[data-variant='pulse'] .progress-bar {
+	animation: progress-pulse 1.4s ease-in-out infinite;
 }
-.pg[data-variant='liquid'] .pg-bar {
+.progress[data-variant='liquid'] .progress-bar {
 	background:
 		linear-gradient(
 			90deg,
-			color-mix(in oklab, var(--pg-fill) 70%, black) 0%,
-			var(--pg-fill) 40%,
-			color-mix(in oklab, var(--pg-fill) 80%, white) 55%,
-			var(--pg-fill) 100%
+			color-mix(in oklab, var(--progress-fill) 70%, black) 0%,
+			var(--progress-fill) 40%,
+			color-mix(in oklab, var(--progress-fill) 80%, white) 55%,
+			var(--progress-fill) 100%
 		);
 	background-size: 200% 100%;
-	animation: pg-liquid 2.2s ease-in-out infinite;
+	animation: progress-liquid 2.2s ease-in-out infinite;
 }
 
 /* indeterminate continuous sweep */
-.pg[data-indeterminate] .pg-bar {
+.progress[data-indeterminate] .progress-bar {
 	inline-size: 38% !important;
-	animation: pg-indeterminate 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+	animation: progress-indeterminate 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
-.pg[data-indeterminate][data-variant='striped'] .pg-bar {
+.progress[data-indeterminate][data-variant='striped'] .progress-bar {
 	animation:
-		pg-indeterminate 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite,
-		pg-stripe 0.9s linear infinite;
+		progress-indeterminate 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+		progress-stripe 0.9s linear infinite;
 }
-.pg[data-indeterminate][data-variant='liquid'] .pg-bar {
+.progress[data-indeterminate][data-variant='liquid'] .progress-bar {
 	animation:
-		pg-indeterminate 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite,
-		pg-liquid 2.2s ease-in-out infinite;
+		progress-indeterminate 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+		progress-liquid 2.2s ease-in-out infinite;
 }
-.pg[data-indeterminate][data-variant='pulse'] .pg-bar {
+.progress[data-indeterminate][data-variant='pulse'] .progress-bar {
 	animation:
-		pg-indeterminate 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite,
-		pg-pulse 1.4s ease-in-out infinite;
+		progress-indeterminate 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+		progress-pulse 1.4s ease-in-out infinite;
 }
 
 /* ── segmented track ──────────────────────────────────────────────── */
-.pg[data-shape]:not([data-shape='none']) .pg-track {
+.progress[data-shape]:not([data-shape='none']) .progress-track {
 	overflow: visible;
 	background: transparent;
 	block-size: auto;
-	min-block-size: var(--pg-h);
+	/*
+	 * Token, not a literal: an inside value readout raises --progress-track-min so the
+	 * number has room. Going through a custom property means these two rules never
+	 * have to win a specificity fight (this selector outranks the inside-position
+	 * one, so a direct min-block-size here would silently beat it).
+	 */
+	min-block-size: var(--progress-track-min, var(--progress-h));
 }
-.pg-segs {
+.progress-segs {
 	display: flex;
 	align-items: center;
 	gap: 0.28em;
 	inline-size: fit-content;
 	max-inline-size: 100%;
-	block-size: calc(var(--pg-h) * 1.65);
+	block-size: calc(var(--progress-h) * 1.65);
 }
-.pg[data-fit='fill'] .pg-segs {
+.progress[data-fit='fill'] .progress-segs {
 	inline-size: 100%;
 }
-.pg-segs[hidden] { display: none !important; }
+.progress-segs[hidden] { display: none !important; }
 
-.pg-seg {
+.progress-seg {
 	flex: 0 0 auto;
 	inline-size: 0.55rem;
 	min-inline-size: 0.28rem;
 	max-inline-size: 1.25rem;
 	block-size: 100%;
-	background: var(--pg-track);
+	background: var(--progress-track);
 	transition:
 		background 0.35s cubic-bezier(0.22, 1, 0.36, 1),
 		transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1),
@@ -195,65 +259,78 @@
 		box-shadow 0.3s ease;
 }
 /* Full-width segmented track — segments grow to fill the host width. */
-.pg[data-fit='fill'] .pg-seg {
+.progress[data-fit='fill'] .progress-seg {
 	flex: 1 1 0;
 	inline-size: auto;
 }
 
 /* shapes */
-.pg[data-shape='circle'] .pg-seg {
+.progress[data-shape='circle'] .progress-seg {
 	aspect-ratio: 1;
 	block-size: auto;
 	max-block-size: 1.1rem;
 	border-radius: 50%;
 	align-self: center;
 }
-.pg[data-shape='round'] .pg-seg {
+.progress[data-shape='round'] .progress-seg {
 	border-radius: 0.3em;
 }
-.pg[data-shape='square'] .pg-seg {
+.progress[data-shape='square'] .progress-seg {
 	border-radius: 0.08em;
 	aspect-ratio: 1;
 	block-size: auto;
 	max-block-size: 1rem;
 	align-self: center;
 }
-.pg[data-shape='triangle'] .pg-seg {
+.progress[data-shape='triangle'] .progress-seg {
 	background: transparent;
 	clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
 	/* paint via box-shadow inset trick: use background on ::after */
 	position: relative;
-	background: var(--pg-track);
+	background: var(--progress-track);
 }
-.pg[data-shape='triangle'] .pg-seg[data-fill='full'],
-.pg[data-shape='triangle'] .pg-seg[data-fill='partial'] {
-	background: var(--pg-fill);
+.progress[data-shape='triangle'] .progress-seg[data-fill='full'],
+.progress[data-shape='triangle'] .progress-seg[data-fill='partial'] {
+	background: var(--progress-fill);
 }
 
-.pg-seg[data-fill='full'] {
-	background: var(--pg-fill);
+.progress-seg[data-fill='full'] {
+	background: var(--progress-fill);
 	transform: scale(1.05);
 }
-.pg-seg[data-fill='partial'] {
-	background: color-mix(in oklab, var(--pg-fill) 55%, var(--pg-track));
+.progress-seg[data-fill='partial'] {
+	background: color-mix(in oklab, var(--progress-fill) 55%, var(--progress-track));
 }
-.pg[data-variant='glow'] .pg-seg[data-fill='full'] {
-	box-shadow: 0 0 0.55rem color-mix(in oklab, var(--pg-fill) 60%, transparent);
+.progress[data-variant='glow'] .progress-seg[data-fill='full'] {
+	box-shadow: 0 0 0.55rem color-mix(in oklab, var(--progress-fill) 60%, transparent);
 }
-.pg[data-variant='pulse'] .pg-seg[data-fill='full'] {
-	animation: pg-pulse 1.4s ease-in-out infinite;
-	animation-delay: calc(var(--pg-i, 0) * 60ms);
-}
-
-/* indeterminate segment wave */
-.pg[data-indeterminate] .pg-seg {
-	animation: pg-seg-wave 1.2s ease-in-out infinite;
-	animation-delay: calc(var(--pg-i, 0) * 70ms);
+.progress[data-variant='pulse'] .progress-seg[data-fill='full'] {
+	animation: progress-pulse 1.4s ease-in-out infinite;
+	animation-delay: calc(var(--progress-i, 0) * 60ms);
 }
 
-/* value readouts — font tracks --pg-h via --pg-value-size */
-.pg-value {
-	font-size: var(--pg-value-size, var(--text-xs, 0.75rem));
+/* indeterminate segment wave — every cell, percent unknown */
+.progress[data-indeterminate] .progress-seg {
+	animation: progress-seg-wave 1.2s ease-in-out infinite;
+	animation-delay: calc(var(--progress-i, 0) * 70ms);
+}
+/*
+ * Determinate remainder wave: completed cells stay solid. Empty / partial cells
+ * pulse a lighter mix so the filled prefix is obviously done.
+ */
+.progress:not([data-indeterminate])[data-animated] .progress-seg[data-fill='full'] {
+	animation: none;
+	background: var(--progress-fill);
+}
+.progress:not([data-indeterminate])[data-animated] .progress-seg[data-fill='empty'],
+.progress:not([data-indeterminate])[data-animated] .progress-seg[data-fill='partial'] {
+	animation: progress-seg-remain 1.2s ease-in-out infinite;
+	animation-delay: calc(var(--progress-i, 0) * 70ms);
+}
+
+/* value readouts — font tracks --progress-h via --progress-value-size */
+.progress-value {
+	font-size: var(--progress-value-size, var(--text-xs, 0.75rem));
 	line-height: 1;
 	font-variant-numeric: tabular-nums;
 	font-weight: var(--weight-semibold, 600);
@@ -262,101 +339,254 @@
 	text-align: end;
 	pointer-events: none;
 }
-.pg-value[hidden] { display: none !important; }
-.pg-value-head {
+.progress-value[hidden] { display: none !important; }
+.progress-value-head {
 	flex: 0 0 auto;
 	min-inline-size: 2.25em;
 	font-weight: var(--weight-medium, 500);
 }
-.pg-track > .pg-value {
+.progress-track > .progress-value {
 	position: absolute;
 	z-index: 1;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	max-inline-size: calc(100% - 0.3rem);
-	padding: 0.05em 0.45em;
-	border-radius: 999px;
+	/*
+	 * The block padding was 0.05em — effectively none, so the scrim hugged the
+	 * glyphs and read as a smudge behind the number rather than a deliberate
+	 * chip. It needs real space on all four sides; the track's min-block-size
+	 * below is derived from this, so the two move together.
+	 */
+	padding: 0.34em 0.7em;
+	/*
+	 * Soft rounded square, not a pill. The scrim stays: the bar fill is
+	 * tone-driven and can be near-white, so plain text would vanish on it.
+	 * Squaring the shape keeps the readout readable without sacrificing contrast.
+	 */
+	border-radius: 0.5rem;
 	color: var(--text-main);
 	background: color-mix(in oklab, var(--bg-panel, #12141a) 78%, transparent);
 	text-shadow: 0 1px 1px rgb(0 0 0 / 0.45);
-	overflow: hidden;
-	text-overflow: ellipsis;
+	/*
+	 * No `overflow: hidden` / `text-overflow: ellipsis`. A percent readout is at
+	 * most four characters ("100%"), so it never legitimately needs truncating —
+	 * clipping only hid the real fault, which was a text pill placed in a track
+	 * too short to hold it. The track now grows to fit (below), so the number has
+	 * room instead of being cut off.
+	 */
 	white-space: nowrap;
 }
-.pg-track[data-value-position='center'] > .pg-value,
-.pg-track[data-value-position='auto'] > .pg-value {
+/*
+ * An INSIDE readout forces a THICK track.
+ *
+ * Every stock height here is 0.35rem-0.75rem (~6-13px), and a percentage cannot
+ * render inside a 6px bar — that mismatch is what crushed and clipped the
+ * number. Modern linear-progress practice: a thin bar puts its value beside or
+ * above the track, and only a deliberately thick bar carries it inside. So
+ * asking for an inside position IS asking for a thick bar; the track grows to
+ * fit its text rather than amputating it.
+ *
+ * `block-size: auto` is required — .progress-track sets a fixed `block-size:
+ * var(--progress-h)`, which a bare min-block-size could not override.
+ */
+.progress-track[data-value-position=center],
+.progress-track[data-value-position=start],
+.progress-track[data-value-position=end],
+.progress-track[data-value-position='inside-follow'] {
+	/*
+	 * Derived from the readout's own box: text + 0.68em of block padding, plus
+	 * breathing room so the chip is inset in the track rather than touching
+	 * both edges. Raised alongside that padding — leaving it at +0.7rem would
+	 * have re-crushed the number the padding was widened to free.
+	 */
+	--progress-track-min: calc(var(--progress-value-size, 0.75rem) + 1.15rem);
+	block-size: auto;
+	min-block-size: var(--progress-track-min);
+}
+.progress-track[data-value-position='center'] > .progress-value {
 	inset-block-start: 50%;
 	inset-inline-start: 50%;
 	translate: -50% -50%;
 }
-.pg-track[data-value-position='start'] > .pg-value {
+.progress-track[data-value-position='start'] > .progress-value {
 	inset-block-start: 50%;
 	inset-inline-start: 0.35rem;
 	translate: 0 -50%;
 }
-.pg-track[data-value-position='end'] > .pg-value {
+.progress-track[data-value-position='end'] > .progress-value {
 	inset-block-start: 50%;
 	inset-inline-end: 0.35rem;
 	translate: 0 -50%;
 }
-.pg-track[data-value-position='above'] > .pg-value {
+/*
+ * INSIDE-FOLLOW — the readout rides the live fill end from WITHIN the bar.
+ *
+ * `follow` already tracks the fill, but floats above it. This is the same idea
+ * kept inside the track, so the number travels with the leading edge instead of
+ * sitting statically at one end.
+ *
+ * The anchor is the badge's TRAILING edge (translate -100%), so it trails just
+ * behind the fill end rather than straddling it. The clamp is what makes it
+ * safe at both extremes: at 0% the lower bound holds the badge fully on the
+ * track instead of hanging off the left, and the upper bound keeps it from
+ * running past the right edge at 100%. `--progress-inside-reserve` is sized for
+ * the widest readout this can show ("100%").
+ */
+.progress-track[data-value-position='inside-follow'] {
+	--progress-inside-reserve: 3.4em;
+}
+.progress-track[data-value-position='inside-follow'] > .progress-value {
+	inset-block-start: 50%;
+	inset-inline-start: clamp(
+		var(--progress-inside-reserve),
+		var(--progress-ratio, 0%),
+		calc(100% - 0.3rem)
+	);
+	translate: -100% -50%;
+}
+/* Same curve and duration as the fill, so the two move as one object. */
+.progress[data-animated] .progress-track[data-value-position='inside-follow'] > .progress-value {
+	transition: inset-inline-start 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/*
+ * FLOATING GLASS BADGE — `above`, and `auto` for every thin bar.
+ *
+ * It hovers OUTSIDE the track rather than sitting in it, so it can never be
+ * crushed by a 6px bar or clipped by the fill. A soft rounded square (8px), not
+ * a pill: a pill reads as a chip stuck to the bar, a squared badge reads as
+ * floating above it.
+ *
+ * `auto` is handled HERE rather than by a height query. The old query never
+ * fired, and "work out whether text fits inside a 6px bar" is not a question
+ * worth asking — a thin bar always puts its value outside. Ask for
+ * center/start/end to put it inside, and the track grows to hold it.
+ */
+.progress-track[data-value-position='above'] > .progress-value,
+.progress-track[data-value-position='auto'] > .progress-value,
+.progress-track[data-value-position='follow'] > .progress-value {
+	inset-block-start: auto;
+	inset-inline-start: auto;
 	inset-block-end: 100%;
 	inset-inline-end: 0;
-	margin-block-end: 0.28rem;
-	padding: 0;
-	background: none;
+	translate: 0 0;
+	margin-block-end: 0.4rem;
+	padding: 0.3rem 0.66rem;
+	border-radius: 0.55rem;
+	border: 0;
+	color: var(--text-main);
 	text-shadow: none;
-	color: var(--text-muted);
 	font-weight: var(--weight-medium, 500);
+	/*
+	 * Fill and blur come from the `.glass` utility, stamped on in valueClass().
+	 * They are NOT declared here on purpose: uwc.util is the last cascade layer,
+	 * so a private background/backdrop-filter would silently lose to it — and
+	 * hand-rolling one is how four other components ended up with their own
+	 * divergent glass. That utility is fill+blur only; radius, padding and the
+	 * outline are the caller's job, which is what this rule owns.
+	 *
+	 * The outline is a FILTER, not a border, and that is what fixes the caret.
+	 * A filter traces the composite alpha silhouette of the element AND its
+	 * pseudo-elements, so one hairline and one shadow wrap the badge and its
+	 * arrow as a single shape. A border stops at the badge's own box — which is
+	 * exactly why the old caret read as a separate piece stuck underneath.
+	 */
+	filter:
+		drop-shadow(0 0 0.5px color-mix(in oklab, var(--text-main) 38%, transparent))
+		drop-shadow(0 3px 8px rgb(0 0 0 / 0.3));
 }
-@container pg-track (max-height: 0.9rem) {
-	.pg-value {
-		inset-block-start: auto;
-		inset-inline-start: auto;
-		inset-block-end: 100%;
-		inset-inline-end: 0;
-		translate: 0 0;
-		margin-block-end: 0.28rem;
-	}
+/*
+ * Follow the live fill end. The caret sits on the badge and points at the
+ * current edge of .progress-bar. Same timing as the fill so the two travel together.
+ */
+.progress-track[data-value-position='follow'] > .progress-value {
+	inset-inline-end: auto;
+	inset-inline-start: var(--progress-ratio, 0%);
+	translate: -50% 0;
+	margin-block-end: 0.55rem;
+}
+.progress[data-animated] .progress-track[data-value-position='follow'] > .progress-value {
+	transition: inset-inline-start 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/*
+ * The caret ABUTS the badge — it never overlaps it. Two translucent glass
+ * shapes stacked would sum their alpha and print a visible wedge along the
+ * seam, which is the classic translucent-tooltip-arrow tell. Sitting exactly
+ * at `100%` (the badge's bottom edge) and taking the badge's own computed fill
+ * and blur through `inherit` makes the two indistinguishable, and the parent's
+ * drop-shadow then outlines their union as one silhouette.
+ *
+ * A border-triangle cannot do this: it takes a flat colour of its own, cannot
+ * carry the backdrop blur, and cannot be reached by the badge's outline.
+ */
+.progress-track[data-value-position='follow'] > .progress-value::after {
+	content: '';
+	position: absolute;
+	inset-block-start: 100%;
+	inset-inline-start: 50%;
+	inline-size: 0.7rem;
+	block-size: 0.36rem;
+	translate: -50% 0;
+	background: inherit;
+	backdrop-filter: inherit;
+	-webkit-backdrop-filter: inherit;
+	clip-path: polygon(50% 100%, 0 0, 100% 0);
 }
 
-@keyframes pg-indeterminate {
+
+@keyframes progress-indeterminate {
 	0% { transform: translateX(-120%); }
 	100% { transform: translateX(320%); }
 }
-@keyframes pg-stripe {
+@keyframes progress-stripe {
 	to { background-position: 1.4rem 0; }
 }
-@keyframes pg-pulse {
+@keyframes progress-pulse {
 	0%, 100% { opacity: 1; filter: brightness(1); }
 	50% { opacity: 0.72; filter: brightness(1.15); }
 }
-@keyframes pg-liquid {
+@keyframes progress-liquid {
 	0% { background-position: 0% 50%; }
 	50% { background-position: 100% 50%; }
 	100% { background-position: 0% 50%; }
 }
-@keyframes pg-seg-wave {
+@keyframes progress-seg-wave {
 	0%, 100% {
-		background: var(--pg-track);
+		background: var(--progress-track);
 		transform: scale(0.92);
 		opacity: 0.55;
 	}
 	40% {
-		background: var(--pg-fill);
+		background: var(--progress-fill);
 		transform: scale(1.08);
 		opacity: 1;
 	}
 }
+@keyframes progress-seg-remain {
+	0%, 100% {
+		background: color-mix(in oklab, var(--progress-fill) 22%, var(--progress-track));
+		transform: scale(0.94);
+		opacity: 0.5;
+	}
+	40% {
+		background: color-mix(in oklab, var(--progress-fill) 48%, var(--progress-track));
+		transform: scale(1.04);
+		opacity: 0.88;
+	}
+}
 
 @media (prefers-reduced-motion: reduce) {
-	.pg-bar,
-	.pg-seg,
-	.pg[data-variant] .pg-bar,
-	.pg[data-indeterminate] .pg-bar,
-	.pg[data-indeterminate] .pg-seg {
+	.progress-bar,
+	.progress-seg,
+	.progress[data-variant] .progress-bar,
+	.progress[data-indeterminate] .progress-bar,
+	.progress[data-indeterminate] .progress-seg,
+	.progress:not([data-indeterminate]) .progress-seg {
 		transition: none !important;
 		animation: none !important;
+	}
+	.progress[data-animated] .progress-track[data-value-position='follow'] > .progress-value,
+	.progress[data-animated] .progress-track[data-value-position='inside-follow'] > .progress-value {
+		transition: none;
 	}
 }

@@ -81,9 +81,9 @@ export class UIAlertDialog extends WebComponent {
 				.state.closeOnBackdrop=${this.state.closeOnBackdrop}
 				.state.showClose=${true}
 				@modal:close=${this.handleModalClose}>
-				<div class="ad">
-					<p class="ad-desc" ?hidden=${!this.state.description}>${this.state.description}</p>
-					<div class="ad-actions">
+				<div class="alert-dialog">
+					<p class="alert-dialog-desc" ?hidden=${!this.state.description}>${this.state.description}</p>
+					<div class="alert-dialog-actions">
 						<ui-button
 							.state.label=${this.state.cancelLabel}
 							.state.variant=${'outline'}

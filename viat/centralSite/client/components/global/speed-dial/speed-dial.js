@@ -1,6 +1,6 @@
 /*
-	DESCRIPTION: ui-speed-dial — a FAB that fans out a cluster of actions (MUI
-	"SpeedDial"). Actions stack in CSS off `data-direction`; `computeAnchor` is a
+	DESCRIPTION: ui-speed-dial — a FAB that fans out a cluster of actions. Actions
+	stack in CSS off `data-direction`; `computeAnchor` is a
 	placement ORACLE only (resolved side written back to `data-direction`, top/left
 	ignored) so a dial near a viewport edge flips the fan instead of overflowing.
 	`direction` is the caller's request and is never overwritten. Trigger by click
@@ -19,6 +19,7 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import '../button/button.js';
+import { isTopEscapable, syncEscapable } from '../../core/escape/escapeStack.js';
 import { computeAnchor, WebComponent } from '../../core/index.js';
 import { UISpeedDialAction } from '../speed-dial-action/speed-dial-action.js';
 const SIDE_BY_DIRECTION = {
@@ -33,7 +34,7 @@ const DIRECTION_BY_SIDE = {
 	left: 'left',
 	right: 'right',
 };
-/* Tracks `.sd-actions` margin (0.7rem @ 16px root) — the gap the oracle uses. */
+/* Tracks `.speed-dial-actions` margin (0.7rem @ 16px root) — the gap the oracle uses. */
 const DIAL_ACTIONS_GAP = 11;
 const DIAL_VIEWPORT_PAD = 8;
 export function resolveDialDirection(direction, triggerRect, actionsSize, viewSize) {
@@ -67,6 +68,14 @@ export class UISpeedDial extends WebComponent {
 		// Spin the trigger 45° when open (turns a + into an ×).
 		rotateTrigger: true,
 		open: false,
+		/*
+		 * Fan geometry: linear (default) · radial · semi · quarter.
+		 * `direction` still steers linear and the open arc of semi/quarter.
+		 */
+		layout: 'linear',
+		radius: '5.5rem',
+		mask: false,
+		hideOnClick: true,
 	};
 	// Hover-close is DEFERRED: the actions cluster is absolutely positioned just
 	// outside the trigger's box with a gap, so moving the pointer onto a sub-item
@@ -77,13 +86,43 @@ export class UISpeedDial extends WebComponent {
 	closeTimer = null;
 	fanToken = 0;
 	onConnect() {
-		this.observe(['open', 'direction'], this.onFanStateChange, {
+		this.observe([
+			'open', 'direction', 'layout', 'radius', 'items',
+		], this.onFanStateChange, {
 			immediate: true,
 		});
 		this.delegate('viewport:resize', this.handleViewportChange);
+		/*
+		 * Global, not a keydown on this subtree. A hover-opened dial has the
+		 * POINTER over it while focus is wherever it was, so a subtree listener
+		 * would never fire — and hover-opening is exactly the case WCAG 1.4.13
+		 * wants dismissable without moving pointer or focus. The hotkey registry
+		 * sweeps its own entry on disconnect.
+		 */
+		this.hotKey('escape', this.handleEscape, {
+			preventDefault: false,
+		});
+	}
+	onDisconnect() {
+		syncEscapable(this, false);
+	}
+	/*
+	 * Guarded to the top layer: a hover-opened dial can appear over an already
+	 * open layer just by dragging the mouse across its trigger, and an unguarded
+	 * global Escape would take both on one press.
+	 */
+	handleEscape(keyEvent) {
+		if (this.state.open !== true || !isTopEscapable(this)) {
+			return;
+		}
+		keyEvent.preventDefault();
+		this.cancelClose();
+		this.closeDial();
 	}
 	onFanStateChange(next, previous, changedPath) {
+		this.syncLayoutVars();
 		if (changedPath === 'open') {
+			syncEscapable(this, this.state.open === true);
 			if (next) {
 				this.resolveFan();
 			}
@@ -174,7 +213,69 @@ export class UISpeedDial extends WebComponent {
 		this.emit('speed-dial:action', {
 			value: domEvent.detail?.data?.value,
 		});
-		this.closeDial();
+		if (this.state.hideOnClick !== false) {
+			this.closeDial();
+		}
+	}
+	showMask() {
+		return this.state.mask === true && this.state.open === true;
+	}
+	hideMask() {
+		return this.state.mask !== true || this.state.open !== true;
+	}
+	onMount() {
+		this.syncLayoutVars();
+	}
+	syncLayoutVars() {
+		const actions = this.refs.actions;
+		if (!actions) {
+			return;
+		}
+		const items = this.state.items;
+		const count = items && items.length ? items.length : 1;
+		const layout = this.state.layout || 'linear';
+		const radius = this.state.radius || '5.5rem';
+		actions.style.setProperty('--speed-dial-count', String(count));
+		actions.style.setProperty('--speed-dial-radius', typeof radius === 'number' ? `${radius}px` : radius);
+		let start = -90;
+		let sweep = 360;
+		if (layout === 'semi') {
+			sweep = 180;
+			start = this.semiStart();
+		} else if (layout === 'quarter') {
+			sweep = 90;
+			start = this.quarterStart();
+		}
+		const divisor = layout === 'radial' ? count : Math.max(count - 1, 1);
+		const step = sweep / divisor;
+		actions.style.setProperty('--speed-dial-start', `${start}deg`);
+		actions.style.setProperty('--speed-dial-step', `${step}deg`);
+	}
+	semiStart() {
+		const direction = this.state.resolvedDirection || this.state.direction;
+		if (direction === 'down') {
+			return 0;
+		}
+		if (direction === 'left') {
+			return 90;
+		}
+		if (direction === 'right') {
+			return -90;
+		}
+		return 180;
+	}
+	quarterStart() {
+		const direction = this.state.resolvedDirection || this.state.direction;
+		if (direction === 'down') {
+			return 0;
+		}
+		if (direction === 'left') {
+			return 90;
+		}
+		if (direction === 'right') {
+			return -90;
+		}
+		return -180;
 	}
 	actionKey(item) {
 		return item.value;
@@ -184,15 +285,18 @@ export class UISpeedDial extends WebComponent {
 			<div class="speed-dial" #dial
 				data-position=${this.state.position}
 				data-direction=${this.state.resolvedDirection}
+				data-layout=${this.state.layout || 'linear'}
 				?data-open=${this.state.open}
 				?data-rotate=${this.state.rotateTrigger}
+				?data-mask=${this.showMask}
 				@pointerenter=${this.handlePointerEnter}
 				@pointerleave=${this.handlePointerLeave}
 				@speed-dial-action:click=${this.handleAction}>
-				<ul class="sd-actions" #actions>
+				<div class="speed-dial-mask" ?hidden=${this.hideMask} @click=${this.closeDial}></div>
+				<ul class="speed-dial-actions" #actions>
 					${this.list('items', UISpeedDialAction, this.actionKey)}
 				</ul>
-				<ui-button class="sd-trigger" #trigger
+				<ui-button class="speed-dial-trigger" #trigger
 					.state.variant=${'solid'}
 					.state.tone=${this.state.tone}
 					.state.size=${'lg'}

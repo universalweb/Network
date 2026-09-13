@@ -19,6 +19,7 @@ function stubbedFetch() {
 	});
 }
 globalThis.fetch = stubbedFetch;
+await import('../../../core/tests/webcomponentSpecifierShim.js');
 await import('../input.js');
 function root(domElement) {
 	return domElement.shadowRoot ?? domElement;
@@ -40,6 +41,22 @@ test('parse-time markup: <ui-input spellcheck="false"> disables spellcheck on th
 	const el = await mountMarkup('<ui-input spellcheck="false"></ui-input>');
 	assert.equal(el.attrs.spellcheck, 'false', 'host attr read as the string "false"');
 	assert.equal(innerInput(el).getAttribute('spellcheck'), 'false', 'inner input spellcheck="false" — OFF, not inverted to ON');
+});
+test('default feature still emits input:input (presets rename via state.feature)', async () => {
+	const el = await mountMarkup('<ui-input></ui-input>');
+	let emitted = null;
+	el.addEventListener('input:input', (domEvent) => {
+		emitted = domEvent.detail?.data?.value ?? null;
+	});
+	const field = innerInput(el);
+	field.value = 'x';
+	field.dispatchEvent(new Event('input', {
+		bubbles: true,
+		composed: true,
+	}));
+	await el.nextFrame();
+	assert.equal(emitted, 'x');
+	el.remove();
 });
 test('reactive: toggling the host spellcheck attribute re-patches the inner input', async () => {
 	const el = await mountMarkup('<ui-input></ui-input>');

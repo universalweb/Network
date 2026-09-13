@@ -73,14 +73,14 @@ export class UIJsonRow extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="jr" role="treeitem" data-type=${this.state.type} ?data-matched=${this.state.matched}
+			<div class="json-row" role="treeitem" data-type=${this.state.type} ?data-matched=${this.state.matched}
 				aria-level=${this.ariaLevel} aria-expanded=${this.ariaExpanded} style=${this.indentVar}
 				@click=${this.handleToggle}>
-				<button #caret type="button" class="jr-caret" ?disabled=${this.isLeaf} aria-hidden="true">${this.caretGlyph}</button>
-				<span class="jr-key" ?data-index=${this.state.isIndex}>${this.state.keyLabel}</span>
-				<span class="jr-sep">:</span>
-				<span class="jr-value" data-type=${this.state.type}>${this.state.preview}</span>
-				<button type="button" class="jr-copy" ?hidden=${this.copyHidden} ?data-copied=${this.state.copied}
+				<button #caret type="button" class="json-row-caret" ?disabled=${this.isLeaf} aria-hidden="true">${this.caretGlyph}</button>
+				<span class="json-row-key" ?data-index=${this.state.isIndex}>${this.state.keyLabel}</span>
+				<span class="json-row-sep">:</span>
+				<span class="json-row-value" data-type=${this.state.type}>${this.state.preview}</span>
+				<button type="button" class="json-row-copy" ?hidden=${this.copyHidden} ?data-copied=${this.state.copied}
 					aria-label="Copy path" @click=${this.handleCopy}>${this.copyGlyph}</button>
 			</div>
 		`;

@@ -1,25 +1,23 @@
 /*
 	DESCRIPTION: ui-breadcrumbs — a route/path trail. Renders an ordered list of
-	crumbs; a crumb with `href` is a link, one without (the current page) is plain
-	aria-current text.
+	crumbs; a crumb with `href` is a link when `interactive` is on, one without
+	(the current page) is plain aria-current text. Separators are <ui-icon>.
 	── STANDARD INTERACTION ─────────────────────────────────────────────
 	  <ui-breadcrumbs .state.items=${[
 	    { label: 'Explorer', href: '/explorer' },
 	    { label: 'Block 4821', href: '/explorer/4821' },
 	    { label: 'Tx 0x9f…', }
 	  ]}></ui-breadcrumbs>
-	Drive `items` from the router's published route trail; omit `href` on the
-	current (last) crumb.
+	Preview sets `.state.interactive=${false}` so demo hrefs do not navigate.
 	─────────────────────────────────────────────────────────────────────
 */
-import { html, WebComponent } from 'webcomponent';
-/*
- * Separator chevron from the shared Lucide sprite (same source `ui-icon` uses).
- * Every crumb carries a leading chevron; CSS hides it on the first one
- * (`.bc-item:first-child .bc-sep`), so position is styling, not per-item data.
- */
-const SPRITE_URL = new URL('../icon/sprite.svg', import.meta.url).href;
-const CHEVRON_HREF = `${SPRITE_URL}#chevron-right`;
+import '../icon/icon.js';
+import {
+	html,
+	isArray,
+	isTrue,
+	WebComponent,
+} from 'webcomponent';
 export class UIBreadcrumbs extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -27,20 +25,51 @@ export class UIBreadcrumbs extends WebComponent {
 	};
 	static state = {
 		items: [],
+		interactive: true,
+		separatorIcon: 'chevron-right',
 	};
-	/* Light html row per crumb — items pass through as-is; `html` auto-escapes
-	   label/href. The crumb is a link when it has an href, else current text. */
-	crumbRow(item) {
-		return item && item.href ? html`<li class="bc-item">
-		<svg class="bc-sep" viewBox="0 0 24 24" aria-hidden="true"><use href=${CHEVRON_HREF}></use></svg>
-		<a class="bc-link" href=${item.href}>${item?.label}</a></li>` : html`<li class="bc-item">
-		<svg class="bc-sep" viewBox="0 0 24 24" aria-hidden="true"><use href=${CHEVRON_HREF}></use></svg>
-		<span class="bc-current" aria-current="page">${item?.label}</span></li>`;
+	crumbHref(item, last) {
+		if (last || !isTrue(this.state.interactive) || !item?.href) {
+			return '';
+		}
+		return item.href;
+	}
+	crumbStyle(index, itemCount) {
+		return `--breadcrumbs-i:${index};--breadcrumbs-n:${itemCount}`;
+	}
+	/* Light html row — items pass through as-is. Index is read from the
+	   parent list so brightness ramps without an enrichment loop. */
+	crumbRow(item, itemIndex) {
+		const items = this.state.items;
+		/*
+		 * Position comes from the ARGUMENT. The list calls a row renderer as
+		 * `renderFn.call(component, item, itemIndex)`, and the item handed over does
+		 * not necessarily satisfy identity against the array read back here, so
+		 * `items.indexOf(item)` returned -1 for EVERY crumb. That was not cosmetic:
+		 * `--breadcrumbs-i` / `data-index` collapsed to -1 so the brightness ramp died, and
+		 * `last` was never true — meaning no crumb carried `aria-current="page"`
+		 * and the current page still rendered as a link.
+		 */
+		const index = itemIndex;
+		const itemCount = isArray(items) && items.length > 0 ? items.length : 1;
+		const last = index === itemCount - 1;
+		const href = this.crumbHref(item, last);
+		const crumbStyle = this.crumbStyle(index, itemCount);
+		if (href) {
+			return html`<li class="breadcrumbs-item" style=${crumbStyle} data-index=${index}>
+				<ui-icon class="breadcrumbs-sep" .state.name=${this.state.separatorIcon} .state.size=${'sm'}></ui-icon>
+				<a class="breadcrumbs-link" href=${href}>${item?.label}</a>
+			</li>`;
+		}
+		return html`<li class="breadcrumbs-item" style=${crumbStyle} data-index=${index} ?data-last=${last}>
+			<ui-icon class="breadcrumbs-sep" .state.name=${this.state.separatorIcon} .state.size=${'sm'}></ui-icon>
+			<span class="breadcrumbs-current" aria-current=${last ? 'page' : ''}>${item?.label}</span>
+		</li>`;
 	}
 	render() {
 		this.html`
-			<nav class="bc" aria-label="Breadcrumb">
-				<ol class="bc-list">
+			<nav class="breadcrumbs" aria-label="Breadcrumb">
+				<ol class="breadcrumbs-list">
 					${this.list('items', this.crumbRow)}
 				</ol>
 			</nav>

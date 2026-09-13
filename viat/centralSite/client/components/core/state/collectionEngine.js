@@ -47,6 +47,7 @@ import { findScrollableAncestor } from '../dom/scrollRoot.js';
 import { nextFrame } from '../lifecycle/scheduler.js';
 import {
 	getValueAtPath,
+	isArray,
 	isFunction,
 	isPlainObject,
 	plainEqual,
@@ -57,6 +58,20 @@ const DEFAULT_MAX_AUTO_FILL = 8;
 /* Same default identity a ListSpot uses — key ?? id ?? index. */
 function autoKey(item, index) {
 	return item?.key ?? item?.id ?? index;
+}
+/*
+ * Raw STATE array for concat/prepend. `this.items` is `host.state[key]` — a
+ * proxy whose index gets mint child proxies. Concat through that copies
+ * those proxies into the next array and breaks list identity
+ * (`item !== prevItemMap`), re-running every retained row fn.
+ */
+function hostRawItems(engine) {
+	const raw = engine.host.STATE?.[engine.key];
+	if (isArray(raw)) {
+		return raw;
+	}
+	const current = engine.items;
+	return isArray(current) ? current : [];
 }
 function readPrefetchPixels(prefetch) {
 	if (typeof prefetch === 'number') {
@@ -227,6 +242,7 @@ export class CollectionEngine {
 	}
 	/* Per-key guarded writes — an unchanged value never notifies. */
 	writeStatus(partial) {
+		this.ensureStatusScope();
 		const status = this.status;
 		const keys = Object.keys(partial);
 		const keysLength = keys.length;
@@ -244,10 +260,17 @@ export class CollectionEngine {
 		}
 		return filterFn(item, this.filterArg) === true;
 	}
+	// @engram em:network/code/setfilterarg-cannot-retouch-items-via-slice-on-a-reactive-ho — wasted-set swallows items.slice(); notify the items path
 	/**
-	 * Swap the filter argument and retouch the row array (same items, new
-	 * reference) so the host's `filter()` spot re-runs the predicate — the
-	 * keyed diff recycles retained rows.
+	 * Swap the filter argument so the host's `filter()` spot re-runs
+	 * `keepItem`. `keepItem` reads `this.filterArg` at call time; the
+	 * remaining work is waking ListSpot.
+	 *
+	 * A structurally-equal `items` replacement is swallowed by the state
+	 * proxy's wasted-set guard (`plainEqual` of the same members, new
+	 * reference). On a reactive host the items path is notified instead —
+	 * no clone. A host with no bus (engine unit tests) still slices, which
+	 * is a real new reference on a plain object.
 	 * @param {*} value - The new second argument for the pure filter predicate.
 	 */
 	setFilterArg(value) {
@@ -255,10 +278,24 @@ export class CollectionEngine {
 			return;
 		}
 		this.filterArg = value;
+		this.retouchItems();
+	}
+	/*
+	 * Wake the host `filter()` / `list()` spot. keepItem reads config.filter
+	 * and filterArg at call time; the items path must notify or the keep
+	 * predicate never re-runs.
+	 */
+	retouchItems() {
 		const current = this.host.state[this.key];
-		if (Array.isArray(current) && current.length > 0) {
-			this.host.state[this.key] = current.slice();
+		if (!isArray(current) || current.length === 0) {
+			return;
 		}
+		const bus = this.host.stateBus;
+		if (bus) {
+			bus.notify(this.key);
+			return;
+		}
+		this.host.state[this.key] = current.slice();
 	}
 	/*
 	 * (Re)wire DOM-attached pieces from the host — idempotent and re-render
@@ -409,6 +446,23 @@ export class CollectionEngine {
 		this.autoFillCount = 0;
 		this.capEmitted = false;
 		this.seenKeys.clear();
+		if (!isFunction(this.config.loader)) {
+			/*
+			 * Static seed — attach/start must not wipe host items then fail
+			 * `load()` with "no loader". Honor `this.state = { items }` before
+			 * connect; there is nothing to fetch.
+			 */
+			this.writeStatus({
+				loading: false,
+				error: '',
+				hasMore: false,
+				exhausted: true,
+				started: true,
+				page: 1,
+				hasPrev: false,
+			});
+			return Promise.resolve();
+		}
 		this.writeStatus({
 			hasMore: true,
 			exhausted: false,
@@ -417,9 +471,10 @@ export class CollectionEngine {
 			hasPrev: false,
 		});
 		/*
-		 * Skip a wasted []→[] reassign. The state set trap only
-		 * ref-equality-skips, so a fresh [] over an already-empty list still
-		 * notifies → a no-op patch pass. Clearing a non-empty list still runs.
+		 * Skip a wasted []→[] reassign. The state set trap skips both
+		 * ref-equal and structurally-equal replacements, so a fresh [] over
+		 * an already-empty list is a no-op either way. Clearing a non-empty
+		 * list still runs.
 		 */
 		const currentItems = this.host.state[this.key];
 		if (!Array.isArray(currentItems) || currentItems.length > 0) {
@@ -488,7 +543,7 @@ export class CollectionEngine {
 			}
 			this.seenKeys.add(itemKey);
 		}
-		this.host.state[this.key] = [item].concat(this.items);
+		this.host.state[this.key] = [item].concat(hostRawItems(this));
 	}
 	/* Core load. `replace` clears+replaces the window (reset / goto), else
 	   appends (loadMore). `cursorOverride` targets a specific page (goto). */
@@ -546,7 +601,7 @@ export class CollectionEngine {
 		}
 		const incoming = Array.isArray(result.items) ? result.items : [];
 		const additions = config.dedupe ? dropDuplicates(incoming, config.keyFn, this.seenKeys) : incoming;
-		const currentItems = this.items;
+		const currentItems = hostRawItems(this);
 		const nextItems = replace ? additions : currentItems.concat(additions);
 		/*
 		 * Reuse the existing reference when the result is structurally identical
@@ -637,8 +692,12 @@ export class CollectionEngine {
 		if (config.filterArg !== undefined) {
 			this.filterArg = config.filterArg;
 		}
-		if (isFunction(config.filter)) {
-			this.config.filter = config.filter;
+		if (Object.hasOwn(config, 'filter')) {
+			const nextFilter = isFunction(config.filter) ? config.filter : null;
+			if (this.config.filter !== nextFilter) {
+				this.config.filter = nextFilter;
+				this.retouchItems();
+			}
 		}
 		if (config.mode != null && config.mode !== this.config.mode) {
 			this.setMode(config.mode);

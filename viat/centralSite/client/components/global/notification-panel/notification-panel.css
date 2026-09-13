@@ -1,0 +1,74 @@
+:host {
+	display: contents;
+}
+
+/*
+ * UA popover chrome is a centered bordered box. Reset to a full-viewport
+ * click-catcher with no fill. ui-slideout is the painted column + drag
+ * surface. Closed visibility is the UA
+ * `[popover]:not(:popover-open) { display: none }` rule.
+ */
+.notification-panel-root {
+	position: fixed;
+	inset: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	width: auto;
+	height: auto;
+	max-width: none;
+	max-height: none;
+	overflow: visible;
+	background: transparent;
+	z-index: var(--z-toast, 1200);
+	pointer-events: none;
+}
+
+.notification-panel-root:popover-open {
+	pointer-events: auto;
+}
+
+/*
+ * Slideout's :host is position:fixed. Nested inside this popover the
+ * containing block is the popover box — pin it to that box, not a second
+ * viewport layer.
+ */
+.notification-panel-root ui-slideout {
+	position: absolute;
+	inset: 0;
+	z-index: auto;
+}
+
+.notification-panel-head-actions {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	flex-shrink: 0;
+}
+
+.notification-panel-search {
+	inline-size: 100%;
+	flex-shrink: 0;
+}
+
+.notification-panel-empty {
+	border: 1px solid color-mix(in oklab, var(--dark-divider, oklch(1 0 0 / 0.14)) 100%, transparent);
+	border-radius: var(--radius-lg, 0.75rem);
+}
+
+.notification-panel-search[hidden],
+.notification-panel-empty[hidden],
+ui-icon-button[hidden] {
+	display: none;
+}
+
+.notification-panel-scroll {
+	flex: 1 1 auto;
+	min-block-size: 0;
+}
+
+.notification-panel-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}

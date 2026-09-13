@@ -1,7 +1,7 @@
 /*
 	DESCRIPTION: ui-number-stepper — a numeric input flanked by −/+ steppers, with
 	min/max/step/precision clamping. DISTINCT from ui-stepper (the wizard progress
-	indicator); this is the ±  amount control (MUI "Number Field"). −/+ are native
+	indicator); this is the ±  amount control. −/+ are native
 	buttons with unicode glyphs; `value` drives the field through a `.value=` bind,
 	and a change commit reconciles imperatively so an out-of-range entry that clamps
 	to the *same* value still snaps the field back.
@@ -72,22 +72,33 @@ export class UINumberStepper extends WebComponent {
 	handleInput(domEvent) {
 		this.setValue(domEvent.target.value);
 	}
-	render() {
+	atMin() {
 		const value = Number(this.state.value) || 0;
-		const atMin = this.state.min != null && value <= Number(this.state.min);
-		const atMax = this.state.max != null && value >= Number(this.state.max);
+		return this.state.min != null && value <= Number(this.state.min);
+	}
+	atMax() {
+		const value = Number(this.state.value) || 0;
+		return this.state.max != null && value >= Number(this.state.max);
+	}
+	decDisabled() {
+		return this.state.disabled || this.atMin();
+	}
+	incDisabled() {
+		return this.state.disabled || this.atMax();
+	}
+	render() {
 		this.html`
 			<div class="number-stepper" ?data-disabled=${this.state.disabled}>
-				<button class="ns-btn ns-dec" type="button" aria-label="Decrease"
-					?disabled=${this.state.disabled || atMin} @click=${this.handleDec}>−</button>
-				<input #input class="ns-input" type="text" inputmode="decimal"
+				<button class="number-stepper-btn number-stepper-dec" part="dec" type="button" aria-label="Decrease"
+					?disabled=${this.decDisabled} @click=${this.handleDec}>−</button>
+				<input #input class="number-stepper-input" type="text" inputmode="decimal"
 					.value=${this.display}
 					?disabled=${this.state.disabled}
 					aria-label=${this.state.label || 'Value'}
 					@change=${this.handleInput}>
-				<span class="ns-suffix" ?hidden=${!this.state.suffix}>${this.state.suffix}</span>
-				<button class="ns-btn ns-inc" type="button" aria-label="Increase"
-					?disabled=${this.state.disabled || atMax} @click=${this.handleInc}>+</button>
+				<span class="number-stepper-suffix" ?hidden=${!this.state.suffix}>${this.state.suffix}</span>
+				<button class="number-stepper-btn number-stepper-inc" part="inc" type="button" aria-label="Increase"
+					?disabled=${this.incDisabled} @click=${this.handleInc}>+</button>
 			</div>
 		`;
 	}

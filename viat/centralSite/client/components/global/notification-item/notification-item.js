@@ -104,6 +104,7 @@ export class NotificationItem extends WebComponent {
 				<ui-close-button
 					class="notification-close"
 					.state.label=${'Remove notification'}
+					.state.size=${'sm'}
 					@click=${this.stopBubble}
 					@close-button:click=${this.handleCloseClick}></ui-close-button>
 			</div>

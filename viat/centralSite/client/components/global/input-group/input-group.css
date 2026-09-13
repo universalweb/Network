@@ -7,7 +7,7 @@
  * middle field share the same surface — no second “input chrome” or phantom
  * trailing column when only a leading addon is present.
  */
-.ig {
+.input-group {
 	display: flex;
 	align-items: stretch;
 	inline-size: 100%;
@@ -21,45 +21,45 @@
 		box-shadow 0.16s ease,
 		background 0.16s ease;
 }
-.ig:hover {
+.input-group:hover {
 	background: var(--input-bg-hover, rgba(255, 255, 255, 0.06));
 	border-color: var(--input-border-hover, rgba(255, 255, 255, 0.2));
 }
-.ig:focus-within {
+.input-group:focus-within {
 	background: var(--input-bg-focus, rgba(255, 255, 255, 0.07));
 	border-color: var(--focus-ring-color, var(--teal));
 	box-shadow: 0 0 0 3px var(--focus-ring-glow, color-mix(in oklch, var(--teal) 25%, transparent));
 }
-.ig[data-size='sm'] {
+.input-group[data-size='sm'] {
 	min-block-size: 1.75rem;
 	font-size: var(--text-sm);
 }
-.ig[data-size='lg'] {
+.input-group[data-size='lg'] {
 	min-block-size: 2.5rem;
 	font-size: var(--text-lg);
 }
-.ig[data-tone='error'] {
+.input-group[data-tone='error'] {
 	border-color: var(--color-danger);
 	background: color-mix(in oklab, var(--color-danger) 10%, var(--input-bg, rgba(255, 255, 255, 0.04)));
 }
-.ig[data-tone='error']:hover {
+.input-group[data-tone='error']:hover {
 	border-color: var(--color-danger);
 	background: color-mix(in oklab, var(--color-danger) 14%, var(--input-bg-hover, rgba(255, 255, 255, 0.06)));
 }
-.ig[data-tone='error']:focus-within {
+.input-group[data-tone='error']:focus-within {
 	border-color: var(--color-danger);
 	box-shadow: 0 0 0 3px var(--input-error-glow, rgba(239, 68, 68, 0.22));
 }
 /* Error is one outline — drop the inner addon rails that read as a second box. */
-:host([data-has-leading]) .ig[data-tone='error'] .ig-leading,
-:host([data-has-trailing]) .ig[data-tone='error'] .ig-trailing {
+:host([data-has-leading]) .input-group[data-tone='error'] .input-group-leading,
+:host([data-has-trailing]) .input-group[data-tone='error'] .input-group-trailing {
 	border-color: transparent;
 }
-.ig[data-disabled] {
+.input-group[data-disabled] {
 	opacity: 0.55;
 	pointer-events: none;
 }
-.ig-addon {
+.input-group-addon {
 	display: none;
 	align-items: center;
 	gap: 0.35rem;
@@ -75,15 +75,15 @@
  * Slot assignment is reflected as host data-has-* (slotchange → syncAddonFlags).
  * :host(:has([slot=…])) is stripped by the UWC style pipeline — do not use it.
  */
-:host([data-has-leading]) .ig-leading {
+:host([data-has-leading]) .input-group-leading {
 	display: inline-flex;
 	border-inline-end: 1px solid color-mix(in oklch, var(--text-muted) 16%, transparent);
 }
-:host([data-has-trailing]) .ig-trailing {
+:host([data-has-trailing]) .input-group-trailing {
 	display: inline-flex;
 	border-inline-start: 1px solid color-mix(in oklch, var(--text-muted) 16%, transparent);
 }
-.ig-control {
+.input-group-control {
 	flex: 1 1 auto;
 	min-inline-size: 0;
 	display: flex;
@@ -103,9 +103,9 @@
 	--input-error-border: transparent;
 	--input-error-glow: transparent;
 }
-.ig-control ::slotted(ui-input),
-.ig-control ::slotted(input),
-.ig-control ::slotted(ui-textarea) {
+.input-group-control ::slotted(ui-input),
+.input-group-control ::slotted(input),
+.input-group-control ::slotted(ui-textarea) {
 	flex: 1 1 auto;
 	inline-size: 100%;
 	min-inline-size: 0;
@@ -116,7 +116,7 @@
 	border-radius: 0 !important;
 }
 /* Native input slotted directly (no ui-input shell). */
-.ig-control ::slotted(input) {
+.input-group-control ::slotted(input) {
 	padding-inline: 0.7rem;
 	padding-block: 0.4rem;
 	color: inherit;

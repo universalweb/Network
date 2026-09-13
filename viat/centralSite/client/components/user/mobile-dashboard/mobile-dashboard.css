@@ -1,7 +1,7 @@
 :host {
 	display: block;
 }
-.md-shell {
+.mobile-dashboard-shell {
 	display: flex;
 	flex-direction: column;
 	/* Shared page pad — chrome (top bar + dock) clearance is on .shell-scroll.

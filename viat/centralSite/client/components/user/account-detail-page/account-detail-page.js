@@ -229,74 +229,74 @@ export class AccountDetailPage extends WebComponent {
 		const account = this.state.account;
 		if (this.state.accountMissing) {
 			return this.htmlElement`
-				<div class="ad-stats ad-stats-missing">
-					<span class="ad-stat-key">No account record</span>
-					<span class="ad-stat-val">Address has transaction history only</span>
+				<div class="account-detail-stats account-detail-stats-missing">
+					<span class="account-detail-stat-key">No account record</span>
+					<span class="account-detail-stat-val">Address has transaction history only</span>
 				</div>
 			`;
 		}
 		if (!account) {
-			return this.htmlElement`<div class="ad-stats ad-stats-loading">Loading account…</div>`;
+			return this.htmlElement`<div class="account-detail-stats account-detail-stats-loading">Loading account…</div>`;
 		}
 		return this.htmlElement`
-			<div class="ad-stats">
-				<div class="ad-stat">
-					<span class="ad-stat-key">Balance</span>
-					<span class="ad-stat-val ad-stat-good">${formatAmount(account.balance)} VIAT</span>
+			<div class="account-detail-stats">
+				<div class="account-detail-stat">
+					<span class="account-detail-stat-key">Balance</span>
+					<span class="account-detail-stat-val account-detail-stat-good">${formatAmount(account.balance)} VIAT</span>
 				</div>
-				<div class="ad-stat">
-					<span class="ad-stat-key">Total In</span>
-					<span class="ad-stat-val">${formatAmount(account.totalIn)} VIAT</span>
+				<div class="account-detail-stat">
+					<span class="account-detail-stat-key">Total In</span>
+					<span class="account-detail-stat-val">${formatAmount(account.totalIn)} VIAT</span>
 				</div>
-				<div class="ad-stat">
-					<span class="ad-stat-key">Total Out</span>
-					<span class="ad-stat-val">${formatAmount(account.totalOut)} VIAT</span>
+				<div class="account-detail-stat">
+					<span class="account-detail-stat-key">Total Out</span>
+					<span class="account-detail-stat-val">${formatAmount(account.totalOut)} VIAT</span>
 				</div>
 			</div>
 		`;
 	}
 	headRow() {
 		return html`
-			<div class="ad-row ad-head">
-				<span class="ad-cell ad-id">TX</span>
-				<span class="ad-cell ad-dir">DIR</span>
-				<span class="ad-cell ad-addr">COUNTERPARTY</span>
-				<span class="ad-cell ad-amount">AMOUNT</span>
-				<span class="ad-cell ad-status">STATUS</span>
-				<span class="ad-cell ad-time">TIMESTAMP</span>
+			<div class="account-detail-row account-detail-head">
+				<span class="account-detail-cell account-detail-id">TX</span>
+				<span class="account-detail-cell account-detail-dir">DIR</span>
+				<span class="account-detail-cell account-detail-addr">COUNTERPARTY</span>
+				<span class="account-detail-cell account-detail-amount">AMOUNT</span>
+				<span class="account-detail-cell account-detail-status">STATUS</span>
+				<span class="account-detail-cell account-detail-time">TIMESTAMP</span>
 			</div>
 		`;
 	}
 	txRow(item) {
 		return html`
-			<div class="ad-row">
-				<a class="ad-cell ad-id" href=${item.txHref} title=${item.id}>${shortId(item.id)}</a>
-				<span class="ad-cell ad-dir" data-tone=${item.tone}>${item.direction}</span>
-				<a class="ad-cell ad-addr" href=${item.counterpartyHref} title=${item.counterparty}>${item.counterpartyShort}</a>
-				<span class="ad-cell ad-amount" data-tone=${item.tone}>${item.amountText}</span>
-				<span class="ad-cell ad-status">${item.status}</span>
-				<span class="ad-cell ad-time">${item.timestamp}</span>
+			<div class="account-detail-row">
+				<a class="account-detail-cell account-detail-id" href=${item.txHref} title=${item.id}>${shortId(item.id)}</a>
+				<span class="account-detail-cell account-detail-dir" data-tone=${item.tone}>${item.direction}</span>
+				<a class="account-detail-cell account-detail-addr" href=${item.counterpartyHref} title=${item.counterparty}>${item.counterpartyShort}</a>
+				<span class="account-detail-cell account-detail-amount" data-tone=${item.tone}>${item.amountText}</span>
+				<span class="account-detail-cell account-detail-status">${item.status}</span>
+				<span class="account-detail-cell account-detail-time">${item.timestamp}</span>
 			</div>
 		`;
 	}
 	render() {
 		this.html`
-			<div class="ad-shell">
-				<header class="ad-header">
-					<div class="ad-title-block">
-						<ui-icon class="ad-title-icon" .state.name=${'user-round'} .state.size=${'md'}></ui-icon>
-						<span class="ad-title">// ACCOUNT DETAIL</span>
-						<span class="ad-label-tag">${() => {
+			<div class="account-detail-shell">
+				<header class="account-detail-header">
+					<div class="account-detail-title-block">
+						<ui-icon class="account-detail-title-icon" .state.name=${'user-round'} .state.size=${'md'}></ui-icon>
+						<span class="account-detail-title">// ACCOUNT DETAIL</span>
+						<span class="account-detail-label-tag">${() => {
 							return labelForAddress(this.state.address);
 						}}</span>
 					</div>
-					<button class="ad-address" @click=${this.handleCopy} tooltip="Click to copy">
-						<span class="ad-address-text">${this.addressDisplay}</span>
+					<button class="account-detail-address" @click=${this.handleCopy} tooltip="Click to copy">
+						<span class="account-detail-address-text">${this.addressDisplay}</span>
 					</button>
 				</header>
 				${this.renderStats}
-				<div class="ad-section">
-					<div class="ad-section-head">
+				<div class="account-detail-section">
+					<div class="account-detail-section-head">
 						<span>Transactions</span>
 					</div>
 					<ui-collection

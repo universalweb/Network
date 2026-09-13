@@ -20,6 +20,11 @@ import { html, WebComponent } from 'webcomponent';
  * render — is reconciled imperatively via `syncValue`, which sets the native
  * control's `.value`. This avoids the old spot-order footgun (a `.value=` set landing
  * on an empty select) without rebuilding the list on every selection.
+ *
+ * `allLabel` (blank-slate default '') paints a real leading `<option value="">`
+ * that stays after another option is selected. Empty value is "all" / no
+ * constraint. When `allLabel` is set it replaces `placeholder` (disabled +
+ * hidden-when-valued). Form selects leave it off; filter selects turn it on.
  */
 export class UISelect extends WebComponent {
 	static url = import.meta.url;
@@ -34,6 +39,7 @@ export class UISelect extends WebComponent {
 		invalid: false,
 		size: 'md',
 		placeholder: '',
+		allLabel: '',
 	};
 	onMount() {
 		this.syncValue();
@@ -65,14 +71,26 @@ export class UISelect extends WebComponent {
 	}
 	render() {
 		// Sole-content list (no whitespace) so the spot elides onto <select>.
-		// Optional empty placeholder option when value is empty.
 		this.html`
 			<select #control class="sl-control"
 				data-size=${this.state.size}
 				?disabled=${this.state.disabled}
 				aria-invalid=${this.state.invalid ? 'true' : 'false'}
-				@change=${this.handleChange}>${this.placeholderOption}${this.list('items', this.renderOption)}</select>
+				@change=${this.handleChange}>${this.leadingOption}${this.list('items', this.renderOption)}</select>
 		`;
+	}
+	leadingOption() {
+		if (this.state.allLabel) {
+			return this.allOption();
+		}
+		return this.placeholderOption();
+	}
+	allOption() {
+		const text = this.state.allLabel;
+		if (!text) {
+			return '';
+		}
+		return this.htmlElement`<option value="">${text}</option>`;
 	}
 	placeholderOption() {
 		const text = this.state.placeholder;

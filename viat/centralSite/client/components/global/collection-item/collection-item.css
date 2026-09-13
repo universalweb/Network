@@ -1,7 +1,7 @@
 :host {
 	display: block;
 }
-.ci-row {
+.collection-item-row {
 	display: flex;
 	align-items: center;
 	gap: var(--space-3, 0.75rem);
@@ -12,34 +12,73 @@
 	cursor: default;
 	transition: background 0.14s ease, border-color 0.14s ease;
 }
-.ci-row[data-selectable] {
+.collection-item-row[data-selectable] {
 	cursor: pointer;
 }
-.ci-row[data-selectable]:hover {
+.collection-item-row[data-selectable]:hover {
 	background: color-mix(in oklch, var(--bg-panel, rgba(255, 255, 255, 0.04)) 80%, transparent);
 }
 /* Selected: whole row tint (independent of checkbox face paint). */
-.ci-row[data-checked],
-:host([data-checked]) .ci-row {
+.collection-item-row[data-checked],
+:host([data-checked]) .collection-item-row {
 	background: color-mix(in oklch, var(--cyan, oklch(0.72 0.12 200)) 12%, var(--bg-panel, transparent));
 	border-color: color-mix(in oklch, var(--cyan, oklch(0.72 0.12 200)) 28%, transparent);
 }
-.ci-row[data-disabled] {
+.collection-item-row[data-disabled] {
 	opacity: 0.55;
 	cursor: not-allowed;
 	pointer-events: none;
 }
+:host(.is-dragging) {
+	position: relative;
+	z-index: 2;
+	pointer-events: none;
+	will-change: transform;
+}
+:host(.is-dragging) .collection-item-row {
+	background: var(--bg-panel, Canvas);
+	box-shadow:
+		0 0 0 1px color-mix(in oklab, var(--text-main) 12%, transparent),
+		0 0 0.75rem color-mix(in oklab, #000 35%, transparent);
+}
+.collection-item-handle {
+	display: inline-flex;
+	flex: none;
+	order: -1;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: none;
+	color: var(--text-muted);
+	cursor: grab;
+	touch-action: none;
+}
+.collection-item-handle[hidden] {
+	display: none;
+}
+.collection-item-handle:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 1px;
+}
+:host(.is-dragging) .collection-item-handle {
+	cursor: grabbing;
+}
 /* Order tokens inherited from <ui-collection> host (start = check first). */
-.ci-check {
+.collection-item-check {
 	flex: 0 0 auto;
 	order: var(--uic-check-order, 0);
 	display: flex;
 	align-items: center;
 }
-.ci-check[hidden] {
+.collection-item-check[hidden] {
 	display: none;
 }
-.ci-body {
+.collection-item-body {
 	flex: 1 1 auto;
 	min-inline-size: 0;
 	display: flex;
@@ -47,20 +86,20 @@
 	gap: 0.15rem;
 	order: var(--uic-body-order, 1);
 }
-.ci-label {
+.collection-item-label {
 	font-family: var(--font-display, system-ui, sans-serif);
 	font-size: var(--text-sm, 0.875rem);
 	font-weight: 500;
 	color: var(--text-main);
 	letter-spacing: -0.01em;
 }
-.ci-desc {
+.collection-item-desc {
 	font-size: var(--text-xs, 0.75rem);
 	color: var(--text-muted);
 	line-height: 1.4;
 }
 @media (prefers-reduced-motion: reduce) {
-	.ci-row {
+	.collection-item-row {
 		transition: none;
 	}
 }

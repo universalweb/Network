@@ -1,59 +1,59 @@
 :host {
 	display: block;
 }
-.al {
+.alert {
 	/* Tone accent is one token; the tint + border derive from it via color-mix so
 	   every theme reskins automatically and no new colors enter. info is the
-	   default; data-tone overrides --al-accent and the derived vars recompute. */
-	--al-accent: var(--color-info);
-	--al-bg: color-mix(in oklab, var(--al-accent) 10%, var(--bg-panel));
-	--al-border: color-mix(in oklab, var(--al-accent) 30%, transparent);
+	   default; data-tone overrides --alert-accent and the derived vars recompute. */
+	--alert-accent: var(--color-info);
+	--alert-bg: color-mix(in oklab, var(--alert-accent) 10%, var(--bg-panel));
+	--alert-border: color-mix(in oklab, var(--alert-accent) 30%, transparent);
 	display: flex;
 	align-items: flex-start;
 	gap: var(--space-3);
 	padding: var(--space-4) var(--space-5);
-	border: 1px solid var(--al-border);
-	border-inline-start: 3px solid var(--al-accent);
+	border: 1px solid var(--alert-border);
+	border-inline-start: 3px solid var(--alert-accent);
 	border-radius: var(--radius-md, 0.5rem);
-	background: var(--al-bg);
+	background: var(--alert-bg);
 	color: var(--text-main);
 	font-family: var(--font-display, system-ui);
 	line-height: var(--leading-normal, 1.5);
 }
-.al[data-tone='success'] {
-	--al-accent: var(--color-success);
+.alert[data-tone='success'] {
+	--alert-accent: var(--color-success);
 }
-.al[data-tone='warning'] {
-	--al-accent: var(--color-warning);
+.alert[data-tone='warning'] {
+	--alert-accent: var(--color-warning);
 }
-.al[data-tone='danger'] {
-	--al-accent: var(--color-danger);
+.alert[data-tone='danger'] {
+	--alert-accent: var(--color-danger);
 }
-.al-icon {
+.alert-icon {
 	flex: 0 0 auto;
-	color: var(--al-accent);
+	color: var(--alert-accent);
 	margin-block-start: 0.1em;
 }
-.al-content {
+.alert-content {
 	flex: 1;
 	min-inline-size: 0;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-1);
 }
-.al-title {
+.alert-title {
 	margin: 0;
 	font-weight: var(--weight-semibold, 600);
 	letter-spacing: 0.01em;
 }
-.al-body {
+.alert-body {
 	color: var(--text-soft, var(--text-muted));
 	font-size: var(--text-sm);
 }
 ::slotted(*) {
 	margin: 0;
 }
-.al-dismiss {
+.alert-dismiss {
 	flex: 0 0 auto;
 	display: inline-flex;
 	align-items: center;
@@ -66,16 +66,16 @@
 	cursor: pointer;
 	transition: color 0.15s ease, background 0.15s ease;
 }
-.al-dismiss:hover {
-	color: var(--al-accent);
-	background: color-mix(in oklab, var(--al-accent) 14%, transparent);
+.alert-dismiss:hover {
+	color: var(--alert-accent);
+	background: color-mix(in oklab, var(--alert-accent) 14%, transparent);
 }
-.al-dismiss:focus-visible {
+.alert-dismiss:focus-visible {
 	outline: 2px solid var(--focus-ring-color, var(--cyan));
 	outline-offset: 1px;
 }
 @media (prefers-reduced-motion: reduce) {
-	.al-dismiss {
+	.alert-dismiss {
 		transition: none;
 	}
 }

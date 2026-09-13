@@ -18,12 +18,12 @@ export class UILabel extends WebComponent {
 	};
 	render() {
 		this.html`
-			<div class="lb" ?data-disabled=${this.state.disabled}>
-				<label class="lb-text" for=${this.state.forId}>
+			<div class="label" ?data-disabled=${this.state.disabled}>
+				<label class="label-text" for=${this.state.forId}>
 					<span>${this.state.text}<slot></slot></span>
-					<span class="lb-req" aria-hidden="true" ?hidden=${!this.state.required}>*</span>
+					<span class="label-req" aria-hidden="true" ?hidden=${!this.state.required}>*</span>
 				</label>
-				<span class="lb-desc" ?hidden=${!this.state.description}>${this.state.description}</span>
+				<span class="label-desc" ?hidden=${!this.state.description}>${this.state.description}</span>
 			</div>
 		`;
 	}

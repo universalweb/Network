@@ -1,8 +1,8 @@
 /*
-	DESCRIPTION: ui-progress — linear progress (/ Base UI Progress parity).
+	DESCRIPTION: ui-progress — linear progress.
 	Solid or segmented track (circle · round · square · triangle), tones, sizes,
 	striped/glow/pulse/liquid animation variants, label + value header, min/max,
-	indeterminate sweep. value null forces indeterminate (Base UI).
+	indeterminate sweep. value null forces indeterminate.
 	── STANDARD USAGE ───────────────────────────────────────────────────
 	  <ui-progress .state.value=${62} .state.label=${'Upload'}></ui-progress>
 	  <ui-progress .state.valuePosition=${'start'} .state.value=${40}></ui-progress>
@@ -36,6 +36,8 @@ const VALUE_POSITIONS = new Set([
 	'start',
 	'end',
 	'above',
+	'follow',
+	'inside-follow',
 ]);
 const LAYOUT_TO_POSITION = {
 	overlay: 'center',
@@ -75,7 +77,7 @@ export class UIProgress extends WebComponent {
 		progress: './progress.css',
 	};
 	static state = {
-		// null → indeterminate (Base UI). Number → determinate fill.
+		// null → indeterminate. Number → determinate fill.
 		value: 0,
 		min: 0,
 		max: 100,
@@ -91,8 +93,9 @@ export class UIProgress extends WebComponent {
 		label: '',
 		// Percent readout. Default on — hide with false.
 		showValue: true,
-		// auto | center | start | end | above. start/end stay inside the bar.
-		// auto = center when the track is tall enough, else lift above.
+		// auto | center | start | end | above | follow | inside-follow.
+		// follow        = glass badge + caret riding the live fill end, ABOVE the bar.
+		// inside-follow = the readout rides that same fill end from INSIDE the bar.
 		valuePosition: 'auto',
 		// Compat alias: overlay→center · above→above · end→end (inside).
 		valueLayout: 'end',
@@ -149,6 +152,12 @@ export class UIProgress extends WebComponent {
 		}
 		return `inline-size:${(this.ratio() * 100).toFixed(2)}%`;
 	}
+	ratioVarStyle() {
+		if (this.isIndeterminate()) {
+			return '';
+		}
+		return `--progress-ratio:${(this.ratio() * 100).toFixed(2)}%`;
+	}
 	statusFlag() {
 		if (this.isIndeterminate()) {
 			return 'indeterminate';
@@ -192,9 +201,9 @@ export class UIProgress extends WebComponent {
 	segmentCell(item) {
 		return html`
 			<span
-				class="pg-seg"
+				class="progress-seg"
 				data-fill=${item?.fill || 'empty'}
-				style=${`--pg-i:${item?.delay ?? 0}`}
+				style=${`--progress-i:${item?.delay ?? 0}`}
 				aria-hidden="true"></span>`;
 	}
 	resolvedPosition() {
@@ -221,6 +230,19 @@ export class UIProgress extends WebComponent {
 	trackValueHidden() {
 		return !this.showTrackValue();
 	}
+	/*
+	 * A FLOATING readout hovers outside the track, so it needs a real surface
+	 * behind it and takes the house `.glass` utility. An INSIDE one sits on the
+	 * fill and keeps its own scrim instead — glass over a tone-driven bar would
+	 * blur the bar itself and lose the contrast the scrim exists to guarantee.
+	 */
+	floatsAboveTrack() {
+		const position = this.resolvedPosition();
+		return position === 'above' || position === 'auto' || position === 'follow';
+	}
+	trackValueClass() {
+		return this.floatsAboveTrack() ? 'progress-value glass' : 'progress-value';
+	}
 	segmentsHidden() {
 		return !this.useSegments();
 	}
@@ -234,16 +256,28 @@ export class UIProgress extends WebComponent {
 		}
 		return this.state.trackFit === 'fill' ? 'fill' : 'content';
 	}
+	progressMin() {
+		return this.range().min;
+	}
+	progressMax() {
+		return this.range().max;
+	}
+	progressNow() {
+		if (this.isIndeterminate()) {
+			return false;
+		}
+		return Math.round(this.ratio() * 100);
+	}
+	progressValueText() {
+		if (this.isIndeterminate()) {
+			return 'Loading';
+		}
+		return this.percentLabel();
+	}
 	render() {
-		const indeterminate = this.isIndeterminate();
-		const {
-			min,
-			max,
-		} = this.range();
-		const now = indeterminate ? false : Math.round(this.ratio() * 100);
 		this.html`
 			<div
-				class="pg"
+				class="progress"
 				data-size=${normalizeSize(this.state.size)}
 				data-tone=${this.state.tone || 'accent'}
 				data-variant=${normalizeVariant(this.state.variant)}
@@ -251,25 +285,27 @@ export class UIProgress extends WebComponent {
 				data-status=${this.statusFlag}
 				data-value-position=${this.resolvedPosition}
 				data-fit=${this.trackFitFlag}
-				?data-indeterminate=${indeterminate}
+				?data-indeterminate=${this.isIndeterminate}
 				?data-animated=${this.state.animated !== false}
 				role="progressbar"
 				aria-label=${this.state.label || 'Progress'}
-				aria-valuemin=${min}
-				aria-valuemax=${max}
-				aria-valuenow=${now}
-				aria-valuetext=${indeterminate ? 'Loading' : this.percentLabel}>
-				<div class="pg-head" ?hidden=${this.labelRowHidden}>
-					<span class="pg-label" ?hidden=${!this.state.label}>${this.state.label}</span>
-					<span class="pg-value pg-value-head" ?hidden=${this.headValueHidden}>${this.percentLabel}</span>
+				aria-valuemin=${this.progressMin}
+				aria-valuemax=${this.progressMax}
+				aria-valuenow=${this.progressNow}
+				aria-valuetext=${this.progressValueText}>
+				<div class="progress-head" ?hidden=${this.labelRowHidden}>
+					<span class="progress-label" ?hidden=${!this.state.label}>${this.state.label}</span>
+					<span class="progress-value progress-value-head" ?hidden=${this.headValueHidden}>${this.percentLabel}</span>
 				</div>
-				<div class="pg-row">
-					<div class="pg-track" data-value-position=${this.resolvedPosition} tooltip=${this.state.tooltip}>
-						<div class="pg-bar" ?hidden=${this.useSegments} style=${this.barStyle}></div>
-						<div class="pg-segs" ?hidden=${this.segmentsHidden}>
+				<div class="progress-row">
+					<div class="progress-track" data-value-position=${this.resolvedPosition} style=${this.ratioVarStyle} tooltip=${this.state.tooltip}>
+						<div class="progress-fill" ?hidden=${this.useSegments}>
+							<div class="progress-bar" style=${this.barStyle}></div>
+						</div>
+						<div class="progress-segs" ?hidden=${this.segmentsHidden}>
 							${this.list('segmentItems', this.segmentCell)}
 						</div>
-						<span class="pg-value" ?hidden=${this.trackValueHidden}>${this.percentLabel}</span>
+						<span class=${this.trackValueClass} ?hidden=${this.trackValueHidden}>${this.percentLabel}</span>
 					</div>
 				</div>
 			</div>

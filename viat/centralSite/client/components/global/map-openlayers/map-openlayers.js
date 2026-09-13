@@ -11,8 +11,9 @@
 	    @map-openlayers:select=${this.handlePick}></ui-map-openlayers>
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent } from 'webcomponent';
+import { armLazy, onLazyVisible, syncLazy } from 'webcomponent';
 import { isFiniteNumber, reuseLatLng, toLatLng } from '../map/map-geo.js';
+import { MapPhase } from '../map/map-phase.js';
 import { ensureOpenLayersStyles, loadOpenLayers } from './loader.js';
 const DEFAULT_CENTER = {
 	lat: 20,
@@ -50,7 +51,7 @@ function pathFromItem(path) {
 	}
 	return out;
 }
-export class UIMapOpenLayers extends WebComponent {
+export class UIMapOpenLayers extends MapPhase {
 	static url = import.meta.url;
 	static styles = {
 		openlayers: './map-openlayers.css',
@@ -79,6 +80,8 @@ export class UIMapOpenLayers extends WebComponent {
 		errorMessage: '',
 		ready: false,
 		emptyLabel: 'Map',
+		lazy: true,
+		loaded: false,
 	};
 	mapInstance = null;
 	olApi = null;
@@ -136,9 +139,25 @@ export class UIMapOpenLayers extends WebComponent {
 		// Selection alone must not clear/rebuild vectors or re-fit bounds (that
 		// fights ui-map goTo / flyTo when a list item is clicked).
 		this.observe(['activeIndex'], this.onActiveIndexChange);
+		this.observe('lazy', this.onLazyFlag);
+		this.observe('loaded', this.onLoadedChange);
+		armLazy(this);
+	}
+	onVisible() {
+		onLazyVisible(this);
+	}
+	onLazyFlag() {
+		syncLazy(this);
+	}
+	onLoadedChange() {
+		if (this.state.loaded === true && !this.mapInstance) {
+			this.bootMap();
+		}
 	}
 	onMount() {
-		this.bootMap();
+		if (this.state.loaded === true) {
+			this.bootMap();
+		}
 		this.attachResizeObserver();
 	}
 	onDisconnect() {
@@ -862,39 +881,8 @@ export class UIMapOpenLayers extends WebComponent {
 		this.resizeObserver = null;
 		this.destroyMapInstance();
 	}
-	hostPhase() {
-		if (this.state.loading) {
-			return 'loading';
-		}
-		if (this.state.errorMessage) {
-			return 'error';
-		}
-		if (this.state.ready) {
-			return 'ready';
-		}
-		return 'idle';
-	}
-	render() {
-		const phase = this.hostPhase();
-		this.html`
-			<div class="ol-root" data-phase=${phase}>
-				<div #map class="ol-canvas" role="application" aria-label=${this.state.emptyLabel || 'Map'}></div>
-				<div class="ol-overlay" ?hidden=${phase === 'ready'} ?data-interactive=${phase === 'error'}>
-					<div class="ol-status" data-tone=${phase === 'error' ? 'danger' : 'neutral'}>
-						<span class="ol-status-label">${() => {
-							if (phase === 'loading') {
-								return 'Loading OpenLayers…';
-							}
-							if (phase === 'error') {
-								return 'Map unavailable';
-							}
-							return this.state.emptyLabel || 'Map';
-						}}</span>
-						<span class="ol-status-msg" ?hidden=${!this.state.errorMessage}>${this.state.errorMessage}</span>
-					</div>
-				</div>
-			</div>
-		`;
+	loadingLabel() {
+		return 'Loading OpenLayers…';
 	}
 }
 customElements.define('ui-map-openlayers', UIMapOpenLayers);

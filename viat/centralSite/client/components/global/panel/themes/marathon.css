@@ -35,13 +35,13 @@
 	height: 1px;
 	background: rgba(43, 127, 255, 0.12);
 }
-.ph-dot {
+.panel-header-dot {
 	display: block;
 	width: 5px;
 	height: 5px;
 	border-radius: 0;
 	background: var(--teal);
-	box-shadow: var(--ph-dot-shadow);
+	box-shadow: var(--panel-header-dot-shadow);
 }
 .panel {
 	position: relative;

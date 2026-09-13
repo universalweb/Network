@@ -1,5 +1,4 @@
-import { hasValue } from '@universalweb/utilitylib';
-import { WebComponent } from 'webcomponent';
+import { hasValue, WebComponent } from 'webcomponent';
 const PLACEHOLDER_CASES = new Set([
 	'upper',
 	'first',
@@ -47,13 +46,23 @@ export class UIInput extends WebComponent {
 		step: '',
 		multiple: false,
 		// Invalid chrome (aria-invalid); also forces tone=error when true.
+		required: false,
 		invalid: false,
 		// Hover hint. `tooltip`, never `title` — `title` is a native HTMLElement property
 		// that a `.title=` binding would hijack before it reached state (the button footgun).
 		tooltip: '',
 		// ::placeholder text-transform. Enumerated dim → data-placeholder-case.
 		placeholderCase: 'upper',
+		/*
+		 * Event feature prefix (tag minus `ui-`). Presets override so
+		 * date-input/time-input emit `date-input:change` / `time-input:change`
+		 * without forking handleInput. Default keeps `input:input`.
+		 */
+		feature: 'input',
 	};
+	eventName(action) {
+		return `${this.state.feature || 'input'}:${action}`;
+	}
 	placeholderCaseToken() {
 		if (PLACEHOLDER_CASES.has(this.state.placeholderCase)) {
 			return this.state.placeholderCase;
@@ -84,21 +93,21 @@ export class UIInput extends WebComponent {
 		// stopPropagation (NOT stopImmediate) blocks only bubbling; the same-element
 		// `$value` @bind still fires, so state.value tracks.
 		domEvent.stopPropagation();
-		this.emit('input:input', {
+		this.emit(this.eventName('input'), {
 			value: domEvent.target.value,
 		});
 	}
 	handleChange(domEvent) {
 		domEvent.stopPropagation();
-		this.emit('input:change', {
+		this.emit(this.eventName('change'), {
 			value: domEvent.target.value,
 		});
 	}
 	handleFocus() {
-		this.emit('input:focus', {});
+		this.emit(this.eventName('focus'), {});
 	}
 	handleBlur() {
-		this.emit('input:blur', {});
+		this.emit(this.eventName('blur'), {});
 	}
 	renderTone() {
 		if (this.state.invalid) {
@@ -132,6 +141,7 @@ export class UIInput extends WebComponent {
 					tooltip=${this.state.tooltip}
 					$value="value"
 					?multiple=${this.state.multiple}
+					?required=${this.state.required}
 					?disabled=${this.state.disabled}
 					?readonly=${this.state.readonly}
 					aria-invalid=${this.state.invalid ? 'true' : 'false'}

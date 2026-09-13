@@ -49,15 +49,15 @@ export class UIAiSettings extends WebComponent {
 	}
 	render() {
 		this.html`
-			<details class="aist" ?open=${this.state.expanded} @toggle=${this.handleToggle}>
-				<summary class="aist-summary">
+			<details class="ai-settings" ?open=${this.state.expanded} @toggle=${this.handleToggle}>
+				<summary class="ai-settings-summary">
 					<ui-icon .state.name=${'settings-2'} .state.size=${'sm'}></ui-icon>
-					<span class="aist-title">${this.state.heading}</span>
-					<ui-icon class="aist-chevron" .state.name=${'chevron-down'} .state.size=${'sm'}></ui-icon>
+					<span class="ai-settings-title">${this.state.heading}</span>
+					<ui-icon class="ai-settings-chevron" .state.name=${'chevron-down'} .state.size=${'sm'}></ui-icon>
 				</summary>
-				<div class="aist-body">
-					<label class="aist-field">
-						<span class="aist-field-label">Temperature <em>${this.state.temperature}</em></span>
+				<div class="ai-settings-body">
+					<label class="ai-settings-field">
+						<span class="ai-settings-field-label">Temperature <em>${this.state.temperature}</em></span>
 						<input type="range"
 							min="0"
 							max="2"
@@ -66,8 +66,8 @@ export class UIAiSettings extends WebComponent {
 							?disabled=${this.state.disabled}
 							@input=${this.handleTemperature}>
 					</label>
-					<label class="aist-field">
-						<span class="aist-field-label">Max tokens</span>
+					<label class="ai-settings-field">
+						<span class="ai-settings-field-label">Max tokens</span>
 						<input type="number"
 							min="1"
 							max="128000"
@@ -76,9 +76,9 @@ export class UIAiSettings extends WebComponent {
 							?disabled=${this.state.disabled}
 							@change=${this.handleMaxTokens}>
 					</label>
-					<label class="aist-field">
-						<span class="aist-field-label">System prompt</span>
-						<textarea class="aist-prompt"
+					<label class="ai-settings-field">
+						<span class="ai-settings-field-label">System prompt</span>
+						<textarea class="ai-settings-prompt"
 							rows="3"
 							$value="systemPrompt"
 							?disabled=${this.state.disabled}

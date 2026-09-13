@@ -42,13 +42,13 @@ export class UIAiReasoning extends WebComponent {
 	}
 	render() {
 		this.html`
-			<details class="air" ?open=${this.state.expanded} ?data-streaming=${this.state.streaming} @toggle=${this.handleToggle}>
-				<summary class="air-summary">
-					<ui-icon class="air-brain" .state.name=${'brain'} .state.size=${'sm'}></ui-icon>
-					<span class="air-label">${this.summaryText}</span>
-					<ui-icon class="air-chevron" .state.name=${'chevron-down'} .state.size=${'sm'}></ui-icon>
+			<details class="ai-reasoning" ?open=${this.state.expanded} ?data-streaming=${this.state.streaming} @toggle=${this.handleToggle}>
+				<summary class="ai-reasoning-summary">
+					<ui-icon class="ai-reasoning-brain" .state.name=${'brain'} .state.size=${'sm'}></ui-icon>
+					<span class="ai-reasoning-label">${this.summaryText}</span>
+					<ui-icon class="ai-reasoning-chevron" .state.name=${'chevron-down'} .state.size=${'sm'}></ui-icon>
 				</summary>
-				<div class="air-body">${this.state.text}</div>
+				<div class="ai-reasoning-body">${this.state.text}</div>
 			</details>
 		`;
 	}

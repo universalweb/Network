@@ -1,0 +1,40 @@
+:host {
+	display: block;
+	max-inline-size: 100%;
+	min-inline-size: 0;
+}
+.comment {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, 0.5rem);
+	padding-inline-start: calc(min(var(--comment-depth, 0), 8) * var(--space-6, 1.5rem));
+	min-inline-size: 0;
+	max-inline-size: 100%;
+}
+.comment-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2, 0.5rem);
+	padding-inline-start: 0.15rem;
+}
+.comment-score {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1, 0.25rem);
+	font-variant-numeric: tabular-nums;
+}
+.comment-votes {
+	min-inline-size: 1.5ch;
+	text-align: center;
+	font-size: var(--text-sm, 0.75rem);
+	color: var(--text-muted);
+}
+.comment-score [aria-pressed='true'] {
+	color: var(--text-accent, var(--text-main));
+}
+@media (prefers-reduced-motion: reduce) {
+	.comment-actions :where(button) {
+		transition-duration: var(--dur-0, 0s);
+	}
+}

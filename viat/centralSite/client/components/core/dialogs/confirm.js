@@ -1,8 +1,9 @@
 /*
  * `this.confirm(message): Promise<boolean>` — imperative confirmation prompt,
- * mixed onto WebComponent.prototype via base.js. Wraps a lazily-built
- * singleton `<ui-modal>` shared across the page. Returns true on accept,
- * false on cancel / backdrop close / Escape.
+ * mixed onto WebComponent.prototype via base.js. Composes a lazily-built
+ * singleton `<ui-alert-dialog>` so chrome matches the declarative path
+ * (ui-button outline cancel + ui-button tone action). Returns true on
+ * accept, false on cancel / X / Escape / backdrop.
  *
  * Replaces the old declarative `confirm="…"` behavior and its synthetic
  * `target.click()` re-fire. Handlers now run directly:
@@ -14,104 +15,70 @@
  *         // …proceed…
  *     }
  *
- * One modal at a time — concurrent confirms are not supported (the second
+ * One dialog at a time — concurrent confirms are not supported (the second
  * would stomp the first's listener wiring). In practice a single global
  * confirmation dialog is the right shape; competing prompts indicate a UX
  * problem at the call sites, not at this module.
  */
 import { resolveTag } from '../resolver.js';
-const PROMPT_CSS = `
-.confirm-prompt { display:flex; flex-direction:column; gap:1rem; padding:1.25rem 1.5rem; min-width:280px; max-width:480px; font:inherit; }
-.confirm-prompt-msg { margin:0; line-height:1.4; white-space:pre-wrap; }
-.confirm-prompt-actions { display:flex; gap:.5rem; justify-content:flex-end; margin:0; padding:0; list-style:none; }
-.confirm-prompt-actions button { font:inherit; cursor:pointer; padding:.5rem 1rem; border-radius:.375rem; border:1px solid currentColor; background:transparent; color:inherit; }
-.confirm-prompt-accept { background:currentColor; }
-.confirm-prompt-accept > * { color:canvas; }
-.confirm-prompt-actions button:hover { opacity:.85; }
-`;
-let stylesInjected = false;
-let modalElement = null;
-let messageNode = null;
-let acceptButton = null;
-let cancelButton = null;
-function injectStyles() {
-	if (stylesInjected) {
-		return;
-	}
-	const styleElement = document.createElement('style');
-	styleElement.textContent = PROMPT_CSS;
-	document.head.appendChild(styleElement);
-	stylesInjected = true;
-}
-async function ensureModal() {
-	const pending = resolveTag('ui-modal');
+let dialogElement = null;
+async function ensureDialog() {
+	const pending = resolveTag('ui-alert-dialog');
 	if (pending) {
 		await pending;
 	}
-	if (modalElement) {
+	if (dialogElement) {
 		return;
 	}
-	injectStyles();
-	modalElement = document.createElement('ui-modal');
-	modalElement.innerHTML = `
-		<div class="confirm-prompt">
-			<p class="confirm-prompt-msg"></p>
-			<div class="confirm-prompt-actions">
-				<button type="button" class="confirm-prompt-cancel">Cancel</button>
-				<button type="button" class="confirm-prompt-accept">OK</button>
-			</div>
-		</div>
-	`;
-	document.body.appendChild(modalElement);
-	messageNode = modalElement.querySelector('.confirm-prompt-msg');
-	acceptButton = modalElement.querySelector('.confirm-prompt-accept');
-	cancelButton = modalElement.querySelector('.confirm-prompt-cancel');
-	/*
-	 * Wait for the modal's first render so the internal <dialog> exists
-	 * before .open() runs.
-	 */
-	await modalElement.lifecycle.whenRendered;
+	dialogElement = document.createElement('ui-alert-dialog');
+	document.body.append(dialogElement);
+	await dialogElement.pendingConnect;
+	await dialogElement.lifecycle.whenRendered;
 }
 /*
  * Promise executor for a single confirm cycle — a named top-level function
  * (per the no-anonymous-executor rule) rather than an inline arrow. Closes over
- * the module singleton refs; each call gets a fresh `settled` guard + per-cycle
- * accept/cancel/close listeners that tear themselves down on the first resolve.
+ * the module singleton; each call gets a fresh `settled` guard + per-cycle
+ * listeners that tear themselves down on the first resolve.
  */
-function confirmExecutor(resolve) {
+function confirmExecutor(accept) {
 	let settled = false;
 	function settle(accepted) {
 		if (settled) {
 			return;
 		}
 		settled = true;
-		acceptButton.removeEventListener('click', onAccept);
-		cancelButton.removeEventListener('click', onCancel);
-		modalElement.removeEventListener('modal:close', onClose);
-		modalElement.close();
-		resolve(accepted);
+		dialogElement.removeEventListener('alert-dialog:action', onAction);
+		dialogElement.removeEventListener('alert-dialog:cancel', onCancel);
+		dialogElement.close();
+		accept(accepted);
 	}
-	function onAccept() {
+	function onAction() {
 		settle(true);
 	}
 	function onCancel() {
 		settle(false);
 	}
-	function onClose() {
-		settle(false);
-	}
-	acceptButton.addEventListener('click', onAccept);
-	cancelButton.addEventListener('click', onCancel);
-	modalElement.addEventListener('modal:close', onClose);
-	modalElement.open();
+	dialogElement.addEventListener('alert-dialog:action', onAction);
+	dialogElement.addEventListener('alert-dialog:cancel', onCancel);
+	dialogElement.open();
 }
 /**
  * Public entry point. Module-internal name avoids shadowing the global
- * `confirm` binding (per CLAUDE.md) — it is exposed on the prototype as
+ * `confirm` binding — it is exposed on the prototype as
  * `this.confirm(message)` via base.js's PROTO_METHODS map.
  */
 export async function confirmPrompt(message) {
-	await ensureModal();
-	messageNode.textContent = String(message);
+	await ensureDialog();
+	dialogElement.assignState({
+		heading: String(message ?? ''),
+		description: '',
+		actionLabel: 'Continue',
+		cancelLabel: 'Cancel',
+		tone: 'danger',
+	});
+	if (dialogElement.nextFrame) {
+		await dialogElement.nextFrame();
+	}
 	return new Promise(confirmExecutor);
 }

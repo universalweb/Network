@@ -1,21 +1,47 @@
 import '../icon/icon.js';
+import '../nav/nav.js';
 import { SNAP_CURVE, SNAP_MS, WebComponent } from 'webcomponent';
-// `<ui-sidebar>` — a responsive drawer. Not a bar; it does not compose
-// `<ui-bar>`. Slots its panel content; offers a backdrop, a close button, and
-// a swipe-to-open/close gesture driven by the shared `dragSnap` engine (axis
-// x). When `responsive` is on, mode is derived from the live viewport width:
-//
-//   flyout  — ultra-wide: bare panel beside content (float gap off the edge)
-//   coverup — mid: frosted overlay drawer (flush to edge, no float gap)
-//   full    — narrow: full-viewport menu (no edge strip, equal inline pad)
-//
-// Mode is re-applied on every `viewport:resize` (not only bucket changes) so
-// crossing the numeric thresholds below is reactive mid-resize.
-// Bare flyout only when the dashboard's max width (1536px) + dock rail + drawer
-// all fit side-by-side — ≈2204px, rounded up for a comfortable gap.
-const FLYOUT_MIN_WIDTH = 2300;
-// Below this: full-screen menu. Matches the app shell's mobile bucket (sm = 768).
-const FULL_MAX_WIDTH = 768;
+import {
+	isTopEscapable,
+	pushEscapable,
+	releaseEscapable,
+} from '../../core/escape/escapeStack.js';
+/*
+ * `<ui-sidebar>` — a responsive drawer. Not a bar; it does not compose
+ * `<ui-bar>`. Owns an optional ui-nav rail when `groups` / `heading` are set
+ * (`density` slim = icon rail, full = labeled groups + search). Still slots
+ * extra panel content. Backdrop, close button, and swipe-to-open/close via
+ * `dragSnap` (axis x).
+ *
+ * `swipe` is deliberately NOT spelled `dragToClose` like ui-slideout and
+ * ui-pulldown: those gate dismissal only, while this gates BOTH drags — the
+ * off-screen edge sensor that OPENS and the shell drag that closes. One flag,
+ * two gestures, so a narrower name would misdescribe it.
+ *
+ * NOT BUILT ON ui-slideout: the drag mechanic is already shared via dragSnap
+ * (whose header names this component's swipe as one of the two private copies it
+ * absorbed), and what is left — docked-vs-overlay viewport modes, the nav rail,
+ * density — is this component's own policy, which a blank-slate edge panel has
+ * no concept of.
+ *
+ * Adaptivity is `this.reflectViewport()` (`data-vw` on the host). Mode is a
+ * declared `data-mode` (default `flyout`), not a width-derived ladder. Geometry
+ * is `data-vw` × `data-mode` × `data-density` in CSS:
+ *
+ *   mobile  (xs/sm)  full      labeled full-viewport overlay
+ *   mobile  (xs/sm)  full+slim icons-only overlay rail (does not reflow)
+ *   mobile  (xs/sm)  flyout    labeled full-viewport overlay (same as full)
+ *   desktop (md+)    full      overlay drawer
+ *   desktop (md+)    flyout    docked rail beside content (default)
+ *   both             coverup   overlay drawer
+ *
+ * Selecting a nav link closes the drawer only while overlaying (xs/sm, or a
+ * declared overlay mode). Desktop flyout stays open so the rail remains.
+ *
+ * `defaultOpen` (opt-in) rests the drawer OPEN in every docked case and closed
+ * in every overlaying one, re-evaluated on viewport change until the user
+ * toggles it by hand.
+ */
 const MODES = new Set([
 	'flyout', 'coverup', 'full',
 ]);
@@ -32,84 +58,146 @@ export class UISidebar extends WebComponent {
 		swipe: true,
 		backdrop: true,
 		closeButton: true,
-		responsive: true,
-		// Optional force: 'flyout' | 'coverup' | 'full' | '' (auto from viewport).
-		mode: '',
+		mode: 'flyout',
+		// Start open wherever the drawer can sit BESIDE the content instead of on top
+		// of it (see applyDefaultOpen). Opt-in: every existing consumer keeps the
+		// closed-at-rest behaviour it was written against.
+		defaultOpen: false,
 		// The open()/close()/toggle() METHODS are the trigger API — a project wires
 		// its own button to them (the Viat shell binds its top-bar button this way).
 		// A document hotkey is offered for zero-wiring control (auto-swept on
 		// disconnect; '' opts out — the shell sets the \ | keys in app.js instead).
 		hotkey: '\\',
+		density: 'full',
+		heading: '',
+		caption: '',
+		groups: [],
+		query: '',
+		searchPlaceholder: 'filter…',
+		showSearch: true,
+		showBrand: true,
+		showDensityToggle: true,
+		showProfile: false,
+		profileName: '',
+		profileCaption: '',
+		profileSrc: '',
+		profileVariant: 'row',
+		showSettings: true,
 	};
 	shellWidth = 0;
 	dragFromOpen = false;
-	lastDefaultOpen = null;
 	lastMode = null;
-	/**
-	 * Resolved layout mode. Forced `state.mode` wins when valid; otherwise
-	 * width thresholds (and short-height demotion from flyout → coverup).
-	 */
+	// Latches on the first hand-driven toggle/swipe — after that `defaultOpen`
+	// stops steering, so a resize never re-opens a drawer the user just shut.
+	userToggled = false;
 	get mode() {
-		const forced = this.state.mode;
-		if (forced && MODES.has(forced)) {
-			return forced;
+		const nextMode = this.state.mode;
+		if (MODES.has(nextMode)) {
+			return nextMode;
 		}
-		if (!this.state.responsive) {
-			return 'flyout';
-		}
-		const view = this.global.environment?.viewport;
-		if (!view) {
-			return 'coverup';
-		}
-		const width = view.width ?? 0;
-		if (width < FULL_MAX_WIDTH) {
-			return 'full';
-		}
-		// Ultra-wide + enough vertical room → bare flyout. Height-starved wide
-		// screens still get coverup so the drawer does not crowd the chrome.
-		if (width >= FLYOUT_MIN_WIDTH && view.h !== 'short') {
-			return 'flyout';
-		}
-		return 'coverup';
+		return 'flyout';
 	}
-	// Bare flyout defaults open (room beside the dashboard). Coverup + full
-	// never auto-open — user opens via toggle / swipe / hotkey.
-	get defaultOpen() {
-		return this.mode === 'flyout';
+	isOverlay() {
+		const vw = this.getAttribute('data-vw');
+		if (vw === 'xs' || vw === 'sm') {
+			return true;
+		}
+		return this.mode !== 'flyout';
 	}
 	toggle() {
+		this.userToggled = true;
 		if (this.attrs.open) {
 			this.close();
 		} else {
 			this.openSidebar();
 		}
 	}
+	/*
+	 * `defaultOpen`: rest OPEN wherever the drawer docks beside the content rather
+	 * than covering it — which is exactly `!isOverlay()` (desktop md+ in the docked
+	 * `flyout` mode). Re-evaluated from applyViewportBucket, so shrinking to xs/sm
+	 * retracts the rail instead of stranding a full-viewport overlay over the page.
+	 */
+	applyDefaultOpen() {
+		if (this.state.defaultOpen !== true || this.userToggled === true) {
+			return;
+		}
+		const shouldOpen = !this.isOverlay();
+		if (shouldOpen === this.attrs.open) {
+			return;
+		}
+		this.attrs.open = shouldOpen;
+		this.emitOpenChange(shouldOpen);
+	}
 	close() {
 		this.attrs.open = false;
+		releaseEscapable(this);
+		this.emitOpenChange(false);
 	}
 	openSidebar() {
 		this.attrs.open = true;
+		/*
+		 * Only an OVERLAYING drawer is dismissible. A docked rail (desktop flyout)
+		 * is part of the layout, not something covering the page, so Escape must
+		 * leave it alone — the same distinction handleNavSelect already draws.
+		 */
+		if (this.isOverlay()) {
+			pushEscapable(this);
+		}
+		this.emitOpenChange(true);
+	}
+	/*
+	 * `preventDefault: false` on the registration; we prevent by hand only when we
+	 * actually close, so a shut (or merely docked) sidebar never swallows Escape
+	 * from whatever else wants it.
+	 */
+	handleEscape(keyEvent) {
+		if (this.attrs.open !== true || !this.isOverlay() || !isTopEscapable(this)) {
+			return;
+		}
+		keyEvent.preventDefault();
+		this.close();
+	}
+	emitOpenChange(isOpen) {
+		this.emit('sidebar:change', {
+			open: isOpen,
+		});
 	}
 	onConnect() {
+		this.reflectViewport();
+		this.applyMode();
+		this.applyDefaultOpen();
 		if (this.state.hotkey) {
 			this.hotKey(this.state.hotkey, this.handleHotkey);
 		}
+		this.hotKey('escape', this.handleEscape, {
+			preventDefault: false,
+		});
+	}
+	onDisconnect() {
+		releaseEscapable(this);
+	}
+	/*
+	 * Ride the ONE `viewport:change` subscription reflectViewport already owns
+	 * rather than registering a second listener for the same signal (the suite pins
+	 * that count, and a parallel subscription is exactly the duplication
+	 * reflectViewport was introduced to retire). `data-vw` is written by super
+	 * first, so `isOverlay()` reads the new bucket.
+	 */
+	applyViewportBucket() {
+		super.applyViewportBucket();
+		this.applyDefaultOpen();
 	}
 	handleHotkey() {
 		this.toggle();
 	}
 	onMount() {
-		this.applyMode();
-		// resize = every coalesced size tick (crosses FLYOUT/FULL thresholds mid-bucket).
-		// change = bucket transitions (w/h/orientation) — still applied for completeness.
-		this.delegate('viewport:resize', this.handleViewportChange);
-		this.delegate('viewport:change', this.handleViewportChange);
 		this.delegate('sidebar:toggle', this.handleToggleEvent);
-		// Forced mode writes from outside re-apply host data-mode without a resize.
 		this.observe('mode', this.handleModeStateChange);
 		this.observe('side', this.handleModeStateChange);
 		this.observe('backdrop', this.handleModeStateChange);
 		this.observe('closeButton', this.handleModeStateChange);
+		this.observe('density', this.handleModeStateChange);
 		if (this.state.swipe) {
 			this.installSwipe();
 		}
@@ -117,38 +205,28 @@ export class UISidebar extends WebComponent {
 	handleToggleEvent() {
 		this.toggle();
 	}
-	handleViewportChange() {
-		this.applyMode();
-	}
 	handleModeStateChange() {
 		this.applyMode();
 	}
-	/**
-	 * Sync host data-* for CSS and open/close defaults when the resolved mode
-	 * (or defaultOpen policy) crosses a threshold. Idempotent.
+	handleNavSelect() {
+		if (this.isOverlay()) {
+			this.close();
+		}
+	}
+	/*
+	 * Host decoration as data-* attributes (CSS targets :host([data-mode])
+	 * / :host([data-vw])). The host is not template-rendered, so these are
+	 * stamped from state here. `data-vw` is owned by reflectViewport.
 	 */
 	applyMode() {
 		const nextMode = this.mode;
-		/* Host decoration as data-* ATTRIBUTES (CSS targets :host([data-side])
-		   /:host([data-mode]) …), set imperatively because the host isn't
-		   template-rendered and `mode` is a viewport-derived getter. */
 		this.dataset.side = this.state.side;
 		this.dataset.mode = nextMode;
+		this.dataset.density = this.state.density === 'slim' ? 'slim' : 'full';
 		this.toggleAttribute('data-no-backdrop', !this.state.backdrop);
 		this.toggleAttribute('data-no-close', !this.state.closeButton);
 		const modeChanged = nextMode !== this.lastMode;
 		this.lastMode = nextMode;
-		const wantOpen = this.defaultOpen;
-		if (wantOpen !== this.lastDefaultOpen) {
-			if (wantOpen) {
-				this.openSidebar();
-			} else {
-				this.close();
-			}
-			this.lastDefaultOpen = wantOpen;
-		}
-		// Mode swap while open: clear any mid-drag inline transform so the new
-		// shell geometry (full vs partial width) takes over cleanly.
 		if (modeChanged && !this.refs.shell?.classList.contains('is-dragging')) {
 			const shell = this.refs.shell;
 			if (shell) {
@@ -160,8 +238,8 @@ export class UISidebar extends WebComponent {
 	installSwipe() {
 		const opensToward = this.state.side === 'left' ? 'right' : 'left';
 		// The off-screen edge sensor — always initiates an opening drag.
-		// CSS hides it in full mode (no edge strip); dragSnap no-ops when
-		// the target has no hit area.
+		// CSS hides it on mobile labeled-full (no edge strip); dragSnap
+		// no-ops when the target has no hit area.
 		this.dragSnap(this.refs.edge, {
 			axis: 'x',
 			opensToward,
@@ -240,6 +318,7 @@ export class UISidebar extends WebComponent {
 		shell.style.transform = `translateX(${targetX}px)`;
 	}
 	settleDrag(shouldOpen) {
+		this.userToggled = true;
 		this.snapTo(shouldOpen);
 	}
 	snapTo(shouldOpen) {
@@ -264,6 +343,22 @@ export class UISidebar extends WebComponent {
 			shell.classList.remove('is-dragging');
 		}, SNAP_MS);
 	}
+	hideNav() {
+		return !(this.state.groups?.length) && !this.state.heading;
+	}
+	handleNavDensity(domEvent) {
+		const value = domEvent.detail?.data?.value;
+		if (value !== 'slim' && value !== 'full') {
+			return;
+		}
+		if (this.state.density !== value) {
+			this.state.density = value;
+		}
+		this.dataset.density = value;
+		this.emit('sidebar:density', {
+			value,
+		});
+	}
 	render() {
 		/*
 		 * inert rides the SHELL, not the host. Inerting the host would also suppress
@@ -277,9 +372,30 @@ export class UISidebar extends WebComponent {
 			<div class="sidebar-edge" #edge></div>
 			<div class="sidebar-backdrop" @click=${this.close}></div>
 			<aside class="sidebar-shell" #shell ?inert=${!this.attrs.open}>
-				<button #close type="button" class="sidebar-close" aria-label="Close sidebar" @click=${this.close}>
-					<ui-icon .state.name=${'x'} .state.size=${'md'}></ui-icon>
+				<button #close type="button" class="sidebar-close" part="close" aria-label="Close sidebar" @click=${this.close}>
+					<span class="sidebar-close-face">
+						<ui-icon .state.name=${'x'} .state.size=${'md'}></ui-icon>
+					</span>
 				</button>
+				<ui-nav ?hidden=${this.hideNav}
+					.state.heading=${this.state.heading}
+					.state.caption=${this.state.caption}
+					.state.groups=${this.state.groups}
+					.state.query=${this.state.query}
+					.state.searchPlaceholder=${this.state.searchPlaceholder}
+					.state.showSearch=${this.state.showSearch}
+					.state.showBrand=${this.state.showBrand}
+					.state.density=${this.state.density}
+					.state.showDensityToggle=${this.state.showDensityToggle}
+					.state.showProfile=${this.state.showProfile}
+					.state.profileName=${this.state.profileName}
+					.state.profileCaption=${this.state.profileCaption}
+					.state.profileSrc=${this.state.profileSrc}
+					.state.profileVariant=${this.state.profileVariant}
+					.state.showSettings=${this.state.showSettings}
+					@nav:select=${this.handleNavSelect}
+					@nav:density=${this.handleNavDensity}>
+				</ui-nav>
 				<slot></slot>
 			</aside>
 		`;

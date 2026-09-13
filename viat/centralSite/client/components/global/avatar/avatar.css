@@ -2,27 +2,27 @@
 	display: inline-flex;
 	flex: 0 0 auto;
 }
-.av {
-	--av-size: 2.5rem;
-	block-size: var(--av-size);
-	inline-size: var(--av-size);
+.avatar {
+	--avatar-size: 2.5rem;
+	block-size: var(--avatar-size);
+	inline-size: var(--avatar-size);
 	position: relative;
 	flex: 0 0 auto;
 }
-.av[data-size='xs'] { --av-size: 1.5rem; font-size: var(--text-2xs); }
-.av[data-size='sm'] { --av-size: 2rem; font-size: var(--text-xs); }
-.av[data-size='md'] { --av-size: 2.5rem; font-size: var(--text-sm); }
-.av[data-size='lg'] { --av-size: 3.25rem; font-size: var(--text-lg); }
-.av-img,
-.av-initials {
+.avatar[data-size='xs'] { --avatar-size: 1.5rem; font-size: var(--text-2xs); }
+.avatar[data-size='sm'] { --avatar-size: 2rem; font-size: var(--text-xs); }
+.avatar[data-size='md'] { --avatar-size: 2.5rem; font-size: var(--text-sm); }
+.avatar[data-size='lg'] { --avatar-size: 3.25rem; font-size: var(--text-lg); }
+.avatar-img,
+.avatar-initials {
 	block-size: 100%;
 	inline-size: 100%;
 	display: flex;
 }
-.av-img {
+.avatar-img {
 	object-fit: cover;
 }
-.av-initials {
+.avatar-initials {
 	align-items: center;
 	/* Chip background is a fixed-lightness oklch (theme-independent), so the text
 	   is an absolute light value, not a theme token that could go dark. */
@@ -33,15 +33,15 @@
 	line-height: 1;
 	text-transform: uppercase;
 }
-.av[data-shape='circle'] .av-img,
-.av[data-shape='circle'] .av-initials {
+.avatar[data-shape='circle'] .avatar-img,
+.avatar[data-shape='circle'] .avatar-initials {
 	border-radius: 50%;
 }
-.av[data-shape='square'] .av-img,
-.av[data-shape='square'] .av-initials {
+.avatar[data-shape='square'] .avatar-img,
+.avatar[data-shape='square'] .avatar-initials {
 	border-radius: var(--radius-md);
 }
-.av-status {
+.avatar-status {
 	position: absolute;
 	inset-block-end: 0;
 	inset-inline-end: 0;
@@ -56,7 +56,7 @@
 	z-index: 1;
 }
 /* Role badge — opposite the status dot so both can show at once. */
-.av-badge {
+.avatar-badge {
 	--icon-size: 0.55rem;
 	position: absolute;
 	inset-block-start: -0.05rem;
@@ -74,19 +74,19 @@
 	z-index: 1;
 	pointer-events: auto;
 }
-.av[data-size='xs'] .av-badge {
+.avatar[data-size='xs'] .avatar-badge {
 	--icon-size: 0.4rem;
 	min-block-size: 0.55rem;
 	min-inline-size: 0.55rem;
 	border-width: 1px;
 }
-.av[data-size='sm'] .av-badge {
+.avatar[data-size='sm'] .avatar-badge {
 	--icon-size: 0.48rem;
 }
-.av[data-size='lg'] .av-badge {
+.avatar[data-size='lg'] .avatar-badge {
 	--icon-size: 0.7rem;
 }
-.av-badge ui-icon {
+.avatar-badge ui-icon {
 	display: grid;
 	place-items: center;
 	color: inherit;

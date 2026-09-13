@@ -1,0 +1,33 @@
+:host {
+	display: block;
+	max-inline-size: 100%;
+	min-inline-size: 0;
+}
+.changelog {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-6, 1.5rem);
+	min-inline-size: 0;
+}
+.changelog-heading {
+	margin: 0;
+	font-size: var(--text-xl, 1.25rem);
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--text-main);
+}
+.changelog-heading[hidden],
+.changelog-list[hidden] {
+	display: none;
+}
+.changelog-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-8, 2rem);
+	min-inline-size: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+	.changelog {
+		transition-duration: var(--dur-0, 0s);
+	}
+}

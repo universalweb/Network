@@ -35,6 +35,7 @@ export class SendConfirmModal extends WebComponent {
 			open: false,
 			showClose: true,
 			closeOnBackdrop: false,
+			heading: 'SEND // CONFIRM TRANSACTION',
 		},
 	};
 	openFor(options = {}) {
@@ -135,10 +136,6 @@ export class SendConfirmModal extends WebComponent {
 		this.html`
 			<ui-modal #modal .state=${this.state.modal} style="--ui-modal-max-width: 520px">
 				<div class="modal-shell">
-					<header class="modal-head">
-						<span class="modal-head-id">SEND</span>
-						<span class="modal-head-title">// CONFIRM TRANSACTION</span>
-					</header>
 					<p class="modal-copy">${() => {
 						return this.state.reason || 'Review the recipient and amount, then confirm to sign and broadcast.';
 					}}</p>

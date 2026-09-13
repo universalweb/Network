@@ -18,14 +18,14 @@ export class UIAiTyping extends WebComponent {
 	};
 	render() {
 		this.html`
-			<div class="ait" ?hidden=${!this.state.active} role="status" aria-live="polite">
-				<span class="ait-author">${this.state.author}</span>
-				<span class="ait-dots" aria-hidden="true">
-					<span class="ait-dot"></span>
-					<span class="ait-dot"></span>
-					<span class="ait-dot"></span>
+			<div class="ai-typing" ?hidden=${!this.state.active} role="status" aria-live="polite">
+				<span class="ai-typing-author">${this.state.author}</span>
+				<span class="ai-typing-dots" aria-hidden="true">
+					<span class="ai-typing-dot"></span>
+					<span class="ai-typing-dot"></span>
+					<span class="ai-typing-dot"></span>
 				</span>
-				<span class="ait-label">${this.state.label}</span>
+				<span class="ai-typing-label">${this.state.label}</span>
 			</div>
 		`;
 	}

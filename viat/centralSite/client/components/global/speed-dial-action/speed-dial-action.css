@@ -1,17 +1,42 @@
 :host {
-	/* Interactive control chrome — never paint a text selection on a click or drag. */
 	user-select: none;
 	-webkit-user-select: none;
 	display: block;
+	overflow: visible;
+	--speed-dial-hit: var(--hit-min, max(2.75rem, 44px));
+	--speed-dial-size: 2.25rem;
 }
-.sd-action {
-	display: flex;
+.speed-dial-action {
+	position: relative;
+	display: var(--speed-dial-fan-display, flex);
+	place-items: var(--speed-dial-fan-place, unset);
 	align-items: center;
-	gap: 0.5rem;
+	gap: var(--speed-dial-fan-gap, 0.5rem);
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
 }
-/* Label rides as a small pill beside the mini-button. */
-.sd-action-label {
-	order: -1;
+.speed-dial-action[data-icon] {
+	min-inline-size: var(--speed-dial-hit);
+	min-block-size: var(--speed-dial-hit);
+	inline-size: var(--speed-dial-fan-size, auto);
+	block-size: var(--speed-dial-fan-size, auto);
+	justify-content: center;
+}
+/*
+ * Fan layouts inherit --speed-dial-label-* from the parent cluster. Icon stays on
+ * the orbit; label is pulled along the ray so its inner edge sits just
+ * outside the disc. Linear leaves the vars unset — chips stay in-flow.
+ */
+.speed-dial-action-label {
+	position: var(--speed-dial-label-pos, static);
+	inset-inline-start: var(--speed-dial-label-x, auto);
+	inset-block-start: var(--speed-dial-label-y, auto);
+	transform: var(--speed-dial-label-transform, none);
 	padding: 0.2rem 0.5rem;
 	border-radius: var(--radius-sm, 0.25rem);
 	background: var(--bg-panel, rgba(20, 22, 30, 0.95));
@@ -21,11 +46,42 @@
 	white-space: nowrap;
 	box-shadow: var(--elev-1, 0 2px 6px rgba(0, 0, 0, 0.25));
 }
-.sd-action-label[hidden] {
+.speed-dial-action:not([data-icon]) .speed-dial-action-label {
+	transform: var(--speed-dial-label-solo-transform, var(--speed-dial-label-transform, none));
+}
+.speed-dial-action-label[hidden],
+.speed-dial-action-icon[hidden] {
 	display: none;
 }
-/* Disc via ui-button `.state.circle`; host radius matches elevation shadow. */
-.sd-action-btn {
+.speed-dial-action-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: var(--speed-dial-size);
+	block-size: var(--speed-dial-size);
 	border-radius: 999px;
+	background: var(--bg-panel, rgba(20, 22, 30, 0.95));
+	border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.12));
 	box-shadow: var(--elev-2, 0 6px 16px rgba(0, 0, 0, 0.28));
+	color: var(--text-primary, currentColor);
+}
+.speed-dial-action[data-tone='primary'] .speed-dial-action-icon {
+	background: var(--color-info, var(--cyan));
+	color: var(--text-on-accent, #fff);
+}
+.speed-dial-action[data-tone='success'] .speed-dial-action-icon {
+	background: var(--color-success, #10b981);
+	color: var(--text-on-accent, #fff);
+}
+.speed-dial-action[data-tone='danger'] .speed-dial-action-icon {
+	background: var(--color-danger, #ef4444);
+	color: var(--text-on-accent, #fff);
+}
+.speed-dial-action[data-tone='accent'] .speed-dial-action-icon {
+	background: var(--cyan, var(--color-info));
+	color: var(--text-on-accent, #fff);
+}
+.speed-dial-action:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--cyan));
+	outline-offset: 2px;
 }

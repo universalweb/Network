@@ -258,20 +258,20 @@ export class UIRadarChart extends WebComponent {
 	}
 	ringRow(ring) {
 		return this.partial`
-			<svg class="rc-layer" viewBox="0 0 240 240" aria-hidden="true">
-				<polyline class="rc-ring" fill="none" points=${ring.pointsAttr}></polyline>
+			<svg class="radar-chart-layer" viewBox="0 0 240 240" aria-hidden="true">
+				<polyline class="radar-chart-ring" fill="none" points=${ring.pointsAttr}></polyline>
 			</svg>`;
 	}
 	axisRow(axis) {
 		return this.partial`
-			<svg class="rc-layer" viewBox="0 0 240 240" aria-hidden="true">
-				<line class="rc-axis" x1=${CX} y1=${CY} x2=${axis.x2} y2=${axis.y2}></line>
+			<svg class="radar-chart-layer" viewBox="0 0 240 240" aria-hidden="true">
+				<line class="radar-chart-axis" x1=${CX} y1=${CY} x2=${axis.x2} y2=${axis.y2}></line>
 			</svg>`;
 	}
 	labelRow(lab) {
 		return this.partial`
-			<svg class="rc-layer" viewBox="0 0 240 240" aria-hidden="true">
-				<text class="rc-label" x=${lab.x} y=${lab.y} text-anchor="middle" dominant-baseline="middle">${lab.label}</text>
+			<svg class="radar-chart-layer" viewBox="0 0 240 240" aria-hidden="true">
+				<text class="radar-chart-label" x=${lab.x} y=${lab.y} text-anchor="middle" dominant-baseline="middle">${lab.label}</text>
 			</svg>`;
 	}
 	seriesLayerRow(layer) {
@@ -336,17 +336,17 @@ export class UIRadarChart extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="rc chart-shell" data-tone=${this.state.tone}
+			<div class="radar-chart chart-shell" data-tone=${this.state.tone}
 				data-legend-pos=${this.legendPosition}
 				data-legend-orient=${this.legendOrientation}
 				data-layout=${this.shellLayout}
 				?data-compact=${this.shellCompact}
 				role="img" aria-label=${this.state.label || 'Radar chart'}>
-				<div class="rc-empty" ?hidden=${this.hideEmpty}>${this.state.emptyLabel}</div>
+				<div class="radar-chart-empty" ?hidden=${this.hideEmpty}>${this.state.emptyLabel}</div>
 				<div class="chart-plot-area">
 					<div class="chart-heading" ?hidden=${this.hideHeading}>${this.state.label}</div>
 					<div #plot class="chart-plot" ?data-motion=${this.state.motion}>
-						<div class="rc-svg-stack">
+						<div class="radar-chart-svg-stack">
 							${this.list('ringLayers', this.ringRow)}
 							${this.list('axisLayers', this.axisRow)}
 							${this.list('seriesLayers', this.seriesLayerRow)}
@@ -355,7 +355,7 @@ export class UIRadarChart extends WebComponent {
 						</div>
 					</div>
 				</div>
-				<div class="chart-legend-slot rc-legend" ?hidden=${this.hideLegend}>
+				<div class="chart-legend-slot radar-chart-legend" ?hidden=${this.hideLegend}>
 					<ui-legend
 						.state.items=${this.state.legendItems}
 						.state.orientation=${this.legendOrientation}

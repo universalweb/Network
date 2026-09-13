@@ -195,7 +195,7 @@ export class ActivityLog extends Panel {
 			timestamp: formatTime(tx.timestamp),
 		};
 	}
-	/* Light `html` row rendered directly into <ui-collection>'s .pl-table and
+	/* Light `html` row rendered directly into <ui-collection>'s .collection-table and
 	   styled via the importStyles-injected activity-log-rows.css — same pattern as
 	   account-detail's txRow. Value-only expressions per the light-row contract;
 	   the router intercepts anchor clicks across the shadow boundary via
@@ -232,6 +232,7 @@ export class ActivityLog extends Panel {
 				<ui-tabs class="output-tabs-strip"
 					.state.items=${this.state.tabItems}
 					.state.activeIndex=${this.state.activeTab}
+					.state.contentMode=${'remote'}
 					@tabs:change=${this.handleTabChange}></ui-tabs>
 				<ui-collection class="output-feed"
 					.state=${this.feedConfig}

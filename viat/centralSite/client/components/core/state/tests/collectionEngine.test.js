@@ -167,6 +167,40 @@ test('dedupe: overlapping pages and prepend never double-render', async () => {
 function pluckId(item) {
 	return item.id;
 }
+/*
+ * Flipping dedupe off must duplicate. Without this, a green overlapping-page
+ * test is not evidence the engine is what prevents double-render.
+ */
+test('dedupe off: overlapping pages append duplicates', async () => {
+	const host = makeHost();
+	const engine = CollectionEngine.create(host, {
+		mode: 'button',
+		dedupe: false,
+		loader: pageLoader([
+			[
+				{
+					id: 'a',
+				}, {
+					id: 'b',
+				},
+			],
+			[
+				{
+					id: 'b',
+				}, {
+					id: 'c',
+				},
+			],
+		]),
+	});
+	engine.attach({});
+	await settleFrame();
+	await engine.loadMore();
+	assert.deepEqual(host.state.items.map(pluckId), [
+		'a', 'b', 'b', 'c',
+	]);
+	engine.dispose();
+});
 test('supersede: a stale slow response never clobbers a newer one', async () => {
 	const host = makeHost();
 	let resolveSlow = null;
@@ -433,6 +467,42 @@ test('setFilterArg retouches the array reference so a filter spot re-runs', asyn
 	assert.equal(host.state.items, retouched, 'same-arg setFilterArg is a no-op');
 	engine.dispose();
 });
+test('setFilterArg notifies items on a reactive host (wasted-set swallows a slice)', () => {
+	const items = [
+		{
+			id: 'a',
+			tag: 'in',
+		},
+		{
+			id: 'b',
+			tag: 'out',
+		},
+	];
+	const notified = [];
+	const host = {
+		state: {
+			items,
+		},
+		stateBus: {
+			notify(path) {
+				notified.push(path);
+			},
+		},
+		emit() {},
+	};
+	const engine = CollectionEngine.create(host, {
+		mode: 'button',
+		filter: function keepByTag(item, tag) {
+			return tag === 'all' || item.tag === tag;
+		},
+		filterArg: 'all',
+	});
+	engine.setFilterArg('in');
+	assert.equal(host.state.items, items, 'reactive host keeps the same array reference');
+	assert.deepEqual(notified, [engine.key]);
+	assert.equal(engine.keepItem(items[1]), false, 'predicate uses the new arg');
+	engine.dispose();
+});
 test('empty reset skips the wasted []→[] reassign', async () => {
 	const host = makeHost();
 	const engine = CollectionEngine.create(host, {
@@ -463,4 +533,30 @@ test('dispose: no further loads, aborted in-flight, seenKeys cleared', async () 
 	assert.equal(engine.seenKeys.size, 0);
 	engine.attach({});
 	assert.equal(signals.length, 1, 'a disposed engine never attaches or loads again');
+});
+test('attach/start keeps pre-seeded items when there is no loader', async () => {
+	const host = makeHost();
+	host.state.items = [
+		{
+			id: 'a',
+		},
+		{
+			id: 'b',
+		},
+		{
+			id: 'c',
+		},
+	];
+	const engine = CollectionEngine.create(host, {
+		key: 'items',
+		mode: 'button',
+	});
+	engine.attach({
+		sentinel: makeSentinel(),
+	});
+	await settleFrame();
+	assert.equal(host.state.items.length, 3, 'static seed must survive start/reset');
+	assert.equal(host.state.itemsStatus.started, true);
+	assert.equal(host.state.itemsStatus.error, '');
+	engine.dispose();
 });

@@ -35,13 +35,13 @@ export class ControlCenterRow extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="cc-row" ?data-disabled=${this.state.disabled}>
-				<span class="cc-row-icon" aria-hidden="true">
+			<div class="control-center-row-row" ?data-disabled=${this.state.disabled}>
+				<span class="control-center-row-row-icon" aria-hidden="true">
 					<ui-icon .state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>
 				</span>
-				<div class="cc-row-text">
-					<span class="cc-row-label">${this.state.label}</span>
-					<span class="cc-row-desc" ?hidden=${() => {
+				<div class="control-center-row-row-text">
+					<span class="control-center-row-row-label">${this.state.label}</span>
+					<span class="control-center-row-row-desc" ?hidden=${() => {
 						return !this.state.description;
 					}}>${this.state.description}</span>
 				</div>

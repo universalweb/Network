@@ -10,7 +10,7 @@
  */
 import '../../../global/ai-chat/ai-chat.js';
 import {
-	enableAi, isFunction, isShadowRoot, WebComponent,
+	enableAi, isArray, isFunction, isShadowRoot, WebComponent,
 } from 'webcomponent';
 import { listAllTools } from '../../../core/ai/index.js';
 const DEFAULT_ENDPOINT = 'http://localhost:1234/v1';
@@ -166,8 +166,12 @@ export class AIChat extends WebComponent {
 		if (!chat) {
 			return false;
 		}
-		const list = chat.state.messages;
-		for (let index = 0; index < list.length; index += 1) {
+		const list = chat.state.items;
+		if (!isArray(list)) {
+			return false;
+		}
+		const itemCount = list.length;
+		for (let index = 0; index < itemCount; index += 1) {
 			if (list[index].role === 'assistant' && list[index].content) {
 				return true;
 			}

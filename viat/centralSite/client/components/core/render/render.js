@@ -1,5 +1,6 @@
 import { defaultLogger } from '../debug/logger.js';
 import { Perf } from '../debug/perf.js';
+import { clearRenderWatch } from '../debug/renderWatch.js';
 import { allChildren } from '../dom/children.js';
 import { LIFECYCLE_PROMISE } from '../lifecycle/lifecycle.js';
 import { PHASE } from '../lifecycle/phase.js';
@@ -37,6 +38,16 @@ function awaitChildren(component, fieldName) {
 		childPromises[childIndex] = children[childIndex].lifecycle[fieldName];
 	}
 	return Promise.all(childPromises);
+}
+/*
+ * onVisible/onIntersect must see the viewport once this node has painted,
+ * not after the ancestor tree reaches LIVE. Preview awaitChildren(LIVE)
+ * of the gallery would otherwise starve lazy media of IntersectionObserver.
+ */
+function armVisibility(component) {
+	if (component.isConnected) {
+		component.installObserver();
+	}
 }
 /**
  * Settle this pass's `whenRendered` slot. The epoch captured at pass start is
@@ -553,11 +564,15 @@ export function handleRendered(sequence, wasFirstRender, renderedEpoch) {
 			return handleRenderedAsyncTail(this, sequence, wasFirstRender, renderedEpoch, result);
 		}
 	}
-	if (wasFirstRender && this.phase === PHASE.CONNECTED) {
-		this.phase = PHASE.RENDERED;
-	}
+	markPhaseRendered(this, wasFirstRender);
 	this.finishRender(renderedEpoch);
 	return undefined;
+}
+function markPhaseRendered(component, wasFirstRender) {
+	if (wasFirstRender && component.phase === PHASE.CONNECTED) {
+		component.phase = PHASE.RENDERED;
+		clearRenderWatch(component);
+	}
 }
 async function handleRenderedAsync(component, sequence, wasFirstRender, renderedEpoch, childPromise) {
 	await childPromise;
@@ -571,9 +586,7 @@ async function handleRenderedAsync(component, sequence, wasFirstRender, rendered
 			await result;
 		}
 	}
-	if (wasFirstRender && component.phase === PHASE.CONNECTED) {
-		component.phase = PHASE.RENDERED;
-	}
+	markPhaseRendered(component, wasFirstRender);
 	component.finishRender(renderedEpoch);
 }
 async function handleRenderedAsyncTail(component, sequence, wasFirstRender, renderedEpoch, onRenderedResult) {
@@ -582,9 +595,7 @@ async function handleRenderedAsyncTail(component, sequence, wasFirstRender, rend
 		component.finishRender(renderedEpoch);
 		return;
 	}
-	if (wasFirstRender && component.phase === PHASE.CONNECTED) {
-		component.phase = PHASE.RENDERED;
-	}
+	markPhaseRendered(component, wasFirstRender);
 	component.finishRender(renderedEpoch);
 }
 /**
@@ -611,6 +622,7 @@ export function handleMount() {
 		this.phase = PHASE.MOUNTED;
 	}
 	this.lifecycle.fireMounted();
+	armVisibility(this);
 	return undefined;
 }
 async function handleMountAsync(component, childPromise) {
@@ -629,6 +641,7 @@ async function handleMountAsync(component, childPromise) {
 		component.phase = PHASE.MOUNTED;
 	}
 	component.lifecycle.fireMounted();
+	armVisibility(component);
 }
 async function handleMountAsyncTail(component, onMountResult) {
 	await onMountResult;
@@ -636,6 +649,7 @@ async function handleMountAsyncTail(component, onMountResult) {
 		component.phase = PHASE.MOUNTED;
 	}
 	component.lifecycle.fireMounted();
+	armVisibility(component);
 }
 export async function handleLive() {
 	await nextFrame();
@@ -667,5 +681,4 @@ export async function handleLive() {
 		this.phase = PHASE.LIVE;
 	}
 	this.lifecycle.fireLive();
-	this.installObserver();
 }

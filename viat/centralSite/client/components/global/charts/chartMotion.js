@@ -200,6 +200,77 @@ export function lerpScatterSeries(from, to, progress) {
 export function lerpNumber(from, to, progress) {
 	return lerp(Number(from) || 0, Number(to) || 0, progress);
 }
+function lerpOhlcBar(fromBar, toBar, progress) {
+	const target = toBar || {};
+	const source = fromBar || target;
+	return {
+		open: lerp(Number(source.open) || 0, Number(target.open) || 0, progress),
+		high: lerp(Number(source.high) || 0, Number(target.high) || 0, progress),
+		low: lerp(Number(source.low) || 0, Number(target.low) || 0, progress),
+		close: lerp(Number(source.close) || 0, Number(target.close) || 0, progress),
+	};
+}
+export function lerpOhlcSeries(from, to, progress) {
+	const fromList = Array.isArray(from) ? from : [];
+	const toList = Array.isArray(to) ? to : [];
+	const fromById = new Map();
+	const fromCount = fromList.length;
+	for (let index = 0; index < fromCount; index += 1) {
+		const row = fromList[index];
+		if (row && row.id != null) {
+			fromById.set(String(row.id), row);
+		}
+	}
+	const out = [];
+	const toCount = toList.length;
+	for (let index = 0; index < toCount; index += 1) {
+		const target = toList[index];
+		const source = fromById.get(String(target.id)) || fromList[index] || null;
+		const sourceBars = source && Array.isArray(source.ohlc) ? source.ohlc : [];
+		const targetBars = Array.isArray(target.ohlc) ? target.ohlc : [];
+		const barCount = targetBars.length;
+		const ohlc = [];
+		const sourceLast = sourceBars.length > 0 ? sourceBars[sourceBars.length - 1] : null;
+		for (let barIndex = 0; barIndex < barCount; barIndex += 1) {
+			const fromBar = barIndex < sourceBars.length ? sourceBars[barIndex] : sourceLast;
+			ohlc.push(lerpOhlcBar(fromBar, targetBars[barIndex], progress));
+		}
+		out.push({
+			id: target.id,
+			label: target.label,
+			color: target.color,
+			ohlc,
+		});
+	}
+	return out;
+}
+export function cloneOhlcSeries(series) {
+	const list = Array.isArray(series) ? series : [];
+	const out = [];
+	const count = list.length;
+	for (let index = 0; index < count; index += 1) {
+		const row = list[index];
+		const bars = Array.isArray(row.ohlc) ? row.ohlc : [];
+		const ohlc = [];
+		const barCount = bars.length;
+		for (let barIndex = 0; barIndex < barCount; barIndex += 1) {
+			const bar = bars[barIndex] || {};
+			ohlc.push({
+				open: bar.open,
+				high: bar.high,
+				low: bar.low,
+				close: bar.close,
+			});
+		}
+		out.push({
+			id: row.id,
+			label: row.label,
+			color: row.color,
+			ohlc,
+		});
+	}
+	return out;
+}
 // Shallow-clone normalized value series (new values arrays).
 export function cloneValueSeries(series) {
 	const list = Array.isArray(series) ? series : [];

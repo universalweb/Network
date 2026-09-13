@@ -327,10 +327,11 @@ class TrackingProxyHandler {
 	get(target, key) {
 		const factory = this.factory;
 		if (key === STATE_PATH) {
-			// Per-(target,path) handler — realm and path are immutable, cache once.
+			// Per-(target,path) handler — realm/path/target immutable, cache once.
 			this.carrier ??= {
 				realm: factory.realm,
 				path: this.path,
+				target,
 			};
 			return this.carrier;
 		}

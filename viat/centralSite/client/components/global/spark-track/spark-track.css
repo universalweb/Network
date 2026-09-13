@@ -1,0 +1,34 @@
+:host {
+	display: block;
+}
+.spark-track {
+	display: flex;
+	align-items: center;
+	gap: 0.625rem;
+}
+.spark-track-label,
+.spark-track-scale {
+	font-size: 0.625rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-muted, oklch(0.7 0 0));
+	font-family: var(--font-mono, ui-monospace, monospace);
+	white-space: nowrap;
+}
+.spark-track-track {
+	display: flex;
+	gap: 2px;
+	flex: 1;
+	block-size: 1rem;
+	min-inline-size: 0;
+}
+.spark-track-cell {
+	flex: 1;
+	min-inline-size: 3px;
+	border-radius: 0.125rem;
+	background: color-mix(
+		in oklab,
+		var(--color-success, oklch(0.72 0.17 145)) var(--spark-track-fast, 50%),
+		var(--color-danger, oklch(0.63 0.2 25))
+	);
+}

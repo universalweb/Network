@@ -45,7 +45,7 @@ export class NotificationCenterItem extends WebComponent {
 	render() {
 		this.html`
 			<div
-				class="nc-item"
+				class="notification-center-item-item"
 				data-type=${this.state.itemType}
 				?data-muted=${this.state.muted}
 				?data-unseen=${this.isUnseen}
@@ -53,13 +53,14 @@ export class NotificationCenterItem extends WebComponent {
 				tabindex="0"
 				@click=${this.handleActivate}
 				@keydown=${this.handleActivate}>
-				<div class="nc-item-body">
-					<div class="nc-item-title">${this.state.heading}</div>
-					<div class="nc-item-message">${this.state.message}</div>
+				<div class="notification-center-item-item-body">
+					<div class="notification-center-item-item-title">${this.state.heading}</div>
+					<div class="notification-center-item-item-message">${this.state.message}</div>
 				</div>
 				<ui-close-button
-					class="nc-item-close"
+					class="notification-center-item-item-close"
 					.state.label=${'Remove notification'}
+					.state.size=${'sm'}
 					@click=${this.stopBubble}
 					@close-button:click=${this.handleCloseClick}></ui-close-button>
 			</div>

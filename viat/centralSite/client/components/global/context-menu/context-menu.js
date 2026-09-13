@@ -1,6 +1,6 @@
 /*
-	DESCRIPTION: ui-context-menu — a right-click / long-press menu (MUI/Radix
-	"Context Menu"). Extends `ui-menu`: it INHERITS the item schema, `renderItems`,
+	DESCRIPTION: ui-context-menu — a right-click / long-press menu. Extends `ui-menu`:
+	it INHERITS the item schema, `renderItems`,
 	keyboard roving, `handleKey`/`handleClick`/`selectIndex` and the native-Popover
 	dismiss — the ONLY differences from a dropdown are (1) there is no trigger
 	button; the host's slotted content IS the trigger region, and (2) the panel
@@ -26,7 +26,7 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { computeAnchor } from '../../core/dom/anchor.js';
-import { UIMenu } from '../menu/menu.js';
+import { UIMenu, withinPaddedRect } from '../menu/menu.js';
 import { UIMenuItem } from '../menu-item/menu-item.js';
 export class UIContextMenu extends UIMenu {
 	static url = import.meta.url;
@@ -47,6 +47,29 @@ export class UIContextMenu extends UIMenu {
 		// the pointer with no trigger to fall back onto → it must not vanish when the
 		// pointer drifts off). Set true to inherit ui-menu's "leave the panel → close".
 		closeOnLeave: false,
+		/*
+		 * WHICH region keeps it open, once closeOnLeave is on. Two genuinely
+		 * different behaviours, not one with a bigger rect:
+		 *
+		 *   'box'   (default) — the boxed target AND the panel are both safe. The
+		 *                       menu survives the whole round trip, closing only
+		 *                       when the pointer is outside both. Right-click a row,
+		 *                       wander back over the row, menu stays.
+		 *   'panel'           — the box is safe only UNTIL the panel is first
+		 *                       entered. After that the panel alone holds it open,
+		 *                       so leaving the panel closes it even back over the
+		 *                       box. This is the OS submenu feel: once you have
+		 *                       committed to the menu, leaving it dismisses it.
+		 *
+		 * Ignored entirely when closeOnLeave is false.
+		 */
+		leaveScope: 'box',
+		// Same reasoning, same default: PERSIST through scroll. ui-menu / menubar /
+		// nav-section close on scroll because their panel is anchored to a trigger
+		// that moves out from under it. A context menu has no trigger — it is placed
+		// at a pointer coordinate — so there is nothing to re-anchor to and nothing
+		// to drift away from. Set true to inherit ui-menu's scroll dismissal.
+		closeOnScroll: false,
 		// One-at-a-time by default (OS behavior): opening any context menu closes other
 		// exclusive ones via the document bus. Set false to let this menu COEXIST with
 		// others opened by right-clicking elsewhere.
@@ -88,6 +111,11 @@ export class UIContextMenu extends UIMenu {
 			return;
 		}
 		this.openAtPointer();
+	}
+	openAt(clientX, clientY) {
+		this.pointerX = clientX;
+		this.pointerY = clientY;
+		return this.openAtPointer();
 	}
 	async openAtPointer() {
 		// The surface is `popover="manual"`, NOT `auto`: an auto popover opened inside
@@ -153,16 +181,56 @@ export class UIContextMenu extends UIMenu {
 	// outside-click all hidePopover → a `closed` toggle lands here).
 	handleToggle(domEvent) {
 		super.handleToggle(domEvent);
-		if (domEvent.newState !== 'open') {
-			this.disarmDismiss();
+		if (domEvent.newState === 'open') {
+			/* Fresh opening: the panel has not been entered yet, so `leaveScope:
+			   'panel'` keeps the box safe until the pointer first arrives. */
+			this.enteredPanel = false;
+			return;
 		}
+		this.disarmDismiss();
 	}
+	/*
+	 * The base walks the pointer while open; this rides along to record the first
+	 * entry into the panel. Reading it here rather than with a pointerenter on the
+	 * surface keeps ONE pointer subscription for the whole feature — a second
+	 * listener could fire in a different order and see a stale region.
+	 */
+	handlePointerWatch(domEvent) {
+		if (this.state.leaveScope === 'panel' && !this.enteredPanel) {
+			const surface = this.refs.surface;
+			/* Zero pad: the ENTRY has to be a genuine one. The base pads its
+			   hit-tests to bridge the trigger↔panel gap, but padding here would arm
+			   the panel scope while the pointer is still short of the panel, and the
+			   box would go unsafe a few pixels early. */
+			if (surface && withinPaddedRect(surface.getBoundingClientRect(), domEvent.clientX, domEvent.clientY, 0)) {
+				this.enteredPanel = true;
+			}
+		}
+		super.handlePointerWatch(domEvent);
+	}
+	/*
+	 * True once the pointer has been inside the PANEL at least once this opening.
+	 * `leaveScope: 'panel'` needs that memory: before the first entry the box has
+	 * to stay safe, or the menu would close during the very travel from the
+	 * right-clicked spot to the panel. Reset per opening, not per move.
+	 */
+	enteredPanel = false;
 	// closeOnLeave keep-open region. There is NO trigger button — the slotted content
 	// IS the boxed target, so the menu must persist while the pointer is over EITHER
 	// the panel (handled by the base) or the box, and close only when it leaves both.
 	// The host is display:contents (no box of its own), so measure the union of the
 	// slotted children's rects rather than the host.
+	//
+	// Under `leaveScope: 'panel'` this region is WITHDRAWN once the panel has been
+	// entered, which is what makes leaving the panel close the menu even while the
+	// pointer is back over the box.
 	keepOpenRect() {
+		if (this.state.leaveScope === 'panel' && this.enteredPanel) {
+			return null;
+		}
+		return this.boxRect();
+	}
+	boxRect() {
 		const nodes = this.children;
 		let minLeft = Infinity;
 		let minTop = Infinity;
@@ -216,7 +284,7 @@ export class UIContextMenu extends UIMenu {
 	render() {
 		this.html`
 			<slot></slot>
-			<div #surface class="menu-surface" popover="manual" role="menu" tabindex="-1"
+			<div #surface class="menu-surface glass" popover="manual" role="menu" tabindex="-1"
 				@toggle=${this.handleToggle} @menu-item:select=${this.handleSelect} @keydown=${this.handleKey}>
 				${this.list('items', UIMenuItem)}
 			</div>

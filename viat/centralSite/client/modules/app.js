@@ -1329,6 +1329,8 @@ class AppView extends AppShell {
 		this.delegate('transmit', this.handleTransmit);
 		this.delegate('faucet:request', this.handleFaucetRequest);
 		this.delegate('wallet:refresh', this.handleWalletRefresh);
+		this.delegate('sidebar:change', this.syncSidebarChrome);
+		this.syncSidebarChrome();
 		this.syncSavedProfiles();
 		this.checkAPIHealth();
 		this.tryAutoLoadRecentProfile();
@@ -1715,6 +1717,14 @@ class AppView extends AppShell {
 	handleToggleSidebarHotkey() {
 		this.emit('sidebar:toggle', {});
 	}
+	syncSidebarChrome(domEvent) {
+		const payload = domEvent?.detail?.data;
+		const sidebar = this.getChild('global-sidebar')?.getChild('ui-sidebar');
+		const isOpen = payload?.open ?? (sidebar?.attrs?.open === true);
+		this.toggleAttribute('data-sidebar-open', isOpen);
+		const mode = sidebar?.dataset?.mode || sidebar?.mode || 'flyout';
+		this.dataset.sidebarMode = mode;
+	}
 	pulldownIsOpen() {
 		return this.getChild('global-pulldown')?.refs?.pulldown?.state?.open === true;
 	}
@@ -1742,7 +1752,7 @@ class AppView extends AppShell {
 			<global-sidebar></global-sidebar>
 			<global-bottom-bar></global-bottom-bar>
 			<global-dock></global-dock>
-			<ui-to-top></ui-to-top>
+			<ui-go-to .state.axes=${'block'}></ui-go-to>
 			<global-pulldown></global-pulldown>
 			<settings-modal></settings-modal>
 			<sign-data-modal></sign-data-modal>
@@ -1782,8 +1792,8 @@ class AppView extends AppShell {
 		const shellScroll = this.refs.shellscroll ?? null;
 		setScrollLockTarget(shellScroll);
 		// Shadow-DOM scroll surface is not reachable via scrollSelector; bind the
-		// element directly so ui-to-top watches/scrolls the real shell scroller.
-		this.findComponent('ui-to-top')?.setScrollTarget(shellScroll);
+		// element directly so ui-go-to watches/scrolls the real shell scroller.
+		this.findComponent('ui-go-to')?.setScrollTarget(shellScroll);
 	}
 }
 customElements.define('app-view', AppView);

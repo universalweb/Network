@@ -70,14 +70,19 @@ export class UITextarea extends WebComponent {
 			this.fitHeight();
 		}
 	}
+	renderTone() {
+		if (this.state.invalid) {
+			return 'error';
+		}
+		return this.state.tone;
+	}
 	render() {
-		const tone = this.state.invalid ? 'error' : this.state.tone;
 		this.html`
-			<div class="ta-shell" data-tone=${tone} data-size=${this.state.size}
+			<div class="textarea-shell" data-tone=${this.renderTone} data-size=${this.state.size}
 				?data-disabled=${this.state.disabled}
 				?data-readonly=${this.state.readonly}
 				?data-invalid=${this.state.invalid}>
-				<textarea #input class="ta-control"
+				<textarea #input class="textarea-control"
 					name=${this.state.name}
 					placeholder=${this.state.placeholder}
 					rows=${this.state.rows}

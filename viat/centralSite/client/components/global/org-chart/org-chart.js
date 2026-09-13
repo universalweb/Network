@@ -13,8 +13,7 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import '../icon/icon.js';
-import { isArray, isString } from '@universalweb/utilitylib';
-import { WebComponent } from 'webcomponent';
+import { isArray, isString, WebComponent } from 'webcomponent';
 const ORG_MAX_DEPTH = 12;
 /**
  * First non-empty string among candidates. Objects stay out of text spots.
@@ -142,19 +141,19 @@ export class UIOrgNode extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="oc-node" ?data-selected=${this.state.selected}>
-				<div class="oc-card" @click=${this.handleSelect}>
-					<button type="button" class="oc-toggle" ?hidden=${this.toggleHidden} aria-label="Toggle reports" @click=${this.handleToggle}>
+			<div class="org-chart-node" ?data-selected=${this.state.selected}>
+				<div class="org-chart-card" @click=${this.handleSelect}>
+					<button type="button" class="org-chart-toggle" ?hidden=${this.toggleHidden} aria-label="Toggle reports" @click=${this.handleToggle}>
 						<ui-icon .state.name=${this.caretName} .state.size=${'sm'}></ui-icon>
 					</button>
-					<ui-icon class="oc-icon" ?hidden=${this.iconHidden} .state.name=${this.state.icon} .state.size=${'md'}></ui-icon>
-					<div class="oc-copy">
-						<div class="oc-name">${this.displayLabel}</div>
-						<div class="oc-author" ?hidden=${this.authorHidden}>${this.displayAuthor}</div>
-						<div class="oc-desc" ?hidden=${this.descHidden}>${this.displayDescription}</div>
+					<ui-icon class="org-chart-icon" ?hidden=${this.iconHidden} .state.name=${this.state.icon} .state.size=${'md'} aria-hidden="true"></ui-icon>
+					<div class="org-chart-copy">
+						<div class="org-chart-name">${this.displayLabel}</div>
+						<div class="org-chart-author" ?hidden=${this.authorHidden}>${this.displayAuthor}</div>
+						<div class="org-chart-desc" ?hidden=${this.descHidden}>${this.displayDescription}</div>
 					</div>
 				</div>
-				<div class="oc-kids" ?hidden=${this.kidsHidden}>
+				<div class="org-chart-kids" ?hidden=${this.kidsHidden}>
 					${this.list('children', UIOrgNode)}
 				</div>
 			</div>
@@ -214,7 +213,7 @@ export class UIOrgChart extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="oc" @org-node:select=${this.handleNodeSelect} @org-node:toggle=${this.handleNodeToggle}>
+			<div class="org-chart" @org-node:select=${this.handleNodeSelect} @org-node:toggle=${this.handleNodeToggle}>
 				${this.list('items', UIOrgNode, this.itemKey)}
 			</div>
 		`;

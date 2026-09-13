@@ -2,31 +2,49 @@
 	display: contents;
 }
 
-.cc-root {
+/*
+ * UA popover chrome is a centered bordered box. Reset so the overlay is a
+ * full-viewport top-layer scrim. Closed visibility is the UA
+ * `[popover]:not(:popover-open) { display: none }` rule — do not also
+ * `display: none` from :host(:not([open])), that fights :popover-open.
+ */
+.control-center-root {
 	position: fixed;
 	inset: 0;
-	z-index: var(--z-toast);
+	margin: 0;
+	padding: 0;
+	border: 0;
+	width: auto;
+	height: auto;
+	max-width: none;
+	max-height: none;
+	overflow: visible;
+	background: transparent;
+	z-index: var(--z-toast, 1200);
 	pointer-events: none;
+	transition:
+		overlay var(--dur-base, 0.3s) allow-discrete,
+		display var(--dur-base, 0.3s) allow-discrete;
 }
 
-.cc-root[data-open] {
+.control-center-root:popover-open {
 	pointer-events: auto;
 }
 
-.cc-backdrop {
+.control-center-backdrop {
 	position: absolute;
 	inset: 0;
 	background: transparent;
 	opacity: 0;
-	transition: opacity 0.28s ease;
+	transition: opacity var(--dur-base, 0.3s) var(--ease-out, ease);
 }
 
-.cc-root[data-open] .cc-backdrop {
+:host([open]) .control-center-backdrop {
 	opacity: 1;
 }
 
 /* Tahoe glass panel — floating card, typically under the top-trailing chrome. */
-.cc-panel {
+.control-center-panel {
 	position: absolute;
 	inset-block-start: calc(var(--top-bar-clearance, 5rem) + var(--space-2));
 	inset-inline-end: var(--space-4);
@@ -37,9 +55,14 @@
 	padding: var(--space-4);
 	border-radius: var(--radius-xl, 1.25rem);
 	border: 1px solid color-mix(in oklab, var(--dark-divider, rgba(255, 255, 255, 0.14)) 100%, transparent);
-	background: color-mix(in oklab, var(--bg-body, #0c0e14) 55%, transparent);
-	backdrop-filter: blur(32px) saturate(1.4);
-	-webkit-backdrop-filter: blur(32px) saturate(1.4);
+	/*
+		Fill + blur come from the `glass` util on the element, NOT from here. This
+		sheet used to hand-roll `--bg-body` at 55% with blur(32px) — 45% TRANSPARENT,
+		the opposite of the house recipe, and a fourth private copy of a treatment
+		that has one home. `.glass` lives in uwc.util (declared last), so a copy here
+		could never win anyway; it would just be dead weight that hides the drift.
+		Tune via --popup-glass-alpha / --popup-glass-blur-radius, never locally.
+	*/
 	box-shadow:
 		0 20px 56px rgba(0, 0, 0, 0.42),
 		inset 0 1px 0 color-mix(in oklab, white 10%, transparent);
@@ -47,23 +70,39 @@
 	opacity: 0;
 	pointer-events: none;
 	transition:
-		transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-		opacity 0.24s ease;
+		transform var(--dur-base, 0.3s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+		opacity var(--dur-fast, 0.18s) var(--ease-out, ease);
 }
 
-.cc-root[data-open] .cc-panel {
+:host([open]) .control-center-panel {
 	transform: translateY(0) scale(1);
 	opacity: 1;
 	pointer-events: auto;
 }
 
-.cc-header {
+.control-center-panel.is-exiting {
+	transform: translateY(-0.75rem) scale(0.96);
+	opacity: 0;
+	pointer-events: none;
+}
+
+@starting-style {
+	:host([open]) .control-center-backdrop {
+		opacity: 0;
+	}
+	:host([open]) .control-center-panel {
+		transform: translateY(-0.75rem) scale(0.96);
+		opacity: 0;
+	}
+}
+
+.control-center-header {
 	display: flex;
 	align-items: center;
 	padding-inline: var(--space-1);
 }
 
-.cc-heading {
+.control-center-heading {
 	font-family: var(--font-display, inherit);
 	font-size: var(--text-xs);
 	font-weight: var(--weight-semibold, 600);
@@ -72,13 +111,13 @@
 	color: var(--text-muted, rgba(255, 255, 255, 0.55));
 }
 
-.cc-tiles {
+.control-center-tiles {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: var(--space-3);
 }
 
-.cc-rows {
+.control-center-rows {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-2);
@@ -89,8 +128,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.cc-backdrop,
-	.cc-panel {
+	.control-center-root,
+	.control-center-backdrop,
+	.control-center-panel {
 		transition-duration: 0.01ms;
 	}
 }

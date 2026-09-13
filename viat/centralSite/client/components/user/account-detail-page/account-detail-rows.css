@@ -1,7 +1,7 @@
 /* Row/cell CSS for the account-detail tx list. Injected into <paged-list>'s
    shadow via `.importStyles`. The account header + stats stay on the page
    (account-detail-page.css). */
-.ad-row {
+.account-detail-row {
 	display: grid;
 	grid-template-columns: 1.1fr 0.5fr 1.7fr 1fr 0.8fr 1.5fr;
 	gap: var(--space-3);
@@ -10,10 +10,10 @@
 	font-size: var(--text-sm);
 	align-items: center;
 }
-.ad-row:hover:not(.ad-head) {
+.account-detail-row:hover:not(.account-detail-head) {
 	background: color-mix(in oklab, var(--teal) 6%, transparent);
 }
-.ad-row.ad-head {
+.account-detail-row.account-detail-head {
 	font-size: var(--text-2xs);
 	letter-spacing: 0.16em;
 	text-transform: uppercase;
@@ -23,49 +23,49 @@
 	background: var(--bg-dark);
 	z-index: 1;
 }
-.ad-cell {
+.account-detail-cell {
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
-.ad-id,
-.ad-addr {
+.account-detail-id,
+.account-detail-addr {
 	text-decoration: none;
 	color: var(--dark-text-medium);
 	border-block-end: 1px dashed transparent;
 }
-a.ad-id:hover,
-a.ad-addr:hover {
+a.account-detail-id:hover,
+a.account-detail-addr:hover {
 	color: var(--teal);
 	border-block-end-color: var(--teal);
 }
-.ad-dir {
+.account-detail-dir {
 	font-size: var(--text-2xs);
 	letter-spacing: 0.16em;
 	font-weight: var(--weight-semibold);
 }
-.ad-dir[data-tone='in'] {
+.account-detail-dir[data-tone='in'] {
 	color: var(--color-success);
 }
-.ad-dir[data-tone='out'] {
+.account-detail-dir[data-tone='out'] {
 	color: var(--color-warning);
 }
-.ad-amount {
+.account-detail-amount {
 	text-align: right;
 	font-variant-numeric: tabular-nums;
 }
-.ad-amount[data-tone='in'] {
+.account-detail-amount[data-tone='in'] {
 	color: var(--color-success);
 }
-.ad-amount[data-tone='out'] {
+.account-detail-amount[data-tone='out'] {
 	color: var(--color-warning);
 }
-.ad-status {
+.account-detail-status {
 	text-transform: uppercase;
 	letter-spacing: 0.12em;
 	font-size: var(--text-2xs);
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.55));
 }
-.ad-time {
+.account-detail-time {
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 }

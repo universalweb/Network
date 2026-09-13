@@ -4,7 +4,7 @@
  * styles/themes/midnight.css and inherit through the shadow boundary; this file
  * is only the shadow-scoped rules a document sheet can't reach. Intentionally
  * UNLAYERED so it wins over the base panel.css (uwc.components) regardless of
- * the base's selector specificity (e.g. `.panel-header .ph-dot`).
+ * the base's selector specificity (e.g. `.panel-header .panel-header-dot`).
  */
 .panel-header {
 	position: relative;
@@ -22,6 +22,6 @@
 		transparent 100%
 	);
 }
-.ph-dot {
+.panel-header-dot {
 	display: none;
 }

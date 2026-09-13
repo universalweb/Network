@@ -27,16 +27,16 @@
    Disc via ui-button `.state.circle`. Open spin is ICON-ONLY through
    `--ui-btn-icon-rotate` (button.css on .btn-icon) — never host transform
    (that rotated the whole chrome into a skewed disc). */
-.sd-trigger {
+.speed-dial-trigger {
 	border-radius: 999px;
 	box-shadow: var(--elev-3, 0 14px 36px rgba(0, 0, 0, 0.38));
 	transition: box-shadow 0.16s ease;
 }
-.speed-dial[data-open][data-rotate] .sd-trigger {
+.speed-dial[data-open][data-rotate] .speed-dial-trigger {
 	--ui-btn-icon-rotate: 45deg;
 }
 /* ── Actions cluster — absolute so it never shifts the trigger ────────────── */
-.sd-actions {
+.speed-dial-actions {
 	position: absolute;
 	margin: 0;
 	padding: 0;
@@ -45,7 +45,7 @@
 	gap: 0.7rem;
 	pointer-events: none;
 }
-.speed-dial[data-direction='up'] .sd-actions {
+.speed-dial[data-direction='up'] .speed-dial-actions {
 	inset-block-end: 100%;
 	inset-inline-start: 50%;
 	transform: translateX(-50%);
@@ -53,7 +53,7 @@
 	flex-direction: column-reverse;
 	align-items: center;
 }
-.speed-dial[data-direction='down'] .sd-actions {
+.speed-dial[data-direction='down'] .speed-dial-actions {
 	inset-block-start: 100%;
 	inset-inline-start: 50%;
 	transform: translateX(-50%);
@@ -61,7 +61,7 @@
 	flex-direction: column;
 	align-items: center;
 }
-.speed-dial[data-direction='left'] .sd-actions {
+.speed-dial[data-direction='left'] .speed-dial-actions {
 	inset-inline-end: 100%;
 	inset-block-start: 50%;
 	transform: translateY(-50%);
@@ -69,7 +69,7 @@
 	flex-direction: row-reverse;
 	align-items: center;
 }
-.speed-dial[data-direction='right'] .sd-actions {
+.speed-dial[data-direction='right'] .speed-dial-actions {
 	inset-inline-start: 100%;
 	inset-block-start: 50%;
 	transform: translateY(-50%);
@@ -84,26 +84,113 @@ ui-speed-dial-action {
 	transform: scale(0.5);
 	transition: opacity 0.16s ease, transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.speed-dial[data-open] .sd-actions {
+.speed-dial[data-open] .speed-dial-actions {
 	pointer-events: auto;
 }
 .speed-dial[data-open] ui-speed-dial-action {
 	opacity: 1;
+}
+.speed-dial[data-open]:not([data-layout='radial']):not([data-layout='semi']):not([data-layout='quarter']) ui-speed-dial-action {
 	transform: scale(1);
 }
-.speed-dial[data-open] ui-speed-dial-action:nth-child(1) { transition-delay: 0.02s; }
-.speed-dial[data-open] ui-speed-dial-action:nth-child(2) { transition-delay: 0.05s; }
-.speed-dial[data-open] ui-speed-dial-action:nth-child(3) { transition-delay: 0.08s; }
-.speed-dial[data-open] ui-speed-dial-action:nth-child(4) { transition-delay: 0.11s; }
-.speed-dial[data-open] ui-speed-dial-action:nth-child(5) { transition-delay: 0.14s; }
+.speed-dial[data-open] ui-speed-dial-action:nth-child(1) { transition-delay: 0.02s; --speed-dial-index: 0; }
+.speed-dial[data-open] ui-speed-dial-action:nth-child(2) { transition-delay: 0.05s; --speed-dial-index: 1; }
+.speed-dial[data-open] ui-speed-dial-action:nth-child(3) { transition-delay: 0.08s; --speed-dial-index: 2; }
+.speed-dial[data-open] ui-speed-dial-action:nth-child(4) { transition-delay: 0.11s; --speed-dial-index: 3; }
+.speed-dial[data-open] ui-speed-dial-action:nth-child(5) { transition-delay: 0.14s; --speed-dial-index: 4; }
 .speed-dial[data-open] ui-speed-dial-action:nth-child(n + 6) { transition-delay: 0.16s; }
+ui-speed-dial-action:nth-child(1) { --speed-dial-index: 0; }
+ui-speed-dial-action:nth-child(2) { --speed-dial-index: 1; }
+ui-speed-dial-action:nth-child(3) { --speed-dial-index: 2; }
+ui-speed-dial-action:nth-child(4) { --speed-dial-index: 3; }
+ui-speed-dial-action:nth-child(5) { --speed-dial-index: 4; }
+ui-speed-dial-action:nth-child(6) { --speed-dial-index: 5; }
+ui-speed-dial-action:nth-child(7) { --speed-dial-index: 6; }
+ui-speed-dial-action:nth-child(8) { --speed-dial-index: 7; }
+ui-speed-dial-action:nth-child(9) { --speed-dial-index: 8; }
+ui-speed-dial-action:nth-child(10) { --speed-dial-index: 9; }
+ui-speed-dial-action:nth-child(11) { --speed-dial-index: 10; }
+ui-speed-dial-action:nth-child(12) { --speed-dial-index: 11; }
+.speed-dial-mask {
+	position: fixed;
+	inset: 0;
+	background: color-mix(in oklab, black 35%, transparent);
+	pointer-events: auto;
+	z-index: -1;
+}
+.speed-dial-mask[hidden] {
+	display: none;
+}
+.speed-dial[data-layout='radial'] .speed-dial-actions,
+.speed-dial[data-layout='semi'] .speed-dial-actions,
+.speed-dial[data-layout='quarter'] .speed-dial-actions {
+	inset: 50% auto auto 50%;
+	margin: 0;
+	transform: none;
+	inline-size: 0;
+	block-size: 0;
+	flex-direction: row;
+}
+.speed-dial[data-layout='radial'] ui-speed-dial-action,
+.speed-dial[data-layout='semi'] ui-speed-dial-action,
+.speed-dial[data-layout='quarter'] ui-speed-dial-action {
+	position: absolute;
+	inset-inline-start: 0;
+	inset-block-start: 0;
+	overflow: visible;
+	--speed-dial-fan: 1;
+	--speed-dial-fan-display: grid;
+	--speed-dial-fan-place: center;
+	--speed-dial-fan-gap: 0;
+	--speed-dial-fan-size: 2.25rem;
+	--speed-dial-label-pos: absolute;
+	--speed-dial-label-x: 50%;
+	--speed-dial-label-y: 50%;
+	--speed-dial-angle: calc(var(--speed-dial-start, -90deg) + var(--speed-dial-index, 0) * var(--speed-dial-step, 45deg));
+	--speed-dial-label-transform:
+		translate(
+			calc(-50% + cos(var(--speed-dial-angle)) * 50%),
+			calc(-50% + sin(var(--speed-dial-angle)) * 50%)
+		)
+		translate(
+			calc(cos(var(--speed-dial-angle)) * var(--speed-dial-label-gap, 1.5rem)),
+			calc(sin(var(--speed-dial-angle)) * var(--speed-dial-label-gap, 1.5rem))
+		);
+	/* Text-only fan items: no disc on the orbit, so the chip sits ON
+	   the orbit (icon-only position) instead of out on the label ray. */
+	--speed-dial-label-solo-transform: translate(-50%, -50%);
+	/*
+	 * Cluster origin is the 0×0 .speed-dial-actions box at the trigger center.
+	 * translate(-50%, -50%) parks the action's CENTER on that origin before
+	 * the rotate/translate/counter-rotate fan; without it every glyph sits
+	 * a half-box off the circle.
+	 */
+	transform:
+		translate(-50%, -50%)
+		rotate(calc(var(--speed-dial-start, -90deg) + var(--speed-dial-index, 0) * var(--speed-dial-step, 45deg)))
+		translate(0)
+		rotate(calc(-1 * (var(--speed-dial-start, -90deg) + var(--speed-dial-index, 0) * var(--speed-dial-step, 45deg))))
+		scale(0.5);
+}
+.speed-dial[data-layout='radial'][data-open] ui-speed-dial-action,
+.speed-dial[data-layout='semi'][data-open] ui-speed-dial-action,
+.speed-dial[data-layout='quarter'][data-open] ui-speed-dial-action {
+	transform:
+		translate(-50%, -50%)
+		rotate(calc(var(--speed-dial-start, -90deg) + var(--speed-dial-index, 0) * var(--speed-dial-step, 45deg)))
+		translate(var(--speed-dial-radius, 5.5rem))
+		rotate(calc(-1 * (var(--speed-dial-start, -90deg) + var(--speed-dial-index, 0) * var(--speed-dial-step, 45deg))))
+		scale(1);
+}
 @media (prefers-reduced-motion: reduce) {
 	ui-speed-dial-action {
 		transition: none;
+	}
+	.speed-dial[data-layout='linear'] ui-speed-dial-action {
 		transform: none;
 	}
 	/* Still show the open × — skip the spin animation only (token is static). */
-	.speed-dial[data-open][data-rotate] .sd-trigger {
+	.speed-dial[data-open][data-rotate] .speed-dial-trigger {
 		--ui-btn-icon-rotate: 45deg;
 	}
 }

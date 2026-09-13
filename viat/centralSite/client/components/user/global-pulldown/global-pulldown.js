@@ -12,10 +12,8 @@ export class GlobalPulldown extends WebComponent {
 	};
 	static state = {
 		pulldown: {
-			trigger: 'main',
-			threshold: 0.3,
-			velocity: 0.5,
 			handlePosition: 'bottom',
+			dragToClose: true,
 		},
 	};
 	scrollLocked = false;

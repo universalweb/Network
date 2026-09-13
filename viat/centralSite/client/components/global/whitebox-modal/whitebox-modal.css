@@ -6,7 +6,7 @@
    automatically. Close + maximize controls come from the core <ui-modal>
    control strip (showClose / showMaximize) — no per-component close
    button to maintain. */
-.wb-shell {
+.whitebox-modal-shell {
 	position: relative;
 	background: var(--popup-bg);
 	color: var(--popup-text);
@@ -17,7 +17,7 @@
 	align-items: center;
 	min-width: 13.75rem;
 }
-.wb-stage {
+.whitebox-modal-stage {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -27,7 +27,7 @@
 	padding: var(--space-5);
 	box-sizing: border-box;
 }
-.wb-media {
+.whitebox-modal-media {
 	display: block;
 	max-width: 100%;
 	max-height: calc(96svh - 96px);
@@ -36,7 +36,7 @@
 	object-fit: contain;
 	border-radius: var(--radius-sm);
 }
-.wb-caption {
+.whitebox-modal-caption {
 	font-family: var(--font-mono, ui-monospace, monospace);
 	font-size: var(--text-sm);
 	color: var(--text-muted, var(--popup-text));

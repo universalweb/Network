@@ -75,14 +75,120 @@ export function findTreeItem(items, needle, depth) {
 	}
 	return null;
 }
+export const PATH_SEPARATOR = '.';
+export const DISPLAY_SEPARATOR = ' / ';
+function findAtLevel(items, segment) {
+	if (!Array.isArray(items) || !segment) {
+		return null;
+	}
+	const count = items.length;
+	for (let index = 0; index < count; index += 1) {
+		const item = items[index];
+		if (item && treeItemId(item) === segment) {
+			return item;
+		}
+	}
+	return null;
+}
+/**
+ * Dotted id-path from the tree root to `node` (identity). Empty if the node is
+ * not in `items` or any hop lacks an id. Labels are never path keys — duplicate
+ * sibling labels are lossless; an id containing `.` is a data error.
+ * @param {object[]} items - Tree roots.
+ * @param {object} node - Live node object from that tree.
+ * @param {number} [depth] - Walk depth.
+ * @returns {string} `'a.b.c'` or `''`.
+ */
+export function pathFor(items, node, depth) {
+	const walkDepth = depth ?? 0;
+	if (!node || !Array.isArray(items) || walkDepth >= TREE_MAX_DEPTH) {
+		return '';
+	}
+	const count = items.length;
+	for (let index = 0; index < count; index += 1) {
+		const item = items[index];
+		if (!item) {
+			continue;
+		}
+		const id = treeItemId(item);
+		if (!id) {
+			continue;
+		}
+		if (item === node) {
+			return id;
+		}
+		const nested = pathFor(treeChildren(item), node, walkDepth + 1);
+		if (nested) {
+			return `${id}${PATH_SEPARATOR}${nested}`;
+		}
+	}
+	return '';
+}
+/**
+ * Walk a dotted id-path. Missing hop, empty segment, or empty path → `null`
+ * (fail soft — never throw).
+ * @param {object[]} items - Tree roots.
+ * @param {string} path - `'a.b.c'`.
+ * @returns {object|null} The live node, or null.
+ */
+export function nodeAt(items, path) {
+	if (!Array.isArray(items) || path == null || path === '') {
+		return null;
+	}
+	const parts = String(path).split(PATH_SEPARATOR);
+	const partCount = parts.length;
+	let level = items;
+	let found = null;
+	for (let index = 0; index < partCount; index += 1) {
+		const segment = parts[index];
+		if (!segment) {
+			return null;
+		}
+		found = findAtLevel(level, segment);
+		if (!found) {
+			return null;
+		}
+		if (index < partCount - 1) {
+			level = treeChildren(found);
+		}
+	}
+	return found;
+}
+/**
+ * Presentational trail of labels for a node. Slash-separated; distinct from
+ * the dotted VALUE path. A label that contains `/` or `.` is display-only.
+ * @param {object[]} items - Tree roots.
+ * @param {object} node - Live node object from that tree.
+ * @returns {string} `'Root / Branch / Leaf'` or the node's own label.
+ */
+export function displayPath(items, node) {
+	const path = pathFor(items, node);
+	if (!path) {
+		return treeItemLabel(node);
+	}
+	const parts = path.split(PATH_SEPARATOR);
+	const labels = [];
+	let level = items;
+	const partCount = parts.length;
+	for (let index = 0; index < partCount; index += 1) {
+		const item = findAtLevel(level, parts[index]);
+		if (!item) {
+			break;
+		}
+		labels.push(treeItemLabel(item));
+		level = treeChildren(item);
+	}
+	if (labels.length === 0) {
+		return treeItemLabel(node);
+	}
+	return labels.join(DISPLAY_SEPARATOR);
+}
 export function treeRowSignature(row) {
 	// cells/icon/disabled included so tree-table column stamps and tree chrome
 	// changes force recomputeRows (signature gate otherwise keeps stale rows).
-	const cells = Array.isArray(row.cells)
-		? row.cells.map((cell) => {
-			return `${cell?.key ?? ''}:${cell?.text ?? ''}`;
-		}).join('|')
-		: '';
+	const cells = Array.isArray(row.cells) ? row.cells.map((cell) => {
+		return `${cell?.key ?? ''}:${cell?.text ?? ''}`;
+	}).join('|') : '';
 	return `${row.id}\t${row.expanded ? 1 : 0}\t${row.selected ? 1 : 0}\t${row.focused ? 1 : 0}\t${row.label}\t${row.icon || ''}\t${row.disabled ? 1 : 0}\t${cells}`;
 }
 function itemMatchesFilter(item, filterText) {
@@ -271,7 +377,7 @@ export class UITreeNode extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="tn" role="treeitem"
+			<div class="tree-node" role="treeitem"
 				data-depth=${this.state.depth}
 				?data-selected=${this.state.selected}
 				?data-focused=${this.state.focused}
@@ -284,11 +390,11 @@ export class UITreeNode extends WebComponent {
 				tabindex=${this.tabIndex}
 				style=${this.indentVar}
 				@click=${this.handleActivate}>
-				<button type="button" class="tn-caret" ?disabled=${this.isLeaf} aria-hidden="true" tabindex="-1" @click=${this.handleToggle}>
+				<button type="button" class="tree-node-caret" ?disabled=${this.isLeaf} aria-hidden="true" tabindex="-1" @click=${this.handleToggle}>
 					<ui-icon .state.name=${this.caretName} .state.size=${'sm'}></ui-icon>
 				</button>
-				<ui-icon class="tn-icon" ?hidden=${this.iconHidden} .state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>
-				<span class="tn-label">${this.state.label}</span>
+				<ui-icon class="tree-node-icon" ?hidden=${this.iconHidden} .state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>
+				<span class="tree-node-label">${this.state.label}</span>
 			</div>
 		`;
 	}
@@ -397,7 +503,7 @@ export class UITree extends WebComponent {
 			if (String(node.state?.id) !== id) {
 				continue;
 			}
-			const face = node.shadowRoot?.querySelector?.('.tn') || node;
+			const face = node.shadowRoot?.querySelector?.('.tree-node') || node;
 			face.focus?.();
 			return;
 		}
@@ -475,11 +581,14 @@ export class UITree extends WebComponent {
 		this.recomputeRows();
 		this.emitSelection(id);
 	}
-	handleNodeSelect(domEvent) {
-		const id = domEvent.detail?.data?.id;
-		if (id == null || id === '' || this.state.disabled === true) {
-			return;
-		}
+	/*
+	 * The ONE entry point for "select this row", so the pointer path and the
+	 * keyboard path cannot drift on what `disabled` means. They had drifted: the
+	 * click path refused a disabled row and Enter/Space went straight to
+	 * applySingle/applyMultiple with no check, so a keyboard user could select a
+	 * node a mouse user could not.
+	 */
+	activateRow(id) {
 		const row = this.rowById(id);
 		if (row?.disabled === true) {
 			return;
@@ -489,6 +598,13 @@ export class UITree extends WebComponent {
 			return;
 		}
 		this.applySingle(id);
+	}
+	handleNodeSelect(domEvent) {
+		const id = domEvent.detail?.data?.id;
+		if (id == null || id === '' || this.state.disabled === true) {
+			return;
+		}
+		this.activateRow(id);
 	}
 	handleNodeToggle(domEvent) {
 		const id = domEvent.detail?.data?.id;
@@ -506,23 +622,65 @@ export class UITree extends WebComponent {
 			expanded: this.expandedSet.has(id),
 		});
 	}
-	moveFocus(delta) {
+	/**
+	 * Row indexes that can hold focus. `ensureActiveIndex` already refuses to
+	 * SEED focus onto a disabled row, and ui-listbox walks the same kind of
+	 * filtered list for its arrows — the keyboard here used to clamp over the
+	 * raw rows instead, which contradicted both.
+	 * @returns {number[]} Indexes into `state.rows` of the enabled rows.
+	 */
+	enabledRowIndexes() {
 		const rows = this.state.rows;
+		const indexes = [];
 		const count = rows.length;
-		if (count === 0) {
+		for (let index = 0; index < count; index += 1) {
+			if (rows[index]?.disabled !== true) {
+				indexes.push(index);
+			}
+		}
+		return indexes;
+	}
+	/**
+	 * Move focus to the first or last enabled row.
+	 * @param {number} edge - 0 for the first row, -1 for the last.
+	 */
+	focusEdgeRow(edge) {
+		const indexes = this.enabledRowIndexes();
+		if (indexes.length === 0) {
 			return;
 		}
-		let current = this.rowIndexById(this.state.activeIndex);
-		if (current < 0) {
-			current = delta > 0 ? -1 : count;
+		const target = edge === 0 ? indexes[0] : indexes[indexes.length - 1];
+		this.state.activeIndex = this.state.rows[target].id;
+		this.focusActiveRow();
+	}
+	moveFocus(delta) {
+		const rows = this.state.rows;
+		if (rows.length === 0) {
+			return;
 		}
-		let next = current + delta;
+		const indexes = this.enabledRowIndexes();
+		const stopCount = indexes.length;
+		if (stopCount === 0) {
+			return;
+		}
+		/*
+		 * Position within the ENABLED stops, not the raw rows. A -1 here means
+		 * activeIndex is missing or sits on a disabled row, so enter from the edge
+		 * the caller is travelling from and the first press still steps inward.
+		 * Clamping (rather than the wrap ui-listbox uses) is this component's
+		 * existing behaviour and is preserved.
+		 */
+		let position = indexes.indexOf(this.rowIndexById(this.state.activeIndex));
+		if (position < 0) {
+			position = delta > 0 ? -1 : stopCount;
+		}
+		let next = position + delta;
 		if (next < 0) {
 			next = 0;
-		} else if (next >= count) {
-			next = count - 1;
+		} else if (next >= stopCount) {
+			next = stopCount - 1;
 		}
-		this.state.activeIndex = rows[next].id;
+		this.state.activeIndex = rows[indexes[next]].id;
 		this.focusActiveRow();
 	}
 	toggleFocused() {
@@ -563,19 +721,12 @@ export class UITree extends WebComponent {
 			}
 			case 'Home': {
 				domEvent.preventDefault();
-				if (this.state.rows[0]) {
-					this.state.activeIndex = this.state.rows[0].id;
-					this.focusActiveRow();
-				}
+				this.focusEdgeRow(0);
 				break;
 			}
 			case 'End': {
 				domEvent.preventDefault();
-				const last = this.state.rows.at(-1);
-				if (last) {
-					this.state.activeIndex = last.id;
-					this.focusActiveRow();
-				}
+				this.focusEdgeRow(-1);
 				break;
 			}
 			case 'ArrowRight': {
@@ -611,11 +762,7 @@ export class UITree extends WebComponent {
 				if (!id) {
 					break;
 				}
-				if (this.state.multiple === true) {
-					this.applyMultiple(id);
-					break;
-				}
-				this.applySingle(id);
+				this.activateRow(id);
 				break;
 			}
 			default: {
@@ -643,15 +790,15 @@ export class UITree extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="tr" ?data-disabled=${this.state.disabled}>
-				<input #search class="tr-search" type="search" placeholder="Filter…" aria-label="Filter tree"
+			<div class="tree" ?data-disabled=${this.state.disabled}>
+				<input #search class="tree-search" type="search" placeholder="Filter…" aria-label="Filter tree"
 					?hidden=${this.filterHidden} $value="filter">
-				<div class="tr-tree" role="tree" tabindex="0"
+				<div class="tree-root" role="tree" tabindex="0"
 					@tree-node:select=${this.handleNodeSelect}
 					@tree-node:toggle=${this.handleNodeToggle}
 					@focusin=${this.handleTreeFocusIn}>
 					${this.list('rows', UITreeNode, this.rowKey)}
-					<div class="tr-empty" ?hidden=${this.hasRows}>${this.state.emptyMessage}</div>
+					<div class="tree-empty" ?hidden=${this.hasRows}>${this.state.emptyMessage}</div>
 				</div>
 			</div>
 		`;

@@ -35,6 +35,15 @@
 	*::-webkit-scrollbar-corner {
 		background: var(--scrollbar-corner);
 	}
+	/*
+	 * Author `:host { display }` beats the UA `[hidden] { display: none }`.
+	 * `!important` is required so this wins every component `:host` display
+	 * regardless of layer order (`uwc.components` beats `uwc.reset` for
+	 * normal declarations). Adopted into every shadow root via uwc.reset.
+	 */
+	:host([hidden]) {
+		display: none !important;
+	}
 	button,
 	[role='button'] {
 		cursor: pointer;

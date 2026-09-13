@@ -56,7 +56,7 @@
 	border-block-end: 1px solid rgba(122, 231, 255, 0.07);
 }
 /* Workspace pill — the panel id as a waybar workspace tag. */
-.panel-header .ph-id {
+.panel-header .panel-header-id {
 	display: inline-block;
 	padding: 0.1em 0.55em;
 	border: 1px solid rgba(51, 204, 255, 0.28);
@@ -67,7 +67,7 @@
 	letter-spacing: 0.14em;
 }
 /* Active-workspace marker — square, two-tone, no glow circle. */
-.panel-header .ph-dot {
+.panel-header .panel-header-dot {
 	display: block;
 	width: 0.3125rem;
 	height: 0.3125rem;

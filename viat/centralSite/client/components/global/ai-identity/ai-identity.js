@@ -37,12 +37,12 @@ export class UIAiIdentity extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="aiid" data-author=${this.state.author}>
+			<div class="ai-identity" data-author=${this.state.author}>
 				<ui-avatar
 					.state.src=${this.state.src}
 					.state.name=${this.avatarName}
 					.state.size=${this.state.size}></ui-avatar>
-				<span class="aiid-label">${this.displayLabel}</span>
+				<span class="ai-identity-label">${this.displayLabel}</span>
 			</div>
 		`;
 	}

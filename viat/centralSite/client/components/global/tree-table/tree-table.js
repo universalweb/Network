@@ -70,21 +70,21 @@ export class UITreeTableRow extends WebComponent {
 		return item?.key ?? index;
 	}
 	renderCell(item) {
-		return html`<span class="tt-td" data-align=${item.align || 'start'}>${item.text}</span>`;
+		return html`<span class="tree-table-td" data-align=${item.align || 'start'}>${item.text}</span>`;
 	}
 	render() {
 		this.html`
-			<div class="tt-row" role="row"
+			<div class="tree-table-row" role="row"
 				?data-selected=${this.state.selected}
 				?data-disabled=${this.state.disabled}
 				style=${this.indentVar}
 				@click=${this.handleActivate}>
-				<div class="tt-tree">
-					<button type="button" class="tt-caret" ?disabled=${this.isLeaf} aria-hidden="true" tabindex="-1" @click=${this.handleToggle}>
+				<div class="tree-table-tree">
+					<button type="button" class="tree-table-caret" ?disabled=${this.isLeaf} aria-hidden="true" tabindex="-1" @click=${this.handleToggle}>
 						<ui-icon .state.name=${this.caretName} .state.size=${'sm'}></ui-icon>
 					</button>
-					<ui-icon class="tt-icon" ?hidden=${this.iconHidden} .state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>
-					<span class="tt-label">${this.state.label}</span>
+					<ui-icon class="tree-table-icon" ?hidden=${this.iconHidden} .state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>
+					<span class="tree-table-label">${this.state.label}</span>
 				</div>
 				${this.list('cells', this.renderCell, this.cellKey)}
 			</div>
@@ -244,13 +244,13 @@ export class UITreeTable extends WebComponent {
 			}
 			parts.push('minmax(5rem, 1fr)');
 		}
-		return `--tt-cols:${parts.join(' ')}`;
+		return `--tree-table-cols:${parts.join(' ')}`;
 	}
 	headKey(item) {
 		return item.id;
 	}
 	renderHead(item) {
-		return html`<span class="tt-th">${item.label}</span>`;
+		return html`<span class="tree-table-th">${item.label}</span>`;
 	}
 	rowKey(row) {
 		return row.id;
@@ -260,13 +260,13 @@ export class UITreeTable extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="tt" style=${this.gridStyle}>
-				<div class="tt-head" role="row">
+			<div class="tree-table" style=${this.gridStyle}>
+				<div class="tree-table-head" role="row">
 					${this.list('headLabels', this.renderHead, this.headKey)}
 				</div>
-				<div class="tt-body" role="treegrid" @tree-table-row:select=${this.handleRowSelect} @tree-table-row:toggle=${this.handleRowToggle}>
+				<div class="tree-table-body" role="treegrid" @tree-table-row:select=${this.handleRowSelect} @tree-table-row:toggle=${this.handleRowToggle}>
 					${this.list('rows', UITreeTableRow, this.rowKey)}
-					<div class="tt-empty" ?hidden=${this.hasRows}>${this.state.emptyMessage}</div>
+					<div class="tree-table-empty" ?hidden=${this.hasRows}>${this.state.emptyMessage}</div>
 				</div>
 			</div>
 		`;

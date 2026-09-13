@@ -1,8 +1,24 @@
 /* uwc.util — fade edges on overflow scroll containers. */
 @layer uwc.util {
+	/*
+	 * EVERY variant is standalone. The size token and the mask plumbing
+	 * (mask-size / mask-repeat) belong to all of them, not only to the plain
+	 * `.scroll-fade` — a directional class used on its own set a mask-image with
+	 * no size and no repeat, which computes to no mask at all. So
+	 * `class="scroll-fade-x"` silently did nothing unless `.scroll-fade` also
+	 * happened to be present, and the directional classes read as broken.
+	 */
 	.scroll-fade,
+	.scroll-fade-x,
+	.scroll-fade-start,
+	.scroll-fade-end,
 	[data-scroll-fade] {
 		--scroll-fade-size: 1.5rem;
+		mask-size: 100% 100%;
+		mask-repeat: no-repeat;
+	}
+	.scroll-fade,
+	[data-scroll-fade] {
 		mask-image: linear-gradient(
 			to bottom,
 			transparent 0,
@@ -10,8 +26,6 @@
 			#000 calc(100% - var(--scroll-fade-size)),
 			transparent 100%
 		);
-		mask-size: 100% 100%;
-		mask-repeat: no-repeat;
 	}
 	[data-scroll-fade='x'],
 	.scroll-fade-x {
@@ -36,6 +50,35 @@
 	.scroll-fade-end {
 		mask-image: linear-gradient(
 			to bottom,
+			#000 0,
+			#000 calc(100% - var(--scroll-fade-size)),
+			transparent 100%
+		);
+	}
+	/*
+	 * Single-edge fades on the INLINE axis. `start`/`end` above run down the
+	 * block axis, so a horizontally scrolling box could fade both edges
+	 * (.scroll-fade-x) or neither — never just the trailing one.
+	 */
+	[data-scroll-fade='x-start'],
+	.scroll-fade-x-start {
+		--scroll-fade-size: 1.5rem;
+		mask-size: 100% 100%;
+		mask-repeat: no-repeat;
+		mask-image: linear-gradient(
+			to right,
+			transparent 0,
+			#000 var(--scroll-fade-size),
+			#000 100%
+		);
+	}
+	[data-scroll-fade='x-end'],
+	.scroll-fade-x-end {
+		--scroll-fade-size: 1.5rem;
+		mask-size: 100% 100%;
+		mask-repeat: no-repeat;
+		mask-image: linear-gradient(
+			to right,
 			#000 0,
 			#000 calc(100% - var(--scroll-fade-size)),
 			transparent 100%

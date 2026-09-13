@@ -10,15 +10,13 @@
 	gap: var(--space-2);
 	align-items: start;
 	width: min(22.5rem, calc(100vw - 2.25rem));
-	/* Symmetric pad; close column is not double-padded. */
 	padding: var(--space-3);
-	padding-inline-end: var(--space-2);
 	border: 1px solid var(--popup-border);
 	border-inline-start: 2px solid var(--popup-accent);
 	border-radius: var(--radius-lg);
 	background: var(--popup-bg);
-	backdrop-filter: blur(14px) saturate(1.15);
-	-webkit-backdrop-filter: blur(14px) saturate(1.15);
+	backdrop-filter: var(--popup-glass-blur);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
 	box-shadow: var(--popup-shadow);
 	color: var(--popup-text);
 	cursor: pointer;
@@ -87,17 +85,14 @@
 }
 
 /*
- * ui-close-button owns size/padding/hover chrome — only reveal + grid placement.
- * Do not add padding here (that was the double-pad bug).
+ * ui-close-button owns the disc hit target — only reveal + grid placement.
+ * Sit inside the card pad; do not pull the × onto the border.
  */
 .notification-close {
 	flex: 0 0 auto;
 	align-self: start;
 	opacity: 0;
 	transition: opacity 0.15s ease;
-	/* Nudge into the card’s end edge without stacking host padding on the ×. */
-	margin-block-start: calc(-1 * var(--space-1));
-	margin-inline-end: calc(-1 * var(--space-1));
 }
 
 .notification:hover .notification-close,

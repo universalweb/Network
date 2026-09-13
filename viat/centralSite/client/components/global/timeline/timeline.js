@@ -2,9 +2,10 @@
 	DESCRIPTION: ui-timeline — a vertical (default) or horizontal event stream
 	(tx history, block events, audit trail). Binds `items[]`
 	({ time, label, description, icon, tone }) straight off state via list(); each
-	row is a flat light html row (shared CSS — no nested timeline-item shadow).
+	row is a feature-light row (click + circle tooltip; shared CSS — no nested
+	timeline-item shadow). Emits timeline:select { item, index }.
 	The parent owns orientation + density decoration as host data-* attrs that set
-	layout custom properties for the row CSS. Display-only.
+	layout custom properties for the row CSS.
 	── STANDARD USAGE ───────────────────────────────────────────────────
 	  <ui-timeline .state.items=${[
 	    { time: '12:04', label: 'Block 4821 sealed', tone: 'success', icon: 'check' },
@@ -13,7 +14,7 @@
 	─────────────────────────────────────────────────────────────────────
 */
 import '../icon/icon.js';
-import { html, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 export class UITimeline extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -40,9 +41,16 @@ export class UITimeline extends WebComponent {
 	itemKey(item) {
 		return item.id ?? item.label ?? item.time;
 	}
+	handleItemClick(domEvent, item, itemIndex) {
+		this.emit('timeline:select', {
+			item,
+			index: itemIndex,
+		});
+	}
 	/*
-	 * Plain light row — display only (no @events / tooltip). Optional icon is a
-	 * nested ui-icon; time/desc stay in-DOM with ?hidden when empty.
+	 * Feature-light row — @click on the row, tooltip on the plain dot
+	 * (not a composed control). Optional icon is a nested ui-icon;
+	 * time/desc stay in-DOM with ?hidden when empty.
 	 */
 	timelineItemRow(item) {
 		const tone = item?.tone || 'neutral';
@@ -50,18 +58,19 @@ export class UITimeline extends WebComponent {
 		const time = item?.time || '';
 		const label = item?.label || '';
 		const description = item?.description || '';
-		return html`
-			<div class="tli" role="listitem">
-				<div class="tli-rail" aria-hidden="true">
-					<span class="tli-dot" data-tone=${tone}>
+		const tip = item?.tooltip || label;
+		return this.partial`
+			<div class="timeline" role="listitem" @click=${this.handleItemClick}>
+				<div class="timeline-rail">
+					<span class="timeline-dot" data-tone=${tone} tooltip=${tip}>
 						<ui-icon .state.name=${icon} .state.size=${'xs'} ?hidden=${!icon}></ui-icon>
 					</span>
-					<span class="tli-line"></span>
+					<span class="timeline-line"></span>
 				</div>
-				<div class="tli-body">
-					<span class="tli-time" ?hidden=${!time}>${time}</span>
-					<span class="tli-label">${label}</span>
-					<span class="tli-desc" ?hidden=${!description}>${description}</span>
+				<div class="timeline-body">
+					<span class="timeline-time" ?hidden=${!time}>${time}</span>
+					<span class="timeline-label">${label}</span>
+					<span class="timeline-desc" ?hidden=${!description}>${description}</span>
 				</div>
 			</div>`;
 	}

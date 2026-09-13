@@ -2,39 +2,40 @@
 	display: block;
 	min-block-size: 0;
 }
-.sa {
+.scroll-area {
 	position: relative;
 	min-block-size: 0;
 	border-radius: inherit;
 }
-.sa-viewport {
+.scroll-area-viewport {
 	block-size: 100%;
-	max-block-size: inherit;
+	/* max-block-size is set INLINE by viewportStyle(). It is not an inherited
+	   property, so it cannot be handed down from `.scroll-area`. */
 	overflow: auto;
 	overscroll-behavior: contain;
 	scrollbar-gutter: stable;
 	scrollbar-width: thin;
 	scrollbar-color: color-mix(in oklch, var(--text-muted) 45%, transparent) transparent;
 }
-.sa[data-orientation='vertical'] .sa-viewport {
+.scroll-area[data-orientation='vertical'] .scroll-area-viewport {
 	overflow-x: hidden;
 	overflow-y: auto;
 }
-.sa[data-orientation='horizontal'] .sa-viewport {
+.scroll-area[data-orientation='horizontal'] .scroll-area-viewport {
 	overflow-x: auto;
 	overflow-y: hidden;
 }
-.sa[data-orientation='both'] .sa-viewport {
+.scroll-area[data-orientation='both'] .scroll-area-viewport {
 	overflow: auto;
 }
-.sa-viewport::-webkit-scrollbar {
+.scroll-area-viewport::-webkit-scrollbar {
 	inline-size: 0.45rem;
 	block-size: 0.45rem;
 }
-.sa-viewport::-webkit-scrollbar-thumb {
+.scroll-area-viewport::-webkit-scrollbar-thumb {
 	background: color-mix(in oklch, var(--text-muted) 40%, transparent);
 	border-radius: 999px;
 }
-.sa-viewport::-webkit-scrollbar-track {
+.scroll-area-viewport::-webkit-scrollbar-track {
 	background: transparent;
 }

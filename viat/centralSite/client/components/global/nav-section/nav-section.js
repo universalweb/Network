@@ -4,13 +4,27 @@
 	slides the active panel under the new trigger (x.ai/api-style) and resizes
 	the shell to the pane. Plain `href` items are links with no panel.
 	Extends UIMenu for leave-watch + pad geometry (keepOpenRect = bar).
+	Pane slide/resize is PaneTrack (shared with ui-menubar). Open/close/scroll
+	is SurfaceController. popover="auto" — UA owns Esc; do NOT join the stack.
+	REJECTED MorphSurface as host — native auto popover is the top-layer
+	escape; MorphSurface's fixed overlay in shadow cannot. tk:144 skipped
+	auto menus for this reason, not by accident.
+	REJECTED a third sliding-dropdown CE — UIMenu + menu-surface + PaneTrack
+	is the mechanism; visual identity stays in nav-section.css.
 	── EVENTS ───────────────────────────────────────────────────────────
 	  nav-section:open   { id, index }
 	  nav-section:close  { id, index }
 	  nav-section:select { id, item, index, href? }
 */
 import { applyAnchor, computeAnchor } from '../../core/dom/anchor.js';
-import { HideOnScroll } from '../../core/dom/hideOnScroll.js';
+import {
+	layoutViewport,
+	markSwitch,
+	resetViewportSize,
+	stampPaneStates,
+} from '../../core/dom/paneTrack.js';
+import { rafCoalesce, rafCoalesceCancel } from '../../core/dom/rafCoalesce.js';
+import { SurfaceController } from '../../core/dom/surfaceController.js';
 import { UIMenu } from '../menu/menu.js';
 import { UINavPane } from '../nav-pane/nav-pane.js';
 import { UINavTrigger } from '../nav-trigger/nav-trigger.js';
@@ -21,6 +35,7 @@ export class UINavSection extends UIMenu {
 		// Drop UIMenu trigger chrome — we only need the shared panel surface.
 		menu: null,
 		menuSurface: '../menu/menu-surface.css',
+		slidePane: '../../core/dom/slide-pane.css',
 		navSection: './nav-section.css',
 	};
 	static state = {
@@ -47,15 +62,29 @@ export class UINavSection extends UIMenu {
 	focusedTrigger = 0;
 	keyboardOpen = false;
 	escFocusReturn = -1;
-	layoutFrame = null;
 	onConnect() {
 		this.observe('items', this.stampItems);
 		this.stampItems();
-		this.scrollHide ??= new HideOnScroll(this, 'closeFromScroll', {
+		this.on('tabs:change', this.onSlottedTabsChange);
+		this.ensureSurfaceCtl();
+	}
+	ensureSurfaceCtl() {
+		this.surfaceCtl ??= new SurfaceController(this, {
+			surface: () => {
+				return this.refs.surface;
+			},
+			closeMethod: 'closeFromScroll',
 			keepOpen: () => {
 				return this.refs.surface;
 			},
 		});
+		return this.surfaceCtl;
+	}
+	onSlottedTabsChange() {
+		if (this.openIndex < 0) {
+			return;
+		}
+		this.scheduleLayout();
 	}
 	onMount() {
 		this.syncPaneSlots();
@@ -65,12 +94,9 @@ export class UINavSection extends UIMenu {
 		this.queueSlotSync();
 	}
 	onDisconnect() {
-		this.scrollHide?.detach();
+		this.surfaceCtl?.detach();
 		this.disarmLeaveWatch();
-		if (this.layoutFrame != null) {
-			cancelAnimationFrame(this.layoutFrame);
-			this.layoutFrame = null;
-		}
+		rafCoalesceCancel(this);
 	}
 	closeFromScroll() {
 		if (this.state.closeOnScroll === false) {
@@ -192,21 +218,7 @@ export class UINavSection extends UIMenu {
 	}
 	/* Paint slide/active onto live panes — not the items array. */
 	syncPanelFlags() {
-		const panes = this.findComponents('ui-nav-pane') || [];
-		const activePanel = this.openPanelIndex;
-		const count = panes.length;
-		for (let index = 0; index < count; index += 1) {
-			const pane = panes[index];
-			const panelIndex = Number(pane.state.panelIndex);
-			const active = activePanel >= 0 && panelIndex === activePanel;
-			const slideOffset = activePanel >= 0 ? panelIndex - activePanel : 0;
-			if (pane.state.active !== active) {
-				pane.state.active = active;
-			}
-			if (pane.state.slideOffset !== slideOffset) {
-				pane.state.slideOffset = slideOffset;
-			}
-		}
+		stampPaneStates(this.findComponents('ui-nav-pane') || [], this.openPanelIndex);
 	}
 	/* Leave-watch region = whole trigger bar (UIMenu default is #trigger). */
 	keepOpenRect() {
@@ -238,14 +250,12 @@ export class UINavSection extends UIMenu {
 		this.syncTriggerFlags();
 		this.syncPanelFlags();
 		const wasOpen = surface.matches(':popover-open');
+		markSwitch(surface, wasOpen);
 		if (wasOpen) {
-			// Switching menus while open — suppress first-open scale/fade re-trigger.
-			surface.dataset.switch = '';
 			this.layoutPanels();
 			this.position();
 		} else {
-			delete surface.dataset.switch;
-			surface.showPopover();
+			this.ensureSurfaceCtl().show();
 		}
 		this.emit('nav-section:open', {
 			id: item.id,
@@ -269,21 +279,13 @@ export class UINavSection extends UIMenu {
 		this.openPanelIndex = -1;
 		this.syncTriggerFlags();
 		this.syncPanelFlags();
-		this.resetViewportSize();
+		resetViewportSize(this.refs.viewport);
 		if (closing >= 0 && item) {
 			this.emit('nav-section:close', {
 				id: item.id,
 				index: closing,
 			});
 		}
-	}
-	resetViewportSize() {
-		const panelViewport = this.refs.viewport;
-		if (!panelViewport) {
-			return;
-		}
-		panelViewport.style.width = '';
-		panelViewport.style.height = '';
 	}
 	layoutPanels() {
 		const panelViewport = this.refs.viewport;
@@ -301,40 +303,24 @@ export class UINavSection extends UIMenu {
 				break;
 			}
 		}
-		if (!activePane) {
-			return;
-		}
-		const contentWidth = Math.ceil(Math.max(
-			activePane.offsetWidth || 0,
-			activePane.getBoundingClientRect().width || 0
-		));
-		const contentHeight = Math.ceil(Math.max(
-			activePane.offsetHeight || 0,
-			activePane.getBoundingClientRect().height || 0
-		));
-		// Soft floor (~8rem) — content can still grow; avoid locking every panel to 11rem.
-		const rootSize = Number.parseFloat(getComputedStyle(globalThis.document.documentElement).fontSize) || 16;
-		const minWidth = Math.ceil(8 * rootSize);
-		if (contentWidth > 0) {
-			panelViewport.style.width = `${Math.max(minWidth, contentWidth)}px`;
-		}
-		if (contentHeight > 0) {
-			panelViewport.style.height = `${contentHeight}px`;
-		}
+		layoutViewport(panelViewport, activePane);
 	}
 	scheduleLayout() {
-		if (this.layoutFrame != null) {
-			cancelAnimationFrame(this.layoutFrame);
+		rafCoalesce(this, this.runPaneLayout);
+	}
+	runPaneLayout() {
+		if (this.isDisconnected) {
+			return;
 		}
-		this.layoutFrame = requestAnimationFrame(() => {
-			this.layoutFrame = null;
-			if (this.isDisconnected) {
-				return;
-			}
-			this.syncPaneSlots();
-			this.layoutPanels();
-			this.position();
-		});
+		this.syncPaneSlots();
+		this.layoutPanels();
+		this.position();
+	}
+	scheduleLayoutIfLive() {
+		if (this.isDisconnected) {
+			return;
+		}
+		this.scheduleLayout();
 	}
 	position() {
 		const surface = this.refs.surface;
@@ -363,9 +349,7 @@ export class UINavSection extends UIMenu {
 			surface.classList.add('is-open');
 			this.scheduleLayout();
 			this.nextFrame().then(() => {
-				if (!this.isDisconnected) {
-					this.scheduleLayout();
-				}
+				return this.scheduleLayoutIfLive();
 			});
 			if (this.keyboardOpen) {
 				surface.focus({
@@ -374,10 +358,10 @@ export class UINavSection extends UIMenu {
 			}
 			this.armLeaveWatch();
 			if (this.state.closeOnScroll !== false) {
-				this.scrollHide?.attach();
+				this.ensureSurfaceCtl().attach();
 			}
 		} else {
-			this.scrollHide?.detach();
+			this.surfaceCtl?.detach();
 			surface.classList.remove('is-open');
 			this.disarmLeaveWatch();
 			const returnFocus = this.escFocusReturn;
@@ -559,11 +543,11 @@ export class UINavSection extends UIMenu {
 					@keydown=${this.handleBarKey}>
 					${this.list('items', UINavTrigger, this.itemKey)}
 				</div>
-				<div #surface class="menu-surface nav-surface" popover="auto" tabindex="-1"
+				<div #surface class="menu-surface nav-surface glass" popover="auto" tabindex="-1"
 					@toggle=${this.handleToggle}
 					@keydown=${this.handleSurfaceKey}
 					@nav-pane:select=${this.handlePaneSelect}>
-					<div #viewport class="nav-viewport">
+					<div #viewport class="slide-viewport">
 						${this.filter('items', UINavPane, itemHasPanel, this.itemKey)}
 					</div>
 				</div>

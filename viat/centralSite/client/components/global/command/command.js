@@ -19,8 +19,7 @@ import '../icon/icon.js';
 import '../input/input.js';
 import '../kbd/kbd.js';
 import '../modal/modal.js';
-import { isArray, isFunction } from '@universalweb/utilitylib';
-import { WebComponent } from '../../core/index.js';
+import { isArray, isFunction, WebComponent } from '../../core/index.js';
 import { COLLECTION_EVENT } from '../collection/collection.js';
 import { optionIdFor, UICommandItem } from '../command-item/command-item.js';
 const ROW_STYLES = new URL('./command-rows.css', import.meta.url).href;
@@ -91,6 +90,8 @@ export class UICommand extends WebComponent {
 		tableMaxHeight: '20rem',
 		pagingStyle: 'button',
 		itemNoun: 'commands',
+		listbox: true,
+		listboxLabel: 'Commands',
 	};
 	queryKeysBound = null;
 	virtualStampHooked = false;
@@ -123,6 +124,7 @@ export class UICommand extends WebComponent {
 		this.syncInputAria();
 		this.hookVirtualStamp();
 		this.stampRowFlags();
+		this.syncOpen(this.state.open);
 	}
 	loadItems() {
 		const items = this.state.items;
@@ -291,10 +293,19 @@ export class UICommand extends WebComponent {
 	}
 	handleListPainted() {
 		this.stampRowFlags();
+		/*
+		 * `refs.list` is only reliably resolvable once the collection has painted,
+		 * so re-run the ARIA pass here — the open-time pass can run before the
+		 * listbox is available and would leave the controls link unset.
+		 */
+		this.syncInputAria();
 	}
 	async syncOpen(next) {
 		const palette = this.refs.palette;
 		if (next) {
+			if (palette?.state.open) {
+				return;
+			}
 			palette?.open();
 			this.resetActive();
 			this.stampRowFlags();
@@ -307,7 +318,9 @@ export class UICommand extends WebComponent {
 			this.focusQuery();
 			return;
 		}
-		palette?.close();
+		if (palette?.state.open) {
+			palette.close();
+		}
 	}
 	focusQuery() {
 		const field = this.refs.query;
@@ -327,21 +340,51 @@ export class UICommand extends WebComponent {
 		this.queryKeysBound = nativeInput;
 		this.addEvent('keydown', this.handleKeydown, nativeInput);
 	}
+	/**
+	 * Point an ARIA relationship at an ELEMENT rather than an id string.
+	 * @param {Element} host - Element carrying the relationship.
+	 * @param {string} property - Reflection property, e.g. ariaControlsElements.
+	 * @param {Element|Element[]|null} target - What it should point at.
+	 * @returns {boolean} True when the property existed and was assigned.
+	 */
+	linkAriaElement(host, property, target) {
+		if (!host || !(property in host)) {
+			return false;
+		}
+		host[property] = target;
+		return true;
+	}
+	/*
+	 * ARIA IDREFs cannot cross a shadow boundary, and this palette spans THREE
+	 * roots: the real <input> is inside ui-input's, `#command-list` is the
+	 * ui-collection host in OUR root, and every ui-command-item is inside
+	 * ui-collection's. So `aria-controls="command-list"` was set on an element that
+	 * could not see its target. Measured, not assumed: from the input's own
+	 * root, getElementById returned null for it.
+	 *
+	 * `ariaControlsElements` takes an element REFERENCE and IS valid here,
+	 * because the collection host sits in a shadow-including ANCESTOR scope of
+	 * the input. Verified in-browser: the property reads back as that host.
+	 *
+	 * `aria-activedescendant` cannot live on the input: the options sit in a
+	 * sibling tree (ui-collection's shadow). Hosting a shadow is also not an
+	 * ancestor scope, so putting it on the collection HOST is equally inert.
+	 * The real relationship is inside the collection: `.collection-rows` (opt-in
+	 * `listbox: true`) and the option CEs share that shadow.
+	 */
 	syncInputAria() {
 		const nativeInput = this.refs.query?.refs?.input;
 		if (!nativeInput) {
 			return;
 		}
 		nativeInput.setAttribute('role', 'combobox');
-		nativeInput.setAttribute('aria-controls', 'cmd-list');
+		nativeInput.setAttribute('aria-controls', 'command-list');
 		nativeInput.setAttribute('aria-autocomplete', 'list');
 		nativeInput.setAttribute('aria-expanded', this.state.open ? 'true' : 'false');
-		const activeId = this.activeOptionId();
-		if (activeId) {
-			nativeInput.setAttribute('aria-activedescendant', activeId);
-		} else {
-			nativeInput.removeAttribute('aria-activedescendant');
-		}
+		nativeInput.removeAttribute('aria-activedescendant');
+		const listbox = this.refs.list;
+		this.linkAriaElement(nativeInput, 'ariaControlsElements', listbox ? [listbox] : []);
+		this.linkAriaElement(nativeInput, 'ariaActiveDescendantElement', null);
 	}
 	handleQuery(domEvent) {
 		const next = domEvent.detail?.data?.value ?? '';
@@ -441,6 +484,9 @@ export class UICommand extends WebComponent {
 		this.close();
 	}
 	handleModalClose() {
+		if (!this.state.open) {
+			return;
+		}
 		this.assignState({
 			open: false,
 			query: '',
@@ -472,15 +518,16 @@ export class UICommand extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="cmd">
+			<div class="command">
 				<ui-modal #palette
 					.state.modal=${true}
+					.state.skin=${'glass'}
 					.state.closeOnBackdrop=${true}
 					.state.autoFocus=${this.modalFocusTarget}
 					@modal:close=${this.handleModalClose}>
-					<div class="cmd-dialog" role="dialog" aria-label="Command palette" aria-modal="true">
+					<div class="command-dialog" role="dialog" aria-label="Command palette" aria-modal="true">
 						<ui-input #query
-							class="cmd-field"
+							class="command-field"
 							.state.value=${this.state.query}
 							.state.placeholder=${this.state.placeholder}
 							.state.type=${'search'}
@@ -488,20 +535,18 @@ export class UICommand extends WebComponent {
 							@input:input=${this.handleQuery}>
 							<ui-icon slot="leading" .state.name=${'search'} .state.size=${'sm'}></ui-icon>
 						</ui-input>
-						<div class="cmd-listbox">
+						<div class="command-listbox">
 							<ui-collection #list
-								id="cmd-list"
-								role="listbox"
-								aria-label="Commands"
-								aria-activedescendant=${this.activeOptionId}
+								id="command-list"
 								.state=${this.listConfig}
 								.state.filterArg=${this.state.query}
+								.state.activeId=${this.activeOptionId}
 								.state.emptyMessage=${this.state.emptyMessage}
 								.importStyles=${this.state.rowStyles}
 								@items:loaded=${this.handleListPainted}
 								@command-item:select=${this.handleItemSelect}></ui-collection>
 							<ui-empty-state
-								class="cmd-empty"
+								class="command-empty"
 								?hidden=${this.hasVisibleItems}
 								.state.heading=${this.state.emptyMessage}></ui-empty-state>
 						</div>

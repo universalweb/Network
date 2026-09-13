@@ -18,23 +18,25 @@ export class UIPanelHeader extends WebComponent {
 		heading: '',
 		showClose: false,
 		closeLabel: 'Close',
+		closeIcon: 'x',
 	};
 	handleCloseClick() {
 		this.emit('panel-header:close', {});
 	}
 	render() {
 		this.html`
-			<header class="ph">
-				<div class="ph-start">
+			<header class="panel-header">
+				<div class="panel-header-start">
 					<slot name="start"></slot>
 				</div>
-				<span class="ph-heading">${this.state.heading}</span>
-				<div class="ph-end">
+				<span class="panel-header-heading">${this.state.heading}</span>
+				<div class="panel-header-end">
 					<slot name="end"></slot>
 					<ui-close-button
-						class="ph-close"
+						class="panel-header-close"
 						?hidden=${!this.state.showClose}
 						.state.label=${this.state.closeLabel}
+						.state.icon=${this.state.closeIcon}
 						@close-button:click=${this.handleCloseClick}></ui-close-button>
 				</div>
 			</header>

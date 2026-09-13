@@ -26,8 +26,8 @@ export class UIAiModelSelect extends WebComponent {
 	}
 	render() {
 		this.html`
-			<label class="aims">
-				<span class="aims-label" ?hidden=${!this.state.label}>${this.state.label}</span>
+			<label class="ai-model-select">
+				<span class="ai-model-select-label" ?hidden=${!this.state.label}>${this.state.label}</span>
 				<ui-select
 					.state.value=${this.state.value}
 					.state.items=${this.state.items}

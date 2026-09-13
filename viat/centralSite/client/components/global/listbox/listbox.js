@@ -1,17 +1,24 @@
 /*
-	DESCRIPTION: ui-listbox — inline list selection (PrimeVue Listbox).
+	DESCRIPTION: ui-listbox — inline list selection.
 	Items {id,label,value,disabled?} via list('items') — filter hides rows
 	(?hidden) so active stamps on items still hit the list deep-write path.
 	Rows are this.partial (flat — no child CE). Single mode tracks `value`;
-	multi tracks `values[]`. Emits listbox:change {value,values,item,items}.
+	multi tracks `values[]`. Optional Select all (multi only, off by default)
+	toggles the VISIBLE selectable set — first click writes those values,
+	second click (already all-visible-selected) writes []. Disabled and
+	filtered-out rows are skipped. Emits listbox:change {value,values,item,items}.
 	── USAGE ────────────────────────────────────────────────────────────
 	  <ui-listbox .state.items=${[{id:'a',label:'Alpha',value:'a'}]}
 	    .state.value=${'a'} @listbox:change=${this.onPick}></ui-listbox>
 	  Multi: .state.multiple=${true} .state.values=${['a','c']}
 	─────────────────────────────────────────────────────────────────────
 */
-import { hasValue, isArray, isString } from '@universalweb/utilitylib';
-import { WebComponent } from 'webcomponent';
+import {
+	hasValue,
+	isArray,
+	isString,
+	WebComponent,
+} from 'webcomponent';
 /**
  * Selection key for a standard item.
  * @param {object} item - Component-standard item.
@@ -66,6 +73,7 @@ export class UIListbox extends WebComponent {
 		query: '',
 		emptyMessage: 'No results.',
 		filtered: [],
+		showSelectAll: false,
 	};
 	// Keyboard cursor — not reactive (must not tear the list on arrow).
 	focusIndex = -1;
@@ -205,6 +213,59 @@ export class UIListbox extends WebComponent {
 		}
 		return this.state.value === '' ? [] : [this.state.value];
 	}
+	hideSelectAll() {
+		return this.state.multiple !== true || this.state.showSelectAll !== true;
+	}
+	visibleSelectableValues() {
+		const items = isArray(this.state.items) ? this.state.items : [];
+		const next = [];
+		const itemCount = items.length;
+		for (let index = 0; index < itemCount; index += 1) {
+			const item = items[index];
+			if (!item || item.disabled || item.visible === false) {
+				continue;
+			}
+			next.push(listboxItemValue(item));
+		}
+		return next;
+	}
+	allVisibleSelected() {
+		const visible = this.visibleSelectableValues();
+		if (visible.length === 0) {
+			return false;
+		}
+		const chosen = new Set(this.selectedValues());
+		const count = visible.length;
+		for (let index = 0; index < count; index += 1) {
+			if (!chosen.has(visible[index])) {
+				return false;
+			}
+		}
+		return true;
+	}
+	allVisiblePressed() {
+		return this.allVisibleSelected() ? 'true' : 'false';
+	}
+	handleSelectAll() {
+		if (this.state.disabled || this.hideSelectAll()) {
+			return;
+		}
+		const visible = this.visibleSelectableValues();
+		if (visible.length === 0) {
+			return;
+		}
+		if (this.allVisibleSelected()) {
+			this.state.values = [];
+		} else {
+			this.state.values = visible;
+		}
+		this.emit('listbox:change', {
+			value: null,
+			values: this.selectedValues(),
+			item: null,
+			items: this.selectedItems(),
+		});
+	}
 	selectedItems() {
 		const chosen = new Set(this.selectedValues());
 		const items = isArray(this.state.items) ? this.state.items : [];
@@ -313,23 +374,19 @@ export class UIListbox extends WebComponent {
 		domEvent.stopPropagation();
 	}
 	itemRow(item) {
-		const label = listboxItemLabel(item);
-		const member = item?.selected === true;
-		const mark = member ? '✓' : '';
 		// Bind list('items'): membership + filter visibility stamp items.* —
 		// list deep-write repaint only tracks the bound key path.
-		const visible = item?.visible !== false;
 		return this.partial`
-			<button type="button" class="lb-item" role="option"
-				?hidden=${!visible}
+			<button type="button" class="listbox-item" role="option"
+				?hidden=${item?.visible === false}
 				?disabled=${item?.disabled}
-				?data-selected=${member}
+				?data-selected=${item?.selected === true}
 				?data-active=${item?.active}
 				?data-focused=${item?.focused}
-				aria-selected=${member ? 'true' : 'false'}
+				aria-selected=${item?.selected === true ? 'true' : 'false'}
 				@click=${this.handleItemClick}>
-				<span class="lb-check">${mark}</span>
-				<span class="lb-label">${label}</span>
+				<span class="listbox-check">${item?.selected === true ? '✓' : ''}</span>
+				<span class="listbox-label">${listboxItemLabel(item)}</span>
 			</button>`;
 	}
 	hasVisible() {
@@ -337,23 +394,29 @@ export class UIListbox extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="lb"
+			<div class="listbox"
 				?data-disabled=${this.state.disabled}
 				?data-multiple=${this.state.multiple}
 				?data-filterable=${this.state.filterable}>
-				<input class="lb-filter" type="search"
+				<input class="listbox-filter" type="search"
 					?hidden=${this.state.filterable !== true}
 					?disabled=${this.state.disabled}
 					placeholder="Filter…"
 					$value="query"
 					@input=${this.stopNative}>
-				<div class="lb-list" role="listbox"
+				<button
+					class="listbox-select-all"
+					type="button"
+					?hidden=${this.hideSelectAll}
+					aria-pressed=${this.allVisiblePressed}
+					@click=${this.handleSelectAll}>Select all</button>
+				<div class="listbox-list" role="listbox"
 					tabindex=${this.state.disabled ? '-1' : '0'}
 					aria-disabled=${this.state.disabled ? 'true' : 'false'}
 					aria-multiselectable=${this.state.multiple ? 'true' : 'false'}
 					@keydown=${this.handleKey}>
 					${this.list('items', this.itemRow, listboxItemKey)}
-					<div class="lb-empty" ?hidden=${this.hasVisible}>${this.state.emptyMessage}</div>
+					<div class="listbox-empty" ?hidden=${this.hasVisible}>${this.state.emptyMessage}</div>
 				</div>
 			</div>
 		`;

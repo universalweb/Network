@@ -8,22 +8,30 @@
 	background: color-mix(in oklch, var(--bg-panel) 55%, transparent);
 }
 /* Promote cells into the host row box. */
-.tb-row {
+.table-row {
 	display: contents;
 }
-.tb-td {
+/*
+ * ui-table-cell is light-DOM inside THIS shadow. Its own sheet is
+ * document-scoped and cannot pierce here. contents promotes the inner
+ * <td> into the table-row host box.
+ */
+.table-row > ui-table-cell {
+	display: contents;
+}
+.table-cell {
 	display: table-cell;
-	/* Inherit density pad from parent .tb (custom props pierce shadow). */
-	padding-block: var(--tb-cell-pad-block, 0.65rem);
-	padding-inline: var(--tb-cell-pad-inline, 0.85rem);
+	/* Inherit density pad from parent .table-frame (custom props pierce shadow). */
+	padding-block: var(--table-cell-pad-block, 0.65rem);
+	padding-inline: var(--table-cell-pad-inline, 0.85rem);
 	text-align: start;
 	vertical-align: middle;
 	border-block-end: 1px solid color-mix(in oklch, var(--text-muted) 12%, transparent);
 	color: inherit;
 }
-.tb-td[data-align='end'] {
+.table-cell[data-align='end'] {
 	text-align: end;
 }
-.tb-td[data-align='center'] {
+.table-cell[data-align='center'] {
 	text-align: center;
 }

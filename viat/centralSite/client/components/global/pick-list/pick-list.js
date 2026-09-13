@@ -2,7 +2,7 @@
 	DESCRIPTION: ui-pick-list — dual-list transfer (source ↔ target).
 	`items` is the source; `target` is the transferred collection. Rows own
 	`selected` (toggled at event-time on the bound item). Uncontrolled after seed.
-	`reorderTarget` (default true): PrimeVue-style up/down/top/bottom on the
+	`reorderTarget` (default true): up/down/top/bottom reordering on the
 	target pane for selected rows (no second list implementation — mutate target).
 	── EVENTS ───────────────────────────────────────────────────────────
 	  pick-list:change { items, target }
@@ -56,7 +56,7 @@ export class UIPickItem extends WebComponent {
 	}
 	render() {
 		this.html`
-			<button type="button" class="pk-item" role="option"
+			<button type="button" class="pick-list-item" role="option"
 				?data-selected=${this.state.selected}
 				?disabled=${this.state.disabled}
 				aria-selected=${this.state.selected ? 'true' : 'false'}
@@ -88,9 +88,9 @@ export class UIPickList extends WebComponent {
 	}
 	/**
 	 * Reorder selected target rows.
-	 * - ±1: each selected index steps independently (PrimeVue parity — scattered
-	 *   selections do NOT collapse into one block).
-	 * - start/end: gather selected (relative order kept) to top/bottom.
+	 * ±1 steps each selected index independently, so scattered selections do
+	 * NOT collapse into one block; start/end gathers the selected rows to an
+	 * edge, keeping their relative order.
 	 * Disabled rows are never movers (selection-driven), but may be displaced when
 	 * a selected row steps past them — position is not locked.
 	 * @param {number|'start'|'end'} move - Step or edge.
@@ -369,7 +369,7 @@ export class UIPickList extends WebComponent {
 		const pathCount = path.length;
 		for (let index = 0; index < pathCount; index += 1) {
 			const node = path[index];
-			if (node?.classList?.contains('pk-item') && !node.disabled) {
+			if (node?.classList?.contains('pick-list-item') && !node.disabled) {
 				domEvent.preventDefault();
 				node.click();
 				return;
@@ -378,48 +378,48 @@ export class UIPickList extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="pk">
-				<section class="pk-pane">
-					<header class="pk-head">${this.state.sourceHeading}</header>
-					<div class="pk-list" role="listbox" tabindex="0" aria-multiselectable="true"
+			<div class="pick-list">
+				<section class="pick-list-pane">
+					<header class="pick-list-head">${this.state.sourceHeading}</header>
+					<div class="pick-list-list" role="listbox" tabindex="0" aria-multiselectable="true"
 						@pick-item:select=${this.handleSourceSelect}
 						@keydown=${this.handleListKey}>
 						${this.list('items', UIPickItem, this.itemKey)}
 					</div>
 				</section>
-				<div class="pk-actions">
-					<button type="button" class="pk-btn" tooltip="Add selected" aria-label="Add selected" @click=${this.addSelected}>
+				<div class="pick-list-actions">
+					<button type="button" class="pick-list-btn" tooltip="Add selected" aria-label="Add selected" @click=${this.addSelected}>
 						<ui-icon .state.name=${'chevron-right'} .state.size=${'sm'}></ui-icon>
 					</button>
-					<button type="button" class="pk-btn" tooltip="Add all" aria-label="Add all" @click=${this.addAll}>
+					<button type="button" class="pick-list-btn" tooltip="Add all" aria-label="Add all" @click=${this.addAll}>
 						<ui-icon .state.name=${'chevrons-right'} .state.size=${'sm'}></ui-icon>
 					</button>
-					<button type="button" class="pk-btn" tooltip="Remove selected" aria-label="Remove selected" @click=${this.removeSelected}>
+					<button type="button" class="pick-list-btn" tooltip="Remove selected" aria-label="Remove selected" @click=${this.removeSelected}>
 						<ui-icon .state.name=${'chevron-left'} .state.size=${'sm'}></ui-icon>
 					</button>
-					<button type="button" class="pk-btn" tooltip="Remove all" aria-label="Remove all" @click=${this.removeAll}>
+					<button type="button" class="pick-list-btn" tooltip="Remove all" aria-label="Remove all" @click=${this.removeAll}>
 						<ui-icon .state.name=${'chevrons-left'} .state.size=${'sm'}></ui-icon>
 					</button>
 				</div>
-				<section class="pk-pane">
-					<header class="pk-head">${this.state.targetHeading}</header>
-					<div class="pk-target-body">
-						<div class="pk-list" role="listbox" tabindex="0" aria-multiselectable="true"
+				<section class="pick-list-pane">
+					<header class="pick-list-head">${this.state.targetHeading}</header>
+					<div class="pick-list-target-body">
+						<div class="pick-list-list" role="listbox" tabindex="0" aria-multiselectable="true"
 							@pick-item:select=${this.handleTargetSelect}
 							@keydown=${this.handleListKey}>
 							${this.list('target', UIPickItem, this.itemKey)}
 						</div>
-						<div class="pk-reorder" ?hidden=${this.hideReorder}>
-							<button type="button" class="pk-btn" tooltip="Move to top" aria-label="Move to top" @click=${this.reorderTop}>
+						<div class="pick-list-reorder" ?hidden=${this.hideReorder}>
+							<button type="button" class="pick-list-btn" tooltip="Move to top" aria-label="Move to top" @click=${this.reorderTop}>
 								<ui-icon .state.name=${'chevrons-up'} .state.size=${'sm'}></ui-icon>
 							</button>
-							<button type="button" class="pk-btn" tooltip="Move up" aria-label="Move up" @click=${this.reorderUp}>
+							<button type="button" class="pick-list-btn" tooltip="Move up" aria-label="Move up" @click=${this.reorderUp}>
 								<ui-icon .state.name=${'chevron-up'} .state.size=${'sm'}></ui-icon>
 							</button>
-							<button type="button" class="pk-btn" tooltip="Move down" aria-label="Move down" @click=${this.reorderDown}>
+							<button type="button" class="pick-list-btn" tooltip="Move down" aria-label="Move down" @click=${this.reorderDown}>
 								<ui-icon .state.name=${'chevron-down'} .state.size=${'sm'}></ui-icon>
 							</button>
-							<button type="button" class="pk-btn" tooltip="Move to bottom" aria-label="Move to bottom" @click=${this.reorderBottom}>
+							<button type="button" class="pick-list-btn" tooltip="Move to bottom" aria-label="Move to bottom" @click=${this.reorderBottom}>
 								<ui-icon .state.name=${'chevrons-down'} .state.size=${'sm'}></ui-icon>
 							</button>
 						</div>

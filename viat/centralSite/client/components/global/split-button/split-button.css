@@ -1,7 +1,7 @@
 /*
  * Structure only — colors come from framework button tones on the halves.
  * Goal: one unified pill (x.ai "Try for free") — shared hover/open paint,
- * no press squash, chevron INVERTS on open (scaleY flip — not a center spin).
+ * no press squash, chevron inverts on open (ui-invert-arrow).
  */
 :host {
 	display: inline-flex;
@@ -12,13 +12,19 @@
 }
 
 .split {
+	position: relative;
 	display: inline-flex;
 	align-items: stretch;
 	max-inline-size: 100%;
 	border-radius: 999px;
-	/* Cluster lift — both halves ride the same elevation (one control). */
+	overflow: hidden;
+	/* Elevation only — never append an inset ring here. Mixing --elev-N
+	   (3 layers) with an extra inset made the ring interpolate through
+	   rgba(0,0,0,0) on enter/leave (measured on the preview). */
 	transition: box-shadow 0.16s ease, filter 0.16s ease;
 	box-shadow: var(--elev-1, 0 2px 8px rgba(0, 0, 0, 0.18));
+	/* Pin brightness at rest so hover interpolates 1 → 1.06, not none → filter. */
+	filter: brightness(1);
 }
 
 .split:hover,
@@ -27,60 +33,81 @@
 	filter: brightness(1.06);
 }
 
-/* Pill seam — --ui-btn-radius pierces into framework size rules.
-   Kill press-squash: x.ai pill is static on click (chevron motion only). */
+.split::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	pointer-events: none;
+	box-shadow: inset 0 0 0 1px currentColor;
+	opacity: 0;
+	transition: opacity 0.16s ease;
+}
+
+.split:has(> [data-variant='outline'])::after {
+	opacity: 0.22;
+}
+
+.split:has(> [data-variant='outline']):hover::after,
+.split:has(> [data-variant='outline'])[data-open]::after {
+	opacity: 0.32;
+}
+
+/* Pill seam — --ui-btn-radius pierces into framework size rules. */
 .split-primary {
 	--ui-btn-radius: 999px 0 0 999px;
-	--ui-btn-press-scale: 1;
 	border-start-end-radius: 0;
 	border-end-end-radius: 0;
+	border-width: 0;
 }
 
 .split-caret {
 	--ui-btn-radius: 0 999px 999px 0;
-	--ui-btn-press-scale: 1;
-	margin-inline-start: -1px;
-	/* Tight chevron lane; height matches primary via stretch + size tokens. */
-	padding-inline: 0.55em;
-	min-inline-size: 2.25em;
+	border-start-start-radius: 0;
+	border-end-start-radius: 0;
+	border-width: 0;
+	padding-inline: 0.45em 0.7em;
+	min-inline-size: 2em;
 	inline-size: auto;
-}
-
-/* Cluster filter already unifies hover paint across both halves; keep seam
-   stacking flat so one half doesn't pop above the other as a separate chip. */
-
-/* Divider between label and caret (inset hairline). */
-.split-caret {
 	position: relative;
 }
-.split-caret::before {
-	content: '';
+
+/*
+ * Cluster filter already unifies hover paint. Kill the framework MD3
+ * state-layer on each half — that ::after 0→0.08 opacity is a second
+ * hover surface and reads as a flash at the seam (measured: halves
+ * ::after 0 rest / 0.08 hover while cluster layer-count stays 1).
+ */
+.split-primary::after,
+.split-caret::after,
+.split:hover .split-primary::after,
+.split:hover .split-caret::after,
+.split[data-open] .split-primary::after,
+.split[data-open] .split-caret::after {
+	opacity: 0;
+}
+
+/* Divider between label and caret (inset hairline). Real node — framework
+   data-variant already owns ::before (ripple) / ::after (state-layer). */
+.split-seam {
 	position: absolute;
 	inset-block: 22%;
 	inset-inline-start: 0;
 	inline-size: 1px;
 	background: color-mix(in oklab, currentColor 22%, transparent);
 	pointer-events: none;
-	z-index: 2;
+	z-index: 1;
 }
 
-/* Chevron — vertical invert (scaleY), not rotate(180). Spin orbits the glyph
-   around its center; scaleY flips through the mid-line so the tip swaps ends
-   without a cartwheel. */
 .split-chevron {
 	display: block;
 	line-height: 1;
 	pointer-events: none;
 	color: currentColor;
-	--icon-color-hover: currentColor;
-	--icon-color-active: currentColor;
-	transform: scaleY(1);
-	transform-origin: center;
-	transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-	will-change: transform;
 }
-.split[data-open] .split-chevron {
-	transform: scaleY(-1);
+.split:hover,
+.split[data-open] {
+	--ui-invert-arrow-turn: 180deg;
 }
 
 .split-primary[aria-disabled='true'],
@@ -92,16 +119,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.split {
+	.split,
+	.split::after {
 		transition: none;
 		filter: none;
 	}
-	.split-chevron {
-		transition: none;
-		will-change: auto;
-	}
-	/* Still show inverted open state — skip the motion only. */
-	.split[data-open] .split-chevron {
-		transform: scaleY(-1);
+	.split:hover,
+	.split[data-open] {
+		--ui-invert-arrow-turn: 180deg;
 	}
 }

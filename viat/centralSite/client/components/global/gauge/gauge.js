@@ -158,7 +158,7 @@ export class UIGauge extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="gg" data-tone=${this.effectiveTone} data-readout=${this.readoutPosition}
+			<div class="gauge" data-tone=${this.effectiveTone} data-readout=${this.readoutPosition}
 				role="meter"
 				aria-label=${this.state.label || 'Gauge'}
 				aria-valuemin=${this.state.min}
@@ -166,15 +166,15 @@ export class UIGauge extends WebComponent {
 				aria-valuenow=${this.state.value}>
 				<div #plot class="chart-plot" ?data-motion=${this.state.motion}
 					@pointermove=${this.handlePointerMove} @pointerleave=${this.handlePointerLeave}>
-					<svg class="gg-svg" viewBox="0 0 200 120" role="presentation">
-						<path class="gg-track" d=${this.trackPath}></path>
-						<path class="gg-value" d=${this.valuePath} data-tip=${this.tipText}></path>
+					<svg class="gauge-svg" viewBox="0 0 200 120" role="presentation">
+						<path class="gauge-track" d=${this.trackPath}></path>
+						<path class="gauge-value" d=${this.valuePath} data-tip=${this.tipText}></path>
 					</svg>
 					<div #tip class="chart-tip" data-show="false" role="status"></div>
 				</div>
-				<div class="gg-readout">
-					<span class="gg-value-text" ?hidden=${this.hideValue}>${this.displayValue}</span>
-					<span class="gg-label" ?hidden=${this.hideLabel}>${this.state.label}</span>
+				<div class="gauge-readout">
+					<span class="gauge-value-text" ?hidden=${this.hideValue}>${this.displayValue}</span>
+					<span class="gauge-label" ?hidden=${this.hideLabel}>${this.state.label}</span>
 				</div>
 			</div>
 		`;
