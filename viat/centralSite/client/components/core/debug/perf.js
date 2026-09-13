@@ -92,7 +92,7 @@ export const Perf = {
 	},
 	/**
 	 * Snapshot the recorded categories sorted by total time desc. Each row:
-	 *   { category, count, totalMs, avgMs, p50Ms, p95Ms, maxMs }
+	 *   { category, count, totalMs, avgMs, minMs, p50Ms, p95Ms, maxMs }
 	 * Returns a fresh array of plain objects suitable for `console.table` or
 	 * for serializing to the perf log.
 	 */
@@ -112,6 +112,7 @@ export const Perf = {
 				count: entry.count,
 				totalMs: Number(entry.total.toFixed(3)),
 				avgMs: Number(avg.toFixed(4)),
+				minMs: Number((sorted[0] ?? 0).toFixed(4)),
 				p50Ms: Number(quantile(sorted, 0.5).toFixed(4)),
 				p95Ms: Number(quantile(sorted, 0.95).toFixed(4)),
 				maxMs: Number(entry.max.toFixed(4)),
@@ -148,7 +149,11 @@ function walkAllComponents(root, sink) {
 function readSubscriptionCounts(component) {
 	const stateBus = component.stateBus;
 	const stateSubs = stateBus?.subs?.size ?? 0;
-	const renderDeps = component.renderDepUnsubs?.size ?? 0;
+	/*
+	 * Local render deps live on the bus's Set channel; renderDepUnsubs holds
+	 * only the non-local (global/private) realm submaps.
+	 */
+	const renderDeps = (stateBus?.renderDeps?.size ?? 0) + (component.renderDepUnsubs?.size ?? 0);
 	const stateUnsubs = component.stateUnsubs?.byPath?.size ?? 0;
 	const globalUnsubs = component.globalUnsubs?.byPath?.size ?? 0;
 	const eventEntries = component.eventEntries?.size ?? 0;
@@ -378,6 +383,15 @@ async function bench(label, fn, options) {
 	const warmupRuns = opts.warmup ?? 5;
 	const timedRuns = opts.iterations ?? 30;
 	/*
+	 * Inner reps folded into ONE timed sample. The browser clamps
+	 * performance.now() to ~100µs (Spectre mitigation), so a single surgical op
+	 * (updateAll / precision) reads as 0. Running N idempotent reps in one timed
+	 * region and dividing lifts the signal above the clamp — the in-browser
+	 * counterpart to a node microbench's inner loop. Destructive ops keep
+	 * innerReps=1 and re-establish their pre-state via `setup`.
+	 */
+	const innerReps = opts.innerReps ?? 1;
+	/*
 	 * Optional per-iteration setup — run before each timed `fn` but EXCLUDED
 	 * from the sample, so a destructive op (e.g. "create from empty") can
 	 * re-establish its pre-state every run without polluting the timing.
@@ -398,8 +412,10 @@ async function bench(label, fn, options) {
 			await setup();
 		}
 		const start = performance.now();
-		await fn();
-		samples[run] = performance.now() - start;
+		for (let rep = 0; rep < innerReps; rep++) {
+			await fn();
+		}
+		samples[run] = (performance.now() - start) / innerReps;
 		const heapNow = readHeapBytes();
 		if (heapNow > heapPeak) {
 			heapPeak = heapNow;
@@ -436,6 +452,7 @@ async function bench(label, fn, options) {
 	return {
 		bench: label,
 		iterations: timedRuns,
+		innerReps,
 		meanMs: round4(meanMs),
 		p50Ms: round4(percentile(sorted, 0.5)),
 		p95Ms: round4(percentile(sorted, 0.95)),

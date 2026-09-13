@@ -1,8 +1,13 @@
 import '../../global/app-bar/app-bar.js';
 import '../../global/icon/icon.js';
 import '../../global/theme-select/theme-select.js';
-import { SNAP_CURVE, SNAP_MS, WebComponent } from 'webcomponent';
+import {
+	routerStore, SNAP_CURVE, SNAP_MS, WebComponent,
+} from 'webcomponent';
 import { clampOffset, offsetIsOpen } from './pulldownOffset.js';
+/* Pulldown travel uses --z-modal so the bar paints above --z-floating (the
+   sheet). Resting chrome is --z-dock and would sit under the sheet. */
+const PULLDOWN_Z = 'var(--z-modal)';
 // `<global-top-bar>` — the Viat top bar. A thin composition over `<ui-app-bar>`:
 // it slots the brand block + theme select and supplies the three action items.
 // The drag-to-open-pulldown coupling lives *here*, not in the built-in — it
@@ -10,6 +15,9 @@ import { clampOffset, offsetIsOpen } from './pulldownOffset.js';
 // `pulldown:*` protocol the pulldown component listens for.
 export class GlobalTopBar extends WebComponent {
 	static url = import.meta.url;
+	static stores = {
+		router: routerStore,
+	};
 	static styles = {
 		globalTopBar: './global-top-bar.css',
 	};
@@ -18,24 +26,27 @@ export class GlobalTopBar extends WebComponent {
 			items: [
 				{
 					id: 'agent',
-					icon: 'bot',
+					icon: 'anim-rainbow',
 					tooltip: 'Local Agent',
 					emitName: 'toggle-pulldown',
-					animated: 'rainbow',
+				},
+				{
+					id: 'notifications',
+					icon: 'bell',
+					tooltip: 'Notifications',
+					emitName: 'notification-center:toggle',
 				},
 				{
 					id: 'settings',
-					icon: 'settings',
+					icon: 'anim-settings',
 					tooltip: 'Settings',
 					emitName: 'open-settings',
-					animated: 'settings',
 				},
 				{
 					id: 'sidebar',
-					icon: 'panel-left',
+					icon: 'anim-sidebar',
 					tooltip: 'Sidebar',
 					emitName: 'sidebar:toggle',
-					animated: 'sidebar',
 				},
 			],
 		},
@@ -45,28 +56,18 @@ export class GlobalTopBar extends WebComponent {
 	naturalTop = 0;
 	naturalBottom = 0;
 	dragStartOffset = 0;
+	externalDragLive = false;
 	onConnect() {
 		this.delegate('pulldown:toggle', this.handlePulldownState);
+		this.delegate('pulldown:dragstart', this.handleExternalDragStart);
+		this.delegate('pulldown:drag', this.handleExternalDrag);
 		this.reflectViewport();
 		/*
-		 * Adaptive flat → float, driven by the inner content scroll surface. The page
-		 * itself no longer scrolls (app.css / index.css lock it); `.shell-scroll` carries
-		 * the `scroll-report` behavior, which publishes its scrolled state to
-		 * `globalState.environment.scrolled`. Bind that flag here — `scroll` events are
-		 * composed:false and never escape the scroller's shadow, so the shared flag is the
-		 * relay. Auto-swept on disconnect (no listener / AbortController to manage).
-		 */
-		this.observeGlobal('environment.scrolled', (scrolled) => {
-			this.applyScrolled(Boolean(scrolled));
-		});
-		/*
 		 * A route change lands a fresh page; AppView resets the scroll surface to top,
-		 * so reset the bar to flat instantly here to avoid a one-frame float before the
+		 * so reset the bar to float instantly here to avoid a one-frame dock before the
 		 * scroll-report flag catches up.
 		 */
-		this.observeGlobal('routeView', () => {
-			this.applyScrolled(false);
-		});
+		this.observeStore('router', 'view', this.handleRouteChange);
 		/*
 		 * Re-float on viewport change. Subscribe to the canonical viewport
 		 * service (`viewport:resize`) rather than a raw `resize` listener: it
@@ -77,14 +78,23 @@ export class GlobalTopBar extends WebComponent {
 		 */
 		this.delegate('viewport:resize', this.handleResize);
 	}
-	applyScrolled(scrolled) {
-		this.refs.appbar?.toggleAttribute('data-scrolled', scrolled);
+	handleRouteChange() {
+		/*
+		 * AppView resets .shell-scroll to top on the same router tick.
+		 * Write the shared flag here so ScrollDock floats before scroll-report
+		 * sees the programmatic scrollTo (or if that scroll event is skipped).
+		 */
+		const environment = this.global.environment;
+		if (environment) {
+			environment.scrolled = false;
+		}
 	}
 	onMount() {
 		const appBar = this.refs.appbar;
 		if (appBar) {
 			appBar.style.touchAction = 'none';
 			appBar.style.cursor = 'grab';
+			appBar.setScrollRoot('global');
 		}
 		// The pulldown drag — the shared engine, attached to the app bar. The
 		// top bar's flip ratio is measured against the viewport height while
@@ -193,14 +203,57 @@ export class GlobalTopBar extends WebComponent {
 	handlePulldownState(domEvent) {
 		// Ignore our own `pulldown:toggle` emissions; react only when the
 		// pulldown is opened or closed by some other route.
-		if (domEvent.target === this) {
+		if (this.isOwnPulldownEvent(domEvent)) {
 			return;
 		}
 		const targetOpen = domEvent.detail?.data?.open === true;
-		if (targetOpen === this.open) {
+		// A pulldown-origin drag already moved the bar 1:1. Snap even when the
+		// committed open flag matches — otherwise an aborted close leaves the
+		// bar stranded mid-travel while the sheet springs back.
+		const mustSnap = this.externalDragLive === true;
+		this.externalDragLive = false;
+		if (targetOpen === this.open && !mustSnap) {
 			return;
 		}
 		this.snapTo(targetOpen);
+	}
+	isOwnPulldownEvent(domEvent) {
+		return domEvent.target === this || domEvent.detail?.source === this;
+	}
+	/*
+	 * Pulldown-origin drag (handle / frost). Pin the bar to the live sheet
+	 * edge instead of waiting for pulldown:toggle, which only fires on settle
+	 * and then snaps the bar from the bottom to the top.
+	 */
+	handleExternalDragStart(domEvent) {
+		if (this.isOwnPulldownEvent(domEvent)) {
+			return;
+		}
+		this.externalDragLive = true;
+		this.dragStartOffset = this.currentRenderedOffset();
+		this.measureNatural();
+		const appBar = this.refs.appbar;
+		if (!appBar) {
+			return;
+		}
+		appBar.style.transition = 'none';
+		appBar.style.transform = `translateY(${this.dragStartOffset}px)`;
+	}
+	handleExternalDrag(domEvent) {
+		if (this.isOwnPulldownEvent(domEvent)) {
+			return;
+		}
+		const appBar = this.refs.appbar;
+		const data = domEvent.detail?.data;
+		if (!appBar || typeof data?.delta !== 'number') {
+			return;
+		}
+		// Same start+delta clamp as a bar-origin drag — 1:1 with the sheet, not
+		// a progress-scaled remap that leaves the bar at the bottom until the
+		// drawer finishes its full viewport travel.
+		const targetY = clampOffset(this.dragStartOffset, data.delta, this.maxOffset());
+		appBar.style.transition = 'none';
+		appBar.style.transform = `translateY(${targetY}px)`;
 	}
 	handleDragStart() {
 		// Capture where the bar actually is RIGHT NOW (mid-snap included), then
@@ -213,7 +266,7 @@ export class GlobalTopBar extends WebComponent {
 		appBar.style.transition = 'none';
 		appBar.style.transform = `translateY(${this.dragStartOffset}px)`;
 		appBar.style.cursor = 'grabbing';
-		appBar.style.zIndex = '100';
+		appBar.style.zIndex = PULLDOWN_Z;
 		this.emit('pulldown:dragstart', {
 			open: this.open,
 		});
@@ -249,7 +302,7 @@ export class GlobalTopBar extends WebComponent {
 		appBar.style.cursor = 'grab';
 		const wasOpen = this.open;
 		this.open = willOpen;
-		appBar.style.zIndex = willOpen ? '100' : '';
+		appBar.style.zIndex = PULLDOWN_Z;
 		this.emit('pulldown:toggle', {
 			open: willOpen,
 		});
@@ -271,20 +324,18 @@ export class GlobalTopBar extends WebComponent {
 		}
 	}
 	render() {
-		this.html `
+		this.html`
 			<ui-app-bar #appbar .state=${this.state.appBar}>
-				<div slot="start" class="tb-logo">
-					<a class="tb-logo-home" href="/" aria-label="Back to dashboard">
-						<svg class="tb-logo-mark" viewBox="0 0 64 64" aria-hidden="true">
-							<path fill="currentColor" d="M 11.54 15.23 L 16.46 12.77 L 32.8 43.85 L 32 56.14 Z"></path>
-							<path fill="currentColor" d="M 52.46 15.23 L 47.54 12.77 L 31.2 43.85 L 32 56.14 Z"></path>
-							<line stroke="currentColor" stroke-width="5.5" stroke-linecap="square" x1="16" y1="32" x2="48" y2="32"></line>
-						</svg>
-						<span class="tb-logo-text">VIAT</span>
-					</a>
-					<ui-icon class="tb-logo-sep" .state.name=${'chevron-right'} .state.size=${'xs'}></ui-icon>
-					<span class="tb-subtitle">${this.state.subtitle}</span>
-				</div>
+				<a slot="start" class="top-bar-logo" href="/" aria-label="Back to dashboard">
+					<svg class="top-bar-logo-mark" viewBox="0 0 64 64" aria-hidden="true">
+						<path fill="currentColor" d="M 11.54 15.23 L 16.46 12.77 L 32.8 43.85 L 32 56.14 Z"></path>
+						<path fill="currentColor" d="M 52.46 15.23 L 47.54 12.77 L 31.2 43.85 L 32 56.14 Z"></path>
+						<line stroke="currentColor" stroke-width="5.5" stroke-linecap="square" x1="16" y1="32" x2="48" y2="32"></line>
+					</svg>
+				</a>
+				<span slot="start" class="top-bar-logo-text">VIAT</span>
+				<ui-icon slot="start" class="top-bar-logo-sep" .state.name=${'chevron-right'} .state.size=${'xs'}></ui-icon>
+				<span slot="start" class="top-bar-subtitle">${this.state.subtitle}</span>
 				<ui-theme-select slot="end"></ui-theme-select>
 			</ui-app-bar>
 		`;

@@ -1,0 +1,135 @@
+:host {
+	display: block;
+	min-inline-size: 0;
+}
+:host(.is-dragging) {
+	position: relative;
+	z-index: 2;
+	pointer-events: none;
+	will-change: transform;
+}
+:host(.is-dragging) .task-card {
+	background: var(--bg-panel, Canvas);
+	box-shadow:
+		0 0 0 1px color-mix(in oklab, var(--text-main) 12%, transparent),
+		0 0 0.75rem color-mix(in oklab, #000 35%, transparent),
+		0 0.5rem 1.25rem color-mix(in oklab, #000 48%, transparent);
+}
+:host(.is-dragging) .task-card-handle {
+	cursor: grabbing;
+}
+:host([data-grabbed]) .task-card {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 2px;
+}
+:host(:focus-visible) {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 2px;
+}
+.task-card {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	min-inline-size: 0;
+	padding: 0.45rem 0.5rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 16%, transparent);
+	border-radius: var(--radius-sm, 0.25rem);
+	background: color-mix(in oklch, var(--bg-panel, Canvas) 88%, transparent);
+	user-select: none;
+	-webkit-user-select: none;
+	cursor: pointer;
+}
+.task-card:hover {
+	background: color-mix(in oklch, currentColor 6%, transparent);
+}
+.task-card[aria-selected='true'] {
+	background: color-mix(in oklch, var(--teal, var(--cyan, currentColor)) 18%, transparent);
+}
+.task-card[data-disabled] {
+	opacity: 0.45;
+	pointer-events: none;
+}
+.task-card-head {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	min-inline-size: 0;
+}
+.task-card-label {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+	font-weight: var(--weight-medium, 500);
+	color: var(--text-main);
+}
+.task-card-label-input {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	margin: 0;
+	padding: 0.1rem 0.3rem;
+	border: 1px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	border-radius: var(--radius-sm, 0.25rem);
+	background: var(--bg-panel, Canvas);
+	color: inherit;
+	font: inherit;
+	user-select: text;
+	-webkit-user-select: text;
+}
+.task-card-badge {
+	flex: none;
+	padding-inline: 0.35rem;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: color-mix(in oklch, var(--text-muted) 16%, transparent);
+	color: var(--text-muted);
+	font-size: 0.6875rem;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+.task-card-body {
+	padding-inline-start: 2.1rem;
+	color: var(--text-muted);
+	font-size: 0.75rem;
+	line-height: 1.35;
+}
+.task-card-foot {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.35rem;
+	padding-inline-start: 2.1rem;
+	color: var(--text-muted);
+	font-size: 0.6875rem;
+}
+.task-card-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+.task-card-tag {
+	padding-inline: 0.3rem;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: color-mix(in oklch, var(--text-muted) 14%, transparent);
+}
+.task-card-handle {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: none;
+	color: var(--text-muted);
+	cursor: grab;
+	touch-action: none;
+}
+.task-card-handle:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 1px;
+}

@@ -188,7 +188,7 @@
 	   to viewport @media. NOTE: container-type:inline-size also establishes layout
 	   containment, so the box sizes against its contents (block-size derives from
 	   content) — opt in deliberately. Pairs with .grid-auto-fit / any @container CSS. */
-	.cq {
+	.query-container {
 		container-type: inline-size;
 	}
 	/* Auto-grow a form control to its content — textarea height / input inline-size.
@@ -197,5 +197,170 @@
 	   bounds on the element, or it grows unbounded / collapses. */
 	.autosize {
 		field-sizing: content;
+	}
+
+	/*
+	   Layout primitives (data-*). Attribute-keyed so they cannot collide with
+	   the class utilities above (.grid, .gap-*, .col-span-*). Consumed by
+	   ui-stack / ui-grid / ui-masonry. uwc.util is LAST — do not re-declare
+	   these in a component sheet.
+	*/
+
+	/*
+	   Slot participation: the wrapper is the flex / grid / multicol container.
+	   Without display:contents the SLOT is the only item and children collapse
+	   into one cell. Pin it so a UA-stylesheet change cannot regress it.
+	*/
+	[data-dir] > slot,
+	[data-grid] > slot,
+	[data-masonry] > slot {
+		display: contents;
+	}
+
+	/* Gap token scale — ONE vocabulary for stack, grid, and masonry. */
+	[data-gap='none'] {
+		gap: 0;
+		--layout-gap: 0;
+	}
+	[data-gap='xs'] {
+		gap: var(--space-2, 0.25rem);
+		--layout-gap: var(--space-2, 0.25rem);
+	}
+	[data-gap='sm'] {
+		gap: var(--space-3, 0.5rem);
+		--layout-gap: var(--space-3, 0.5rem);
+	}
+	[data-gap='md'] {
+		gap: var(--space-4, 0.75rem);
+		--layout-gap: var(--space-4, 0.75rem);
+	}
+	[data-gap='lg'] {
+		gap: var(--space-6, 1.25rem);
+		--layout-gap: var(--space-6, 1.25rem);
+	}
+	[data-gap='xl'] {
+		gap: var(--space-8, 2rem);
+		--layout-gap: var(--space-8, 2rem);
+	}
+
+	/* ui-grid — 2-D tracks. --grid-* are set from JS (freeform, not enumerated). */
+	[data-grid] {
+		display: grid;
+		box-sizing: border-box;
+		min-inline-size: 0;
+		inline-size: 100%;
+		grid-template-columns: var(--grid-cols, none);
+		grid-template-rows: var(--grid-rows, none);
+		grid-template-areas: var(--grid-areas, none);
+		grid-auto-rows: var(--grid-auto-rows, auto);
+		grid-auto-flow: row;
+	}
+	[data-grid][data-flow='row'] {
+		grid-auto-flow: row;
+	}
+	[data-grid][data-flow='column'] {
+		grid-auto-flow: column;
+	}
+	/*
+	   dense backfills HOLES inside the grid's own tracks. It does not pull
+	   items up past a row band — not masonry packing.
+	*/
+	[data-grid][data-flow='dense'] {
+		grid-auto-flow: row dense;
+	}
+	[data-grid][data-align='start'] {
+		align-items: start;
+	}
+	[data-grid][data-align='center'] {
+		align-items: center;
+	}
+	[data-grid][data-align='end'] {
+		align-items: end;
+	}
+	[data-grid][data-align='stretch'] {
+		align-items: stretch;
+	}
+	[data-grid][data-align='baseline'] {
+		align-items: baseline;
+	}
+	[data-grid][data-justify='start'] {
+		justify-items: start;
+	}
+	[data-grid][data-justify='center'] {
+		justify-items: center;
+	}
+	[data-grid][data-justify='end'] {
+		justify-items: end;
+	}
+	[data-grid][data-justify='stretch'] {
+		justify-items: stretch;
+	}
+	/* Item spans cap at 6. data-span="all" is full-width breakout. */
+	[data-grid] ::slotted([data-span='2']) {
+		grid-column: span 2;
+	}
+	[data-grid] ::slotted([data-span='3']) {
+		grid-column: span 3;
+	}
+	[data-grid] ::slotted([data-span='4']) {
+		grid-column: span 4;
+	}
+	[data-grid] ::slotted([data-span='5']) {
+		grid-column: span 5;
+	}
+	[data-grid] ::slotted([data-span='6']) {
+		grid-column: span 6;
+	}
+	[data-grid] ::slotted([data-span='all']) {
+		grid-column: 1 / -1;
+	}
+	[data-grid] ::slotted([data-row-span='2']) {
+		grid-row: span 2;
+	}
+	[data-grid] ::slotted([data-row-span='3']) {
+		grid-row: span 3;
+	}
+	[data-grid] ::slotted([data-row-span='4']) {
+		grid-row: span 4;
+	}
+	[data-grid] ::slotted([data-row-span='5']) {
+		grid-row: span 5;
+	}
+	[data-grid] ::slotted([data-row-span='6']) {
+		grid-row: span 6;
+	}
+
+	/*
+	   ui-masonry — CSS multicolumn packing (the zero-JS Pinterest path).
+	   Column-major fill is the tradeoff: items run down a column, then the
+	   next. `data-span="all"` is `column-span: all` (full-width breakout).
+	   Native `grid-template-rows: masonry` is not shipped; this path does
+	   not depend on it and must not silently flip when it lands (that would
+	   invert reading order).
+	*/
+	[data-masonry] {
+		inline-size: 100%;
+		column-count: var(--masonry-columns, auto);
+		column-width: var(--masonry-min, auto);
+		column-gap: var(--masonry-gap, 1rem);
+	}
+	/*
+	   Item packing. `::slotted` cannot win a margin fight against the
+	   document/parent `* { margin: 0 }` reset (light-tree origin beats
+	   shadow ::slotted). `ui-masonry > *` lives in the same tree as the
+	   children (document sheet + parent shadows both import this module).
+	*/
+	ui-masonry > *,
+	[data-masonry] ::slotted(*) {
+		display: inline-block;
+		inline-size: 100%;
+		margin-block-end: var(--masonry-gap, 1rem);
+		break-inside: avoid;
+		-webkit-column-break-inside: avoid;
+	}
+	ui-masonry > [data-span='all'],
+	[data-masonry] ::slotted([data-span='all']) {
+		display: block;
+		column-span: all;
 	}
 }

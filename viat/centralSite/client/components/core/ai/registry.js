@@ -1,4 +1,9 @@
-import { isFunction, isPlainObject, isString } from '../utilities.js';
+import {
+	isFunction,
+	isPlainObject,
+	isString,
+	queueAsyncError,
+} from '../utilities.js';
 const components = new Map();
 const componentIds = new WeakMap();
 const parents = new WeakMap();
@@ -35,9 +40,7 @@ function notify(registryEvent) {
 		try {
 			fn(registryEvent);
 		} catch (error) {
-			queueMicrotask(() => {
-				throw error;
-			});
+			queueAsyncError(error);
 		}
 	}
 }

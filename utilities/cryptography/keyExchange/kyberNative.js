@@ -6,9 +6,9 @@
  * Swap KyberNativePair for another KemKeyPair provider (pqclean backup, noble in the browser)
  * and not a line of the handshake changes.
  */
+import shake256 from '../hash/shake.js';
 import { KyberKeyExchange } from './KyberKeyExchange.js';
 import { KyberNativePair } from './pairs/kyberNativePair.js';
-import shake256 from '../hash/shake.js';
 const algorithm = 'ml-kem-768';
 export function createKyberNative(config = {}) {
 	const resolvedAlgorithm = config.algorithm || algorithm;

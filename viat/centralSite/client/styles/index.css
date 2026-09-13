@@ -1,7 +1,18 @@
 @import './variables.css';
-/* Shared framework modules — single source with the shadow-root manifest. */
+/*
+ * Shared framework modules — the LIGHT-DOM half of the pair. The shadow-root
+ * half is components/core/styles/manifest.js, and the two must list the SAME
+ * files: a module in only one of them works in exactly one place and looks
+ * deleted from the other. That is what happened to util-scroll-fade, which was
+ * registered in the manifest and never added here, so `.scroll-fade` styled a
+ * component's internals but computed `mask-image: none` on any page element.
+ * elements-buttons had drifted the same way.
+ *
+ * styles/tests/moduleParity.test.js now fails if they diverge again.
+ */
 @import '../components/core/styles/modules/reset.css';
 @import '../components/core/styles/modules/elements-forms.css';
+@import '../components/core/styles/modules/elements-buttons.css';
 @import '../components/core/styles/modules/elements-prose.css';
 @import '../components/core/styles/modules/util-spacing.css';
 @import '../components/core/styles/modules/util-layout.css';
@@ -10,6 +21,8 @@
 @import '../components/core/styles/modules/util-surface.css';
 @import '../components/core/styles/modules/animations.css';
 @import '../components/core/styles/modules/effects.css';
+@import '../components/core/styles/modules/util-scroll-fade.css';
+@import '../components/core/styles/modules/util-focus.css';
 
 /* ── Page-level (light DOM) rules ──────────────────── */
 html { font-size: clamp(14px, 1.3vw, 18px); block-size: 100%; }

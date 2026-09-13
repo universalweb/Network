@@ -1,0 +1,73 @@
+:host {
+	display: block;
+	box-sizing: border-box;
+	min-inline-size: 0;
+}
+.scheduler-event {
+	display: flex;
+	align-items: baseline;
+	gap: 0.55rem;
+	inline-size: 100%;
+	margin: 0;
+	padding: 0.4rem 0.55rem;
+	border: 1px solid color-mix(in oklch, var(--resource-fill, var(--tone-fill, var(--cyan))) 35%, transparent);
+	border-radius: var(--radius-sm, 0.35rem);
+	background: color-mix(in oklch, var(--resource-fill, var(--tone-fill, var(--cyan))) 14%, transparent);
+	color: var(--text-main);
+	font: inherit;
+	text-align: start;
+	cursor: grab;
+	transition:
+		background 0.16s ease,
+		border-color 0.16s ease,
+		transform 0.12s ease;
+}
+.scheduler-event:hover {
+	background: color-mix(in oklch, var(--resource-fill, var(--tone-fill, var(--cyan))) 22%, transparent);
+}
+.scheduler-event[aria-selected='true'] {
+	box-shadow: inset 0 0 0 2px var(--focus-ring-color, var(--cyan));
+	background: color-mix(in oklch, var(--resource-fill, var(--tone-fill, var(--cyan))) 28%, transparent);
+}
+.scheduler-event:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--cyan));
+	outline-offset: 2px;
+}
+.scheduler-event-time {
+	flex: 0 0 auto;
+	font-size: var(--text-xs, 0.75rem);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+.scheduler-event-time[hidden] {
+	display: none !important;
+}
+.scheduler-event-label {
+	min-inline-size: 0;
+	font-size: var(--text-sm, 0.875rem);
+	font-weight: var(--weight-medium, 500);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+:host(.is-dragging) {
+	z-index: 4;
+	pointer-events: none;
+	will-change: transform;
+}
+:host(.is-dragging) .scheduler-event {
+	cursor: grabbing;
+	box-shadow:
+		0 0 0 1px color-mix(in oklch, var(--text-main) 12%, transparent),
+		0 0.5rem 1.25rem color-mix(in oklch, #000 40%, transparent);
+}
+.scheduler-event[data-conflict] {
+	box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-warning, var(--tone-fill)) 60%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+	.scheduler-event {
+		transition: none;
+	}
+}

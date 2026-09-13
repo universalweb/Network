@@ -1,0 +1,327 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-flex;
+	flex: 0 0 auto;
+	min-width: 0;
+}
+:host-context([data-orientation='vertical']) {
+	display: flex;
+	flex: 0 0 auto;
+	inline-size: 100%;
+}
+.tab-btn {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: var(--space-3);
+	/* Orientation-dependent box rides inherited custom props the strip sets per
+	   `data-orientation` (tabs.css); fallbacks are the vertical defaults. */
+	padding: var(--tab-button-pad, var(--space-3) var(--space-4));
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--tab-button-radius, var(--radius-sm));
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+	font-family: var(--font-mono, monospace);
+	font-size: var(--text-xs);
+	cursor: pointer;
+	white-space: nowrap;
+	transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.18s ease;
+	width: 100%;
+}
+.tab-btn-icon {
+	display: inline-flex;
+	flex-shrink: 0;
+	color: inherit;
+}
+.tab-btn-label {
+	min-width: 0;
+	max-inline-size: 9rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: inherit;
+	transition: max-inline-size 0.22s cubic-bezier(0.34, 1.05, 0.64, 1);
+}
+.tab-btn[aria-selected='true'] .tab-btn-label {
+	max-inline-size: 24rem;
+}
+.tab-btn-icon[hidden],
+.tab-btn-label[hidden] {
+	display: none !important;
+}
+.tab-btn[data-empty] {
+	opacity: 0.38;
+	cursor: default;
+	pointer-events: none;
+}
+:host-context([data-variant='blocks']) {
+	--tab-block-collapsed: 9rem;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	flex: 0 0 auto;
+	inline-size: var(--tab-block-collapsed);
+	min-inline-size: var(--tab-block-collapsed);
+	max-inline-size: var(--tab-block-collapsed);
+	/*
+	 * Sizing stays on the host (the strip flexes the custom-element box).
+	 * background-color joins the same list so a fill change on this box
+	 * eases; the host is NOT [data-interactive] — that hook lives in
+	 * uwc.util and would REPLACE this list (layer order), dropping the
+	 * sizing channel. Inner .tab-btn already matches [role='tab'].
+	 */
+	transition:
+		max-inline-size var(--dur-base, 0.3s) cubic-bezier(0.34, 1.05, 0.64, 1),
+		min-inline-size var(--dur-base, 0.3s) cubic-bezier(0.34, 1.05, 0.64, 1),
+		inline-size var(--dur-base, 0.3s) cubic-bezier(0.34, 1.05, 0.64, 1),
+		margin-inline var(--dur-base, 0.3s) cubic-bezier(0.34, 1.05, 0.64, 1),
+		background-color var(--dur-fast, 0.18s) var(--ease-out, ease);
+}
+:host-context([data-variant='blocks']):has(.tab-btn[aria-selected='true']) {
+	inline-size: max-content;
+	max-inline-size: none;
+	min-inline-size: var(--tab-block-collapsed);
+	z-index: 1;
+}
+/* Time-guide blocks keep duration flex even when selected — a max-content
+   grow would slide every in-block tick. */
+:host-context([data-variant='blocks'][data-time-guide]):has(.tab-btn[aria-selected='true']) {
+	inline-size: auto;
+	min-inline-size: 2.4rem;
+	max-inline-size: none;
+}
+:host-context([data-variant='blocks']) .tab-btn {
+	block-size: 100%;
+	min-block-size: 1.85rem;
+	inline-size: 100%;
+	width: 100%;
+	justify-content: center;
+	letter-spacing: 0;
+	color: var(--text-main);
+	/*
+	 * MATTE: mixed toward the panel, never toward `transparent`. A translucent
+	 * fill lets the page glow through and reads as backlit/glossy; mixing to an
+	 * OPAQUE colour keeps the identical tone weight with a flat, matte surface.
+	 * (`blocks` is a tracker-only variant — ui-tracker is its sole consumer.)
+	 */
+	background-color: color-mix(in oklab, var(--tone-fill, var(--text-muted)) 72%, var(--bg-panel, var(--bg-body)));
+	border: 0;
+	border-start-start-radius: var(--tab-button-start-radius, 0);
+	border-end-start-radius: var(--tab-button-start-radius, 0);
+	border-start-end-radius: var(--tab-button-end-radius, 0);
+	border-end-end-radius: var(--tab-button-end-radius, 0);
+	padding-inline: 0.45rem;
+	max-inline-size: 100%;
+	overflow: hidden;
+	transition:
+		border-start-start-radius var(--dur-base, 0.3s) cubic-bezier(0.34, 1.05, 0.64, 1),
+		border-end-start-radius var(--dur-base, 0.3s) cubic-bezier(0.34, 1.05, 0.64, 1),
+		border-start-end-radius var(--dur-base, 0.3s) cubic-bezier(0.34, 1.05, 0.64, 1),
+		border-end-end-radius var(--dur-base, 0.3s) cubic-bezier(0.34, 1.05, 0.64, 1),
+		opacity var(--dur-fast, 0.18s) var(--ease-out, ease),
+		background-color var(--dur-fast, 0.18s) var(--ease-out, ease);
+}
+/*
+ * Status-block icons get their own scrim disc.
+ *
+ * The block paints a saturated `--tone-fill` surface and the glyph only inherits
+ * that surface's text colour, so a success icon sat on a success block had
+ * almost nothing to read against — the icons were there but invisible. A dark
+ * translucent disc gives the glyph a contrast floor that does not depend on
+ * which tone the segment happens to carry.
+ *
+ * The black is deliberate and absolute rather than tokenised: this scrim must
+ * darken whatever tone lands under it, in every theme, which is exactly the
+ * theme-independent case where a fixed value is correct.
+ */
+:host-context([data-variant='blocks']) .tab-btn-icon {
+	padding: 0.22rem;
+	border-radius: var(--radius-pill);
+	background: oklch(0 0 0 / 0.42);
+	/*
+	 * Absolute white, NOT --text-light. That token means "the light theme's text
+	 * colour" and resolves to near-black here — pairing it with the scrim put a
+	 * black glyph on a black disc and measured 2.66:1, worse than the 6.49:1 it
+	 * replaced. The glyph is pinned to the scrim, so both ends of the pair have
+	 * to be fixed together or neither is.
+	 */
+	color: oklch(1 0 0);
+}
+:host-context([data-variant='blocks']) .tab-btn-label {
+	max-inline-size: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	padding: 0.2rem 0.72rem;
+	border-radius: 2px;
+	background: color-mix(in oklab, black 55%, transparent);
+	color: var(--tab-label-color, var(--text-main, #f5f6fa));
+}
+.tab-caption[hidden],
+.tab-block-ticks[hidden],
+.tab-tick[hidden] {
+	display: none !important;
+}
+:host([data-label-place='over']) .tab-caption {
+	order: -1;
+	align-self: center;
+	background: transparent;
+	color: var(--text-main);
+	padding: 0.2rem 0.72rem;
+	border-radius: 2px;
+	margin-block-end: 0.15rem;
+}
+.tab-block-ticks {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	inline-size: 100%;
+	padding-block-start: 0.28rem;
+	color: var(--text-muted, oklch(0.7 0 0));
+	pointer-events: none;
+}
+.tab-tick {
+	font-size: 0.58rem;
+	letter-spacing: 0.04em;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+.tab-tick[data-edge='start'] {
+	align-items: flex-start;
+}
+.tab-tick[data-edge='end'] {
+	align-items: flex-end;
+	margin-inline-start: auto;
+}
+.tab-tick::before {
+	content: '';
+	inline-size: 1px;
+	block-size: 0.45rem;
+	background: color-mix(in oklab, var(--text-muted) 55%, transparent);
+	margin-block-end: 0.12rem;
+}
+:host-context([data-time-guide]) {
+	flex: var(--trk-flex, 1) 1 0;
+	min-inline-size: 2.4rem;
+	max-inline-size: none;
+	inline-size: auto;
+}
+:host-context([data-variant='blocks']) .tab-btn[aria-selected='true'] .tab-btn-label {
+	max-inline-size: none;
+}
+:host-context([data-variant='blocks']) .tab-btn:hover {
+	background-color: transparent;
+}
+:host-context([data-variant='blocks']) .tab-btn[aria-selected='true'] {
+	inline-size: 100%;
+	width: 100%;
+	color: var(--text-main);
+	background-color: var(--tone-fill, var(--text-muted));
+	border-radius: var(--tab-block-radius, var(--radius-lg, 0.625rem));
+	padding-inline: 0.75rem;
+}
+/* Split-apart under the time guide. The gutter is INSIDE the block: the button
+   stops filling its host and takes the margin itself, so the painted surface
+   pulls away from both neighbours while the block's own box — and the ticks
+   that sit under it as siblings, not children — stay exactly on the duration it
+   represents. An outer margin would move the ticks off the clock, which is why
+   tabs.css pins the host margin to 0 under the guide. */
+:host-context([data-variant='blocks'][data-time-guide][data-join='detached']) .tab-btn[aria-selected='true'] {
+	inline-size: auto;
+	width: auto;
+	margin-inline: var(--tab-block-gap);
+}
+:host-context([data-variant='blocks'][data-join='attached']) .tab-btn[aria-selected='true'] {
+	border-radius: 0;
+	border-start-start-radius: var(--tab-button-start-radius, 0);
+	border-end-start-radius: var(--tab-button-start-radius, 0);
+	border-start-end-radius: var(--tab-button-end-radius, 0);
+	border-end-end-radius: var(--tab-button-end-radius, 0);
+}
+:host-context([data-variant='blocks']) .tab-btn[aria-selected='true']:hover {
+	background-color: var(--tone-fill, var(--text-muted));
+}
+:host-context([data-variant='blocks']) .tab-btn[data-empty] {
+	/* Matte empty slot — an opaque grey, not a translucent hole in the panel. */
+	background-color: color-mix(in oklab, var(--text-muted) 18%, var(--bg-panel, var(--bg-body)));
+	scale: 1 1;
+}
+:host-context([data-variant='pill']) .tab-btn {
+	letter-spacing: var(--tab-button-letter-spacing, var(--ui-btn-letter-spacing, 0.04em));
+	text-transform: var(--tab-button-text-transform, uppercase);
+	font-size: var(--tab-button-font, var(--text-sm, 0.8125rem));
+	color: color-mix(in oklch, var(--text-main) 62%, transparent);
+}
+:host-context([data-variant='pill']) .tab-btn:hover {
+	color: var(--text-main);
+	background: transparent;
+	transform: none;
+}
+:host-context([data-variant='pill']) .tab-btn[aria-selected='true'] {
+	color: var(--tab-button-selected-color, var(--text-main));
+	background: transparent;
+	border-color: transparent;
+	transform: none;
+}
+/* Mobile icon rail — generic vertical only. Pill keeps labels; 999px +
+   clipped labels is what turned vertical tabs into circles. */
+@media (max-width: 47.9375em) {
+	:host-context([data-orientation='vertical'][data-variant='generic']) .tab-btn:has(.tab-btn-icon) {
+		justify-content: center;
+		gap: 0;
+		padding: var(--space-4) 0;
+		width: 100%;
+	}
+	:host-context([data-orientation='vertical'][data-variant='generic']) .tab-btn:has(.tab-btn-icon) .tab-btn-label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+}
+.tab-btn:hover {
+	color: var(--text-main);
+	background: transparent;
+	transform: var(--tab-button-hover-transform, none);
+}
+/*
+ * Selected fill + border live on the sliding `.tab-indicator` (tabs.css).
+ * Painting them here too doubles the chip under the moving surface.
+ */
+.tab-btn[aria-selected='true'] {
+	color: var(--tab-button-selected-color, var(--teal));
+	border-color: transparent;
+	background: transparent;
+	transform: none;
+}
+.tab-btn[aria-selected='true']:hover {
+	background: transparent;
+}
+.tab-btn:focus-visible {
+	outline: 0.125rem solid color-mix(in oklab, var(--text-main) 40%, transparent);
+	outline-offset: 0.125rem;
+	box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.tab-btn {
+		transition: color 0.15s ease, background 0.15s ease;
+	}
+	.tab-btn-label {
+		transition: none;
+	}
+	:host-context([data-variant='blocks']) {
+		transition: none;
+	}
+	.tab-btn:hover {
+		transform: none;
+	}
+}

@@ -26,6 +26,7 @@
  * ANY attribute. See ./reactive-attrs.plan.private.md for the full design + rationale.
  */
 import { trackAttrRead } from '../state/binding.js';
+import { hasAnyKey } from '../utilities.js';
 export function writeHostAttr(host, key, value) {
 	if (value == null || value === false) {
 		host.removeAttribute(key);
@@ -50,40 +51,64 @@ export function readHostAttr(host, key, defaultValue) {
 	}
 	return rawValue;
 }
-export function makeAttrsProxy(host, schema) {
-	return new Proxy({}, {
-		get(target, key) {
-			if (typeof key === 'symbol' || !(key in schema)) {
-				return undefined;
-			}
-			/*
-			 * Reactive read: during render tracking, subscribe this spot to the
-			 * attribute so `attributeChangedCallback` re-patches it. No-op otherwise.
-			 */
-			trackAttrRead(host, key);
-			return readHostAttr(host, key, schema[key]);
-		},
-		set(target, key, value) {
-			if (typeof key === 'symbol' || !(key in schema)) {
-				return true;
-			}
-			writeHostAttr(host, key, value);
-			return true;
-		},
-		has(target, key) {
-			return key in schema;
-		},
-		ownKeys() {
-			return Object.keys(schema);
-		},
-		getOwnPropertyDescriptor(target, key) {
-			if (key in schema) {
-				return {
-					configurable: true,
-					enumerable: true,
-				};
-			}
+/**
+ * Stateless handler shared by every attrs proxy — the `{ host, schema }` the
+ * traps need rides the proxy TARGET, not per-instance closures (mirrors
+ * dom/refs.js REFS_HANDLER). One handler object for the whole app instead of a
+ * fresh handler + 5 trap closures per component construct.
+ */
+class AttrsProxyHandler {
+	static instance = new AttrsProxyHandler();
+	get(target, key) {
+		const schema = target.schema;
+		if (typeof key === 'symbol' || !(key in schema)) {
 			return undefined;
-		},
-	});
+		}
+		/*
+		 * Reactive read: during render tracking, subscribe this spot to the
+		 * attribute so `attributeChangedCallback` re-patches it. No-op otherwise.
+		 */
+		trackAttrRead(target.host, key);
+		return readHostAttr(target.host, key, schema[key]);
+	}
+	set(target, key, value) {
+		if (typeof key === 'symbol' || !(key in target.schema)) {
+			return true;
+		}
+		writeHostAttr(target.host, key, value);
+		return true;
+	}
+	has(target, key) {
+		return key in target.schema;
+	}
+	ownKeys(target) {
+		return Object.keys(target.schema);
+	}
+	getOwnPropertyDescriptor(target, key) {
+		if (key in target.schema) {
+			return {
+				configurable: true,
+				enumerable: true,
+			};
+		}
+		return undefined;
+	}
+}
+/*
+ * The common case is `static attrs = {}` (no declared attributes): every trap
+ * would no-op on the empty schema without ever touching `host`, so one shared
+ * proxy serves every attr-less component — zero per-instance allocation.
+ */
+const EMPTY_ATTRS_PROXY = new Proxy({
+	host: null,
+	schema: {},
+}, AttrsProxyHandler.instance);
+export function makeAttrsProxy(host, schema) {
+	if (!schema || !hasAnyKey(schema)) {
+		return EMPTY_ATTRS_PROXY;
+	}
+	return new Proxy({
+		host,
+		schema,
+	}, AttrsProxyHandler.instance);
 }

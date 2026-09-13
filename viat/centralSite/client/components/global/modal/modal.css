@@ -1,5 +1,25 @@
+/*
+ * Host MUST generate a box. `display: contents` on a shadow host that owns a
+ * native <dialog> breaks Chromium top-layer hit-testing: the open dialog still
+ * paints and reports geometry, but elementsFromPoint / click / focus never
+ * reach it (or its slotted light DOM). Fixed inset + pointer-events:none keeps
+ * the host out of layout and out of the pointer path; the dialog re-enables
+ * hits on itself.
+ */
 :host {
-  display: contents;
+  display: block;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+:host(:not([data-open])) {
+  /* Closed overlay must not occupy the viewport. A PE-none inset:0 layer
+     still intercepts hits in Chromium (fall-through lands on body).
+     Open dialogs keep the host box — required for top-layer hit-testing.
+     Host data-open tracks state.open OR the native dialog.open so a stale
+     parent bag cannot display:none the host under a live showModal(). */
+  display: none;
 }
 
 .modal {
@@ -9,7 +29,6 @@
   padding: 0;
   border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
   border-radius: var(--radius-lg, 12px);
-  background: var(--popup-bg);
   color: var(--popup-text);
   box-shadow: var(--modal-shadow,
     0 24px 64px rgba(0, 0, 0, 0.6),
@@ -22,6 +41,8 @@
   max-height: var(--ui-modal-max-height, calc(100dvh - 32px));
   overflow: hidden;
   position: relative;
+  /* Host is pointer-events:none — re-enable hits on the dialog surface. */
+  pointer-events: auto;
   opacity: 1;
   transform: scale(1) translateY(0);
   transform-origin: center;
@@ -32,6 +53,16 @@
     border-radius 0.2s ease,
     overlay 0.22s ease allow-discrete,
     display 0.22s ease allow-discrete;
+}
+/*
+ * The opaque fill is SCOPED so `skin: 'glass'` can replace it. `.glass` lives
+ * in uwc.util, the last cascade layer, so it already outranks anything declared
+ * here — but leaving an unconditional `background` on `.modal` would still make
+ * two rules claim the same surface, and the next person to read it cannot tell
+ * which one wins. `:not(.glass)` makes the handover explicit instead.
+ */
+.modal:not(.glass) {
+  background: var(--popup-bg);
 }
 /* Top-layer (showModal) dialogs must anchor to the VIEWPORT, not the document.
    The base `.modal` resolves to `position: absolute` against the initial
@@ -64,38 +95,39 @@
      2. When content is taller than the modal's `max-height`, the body
         shrinks (`flex-shrink: 1` + `min-height: 0` to override flex's
         default `min-height: auto`) to fit inside the capped modal and
-        scrolls its overflow internally. */
+        scrolls its overflow internally.
+     Inline / block-end padding is the dialog content inset. Full-bleed
+     hosts zero --modal-body-padding-*. */
   flex: 0 1 auto;
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
+  padding-inline: var(--modal-body-padding-inline, var(--dialog-content-padding, var(--space-5)));
+  padding-block-end: var(--modal-body-padding-block-end, var(--dialog-content-padding, var(--space-5)));
 }
-/* Window bar — a reserved, frosted title bar pinned to the modal top. It gets
-   its bar treatment only when `.has-bar` is set (a control or a title exists),
-   so a plain content modal shows no phantom bar. Semi-transparent + slight blur
-   so scrolled content passes UNDER the glass; a modern shadow + hairline give
-   depth. The matching `.modal-body` top padding (below) reserves the bar height
-   plus breathing room — the SINGLE source of top clearance, so per-modal shells
-   no longer add their own. The bar spans the full width and stays put while the
-   body scrolls beneath it. */
-.modal-controls {
+.modal:not(.has-bar) .modal-body {
+  padding-block-start: var(--modal-body-padding-block-start, var(--dialog-content-padding, var(--space-5)));
+}
+/* Window bar — ui-window-title-bar owns frost/heading/layout. This sheet only
+   pins it to the dialog top when `.has-bar` is set (a control or a title
+   exists), so a plain content modal shows no phantom bar. Body top padding
+   (below) is the SINGLE source of top clearance. */
+.modal:not(.has-bar) ui-window-title-bar {
+  display: none;
+}
+.modal.has-bar ui-window-title-bar {
   position: absolute;
   inset-block-start: 0;
   inset-inline: 0;
-  block-size: var(--modal-bar-h);
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding-inline: var(--space-3);
   z-index: 3;
-}
-.modal.has-bar .modal-controls {
-  background: color-mix(in oklab, var(--popup-bg) 72%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-block-end: 1px solid
-    color-mix(in oklab, var(--popup-border, var(--teal)) 26%, transparent);
-  box-shadow: var(--modal-bar-shadow, 0 6px 18px -8px rgba(0, 0, 0, 0.45));
+  /*
+   * CONCENTRIC, not equal. The bar sits INSIDE the dialog's 1px border, so its
+   * corner is one pixel closer to the centre than the dialog's own. Handing it
+   * the same --radius-lg drew a 14px curve inside a 13px one: the bar's corner
+   * bulged past the parent's curve, overflow:hidden sliced the bulge off, and
+   * the result read as a square corner escaping a rounded box.
+   */
+  --window-title-bar-radius: calc(var(--radius-lg, 12px) - 1px);
 }
 .modal.has-bar .modal-body {
   /* Single source of bar clearance for normal modals. A modal whose content
@@ -104,26 +136,13 @@
      flows up under the frosted bar seamlessly rather than starting below a gap. */
   padding-block-start: var(--modal-body-pad-top, calc(var(--modal-bar-h) + var(--space-5)));
 }
-/* Title fills the bar opposite the controls; truncates rather than wrapping. */
-.modal-title {
-  flex: 1 1 auto;
-  min-inline-size: 0;
-  padding-inline-start: var(--space-2);
-  font-family: var(--font-display, inherit);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  letter-spacing: 0.04em;
-  color: var(--text-muted, var(--popup-text));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-/* macOS-style: controls left, title right — via `order`, DOM stays simple. */
-.modal.controls-left .modal-title { order: 10; padding-inline: 0 var(--space-2); text-align: end; }
-.modal.controls-left .mc-close { order: 1; }
-.modal.controls-left .mc-min   { order: 2; }
-.modal.controls-left .mc-max   { order: 3; }
-.mc-btn {
+/* macOS-style: close-first ordering via `order`. Buttons live in the modal
+   shadow and project into the title-bar; `order` still applies in the
+   title-bar's flex region. */
+.modal.controls-left .modal-close { order: 1; }
+.modal.controls-left .modal-min   { order: 2; }
+.modal.controls-left .modal-max   { order: 3; }
+.modal-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -142,42 +161,42 @@
    correctly toggles the attribute but the button still paints. Force it
    back on every control flavor so showMinimize/showMaximize/showClose
    all hide cleanly when their flag is anything other than literal true. */
-.mc-btn[hidden],
-.mc-close[hidden] {
+.modal-btn[hidden],
+.modal-close[hidden] {
   display: none !important;
 }
-.mc-btn .mc-icon {
+.modal-btn .modal-icon {
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease, opacity 0.2s ease;
 }
-.mc-btn:hover {
+.modal-btn:hover {
   color: var(--text-main);
   border-color: var(--dark-divider, rgba(255, 255, 255, 0.18));
   background: rgba(255, 255, 255, 0.04);
 }
-.mc-btn:active { transform: scale(0.92); }
-.mc-btn:focus-visible {
+.modal-btn:active { transform: scale(0.92); }
+.modal-btn:focus-visible {
   outline: none;
   border-color: var(--focus-ring-color, var(--cyan));
   box-shadow: 0 0 0 2px color-mix(in oklab, var(--focus-ring-color, var(--cyan)) 45%, transparent);
 }
 /* Per-button hover micro-animations on the icon itself. */
-.mc-min:hover .mc-icon {
+.modal-min:hover .modal-icon {
   transform: translateY(2px) scaleX(1.1);
   color: var(--teal);
 }
-.mc-max:hover .mc-icon-grow,
-.mc-max:hover .mc-icon-shrink {
+.modal-max:hover .modal-icon-grow,
+.modal-max:hover .modal-icon-shrink {
   color: var(--cyan);
 }
 /* Expand/restore single toggle — both icons live in the same button slot
    and crossfade with a rotate+scale morph so it reads as one icon
    transforming rather than two icons swapping. The currently-visible one
    matches the modal's actual size state (host data-window). */
-.mc-max {
+.modal-max {
   position: relative;
 }
-.mc-max .mc-icon-grow,
-.mc-max .mc-icon-shrink {
+.modal-max .modal-icon-grow,
+.modal-max .modal-icon-shrink {
   position: absolute;
   inset: 0;
   display: inline-flex;
@@ -188,19 +207,19 @@
     transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
     color 0.2s ease;
 }
-.mc-max .mc-icon-grow {
+.modal-max .modal-icon-grow {
   opacity: 1;
   transform: rotate(0deg) scale(1);
 }
-.mc-max .mc-icon-shrink {
+.modal-max .modal-icon-shrink {
   opacity: 0;
   transform: rotate(-90deg) scale(0.5);
 }
-:host([data-window='maximized']) .mc-max .mc-icon-grow {
+:host([data-window='maximized']) .modal-max .modal-icon-grow {
   opacity: 0;
   transform: rotate(90deg) scale(0.5);
 }
-:host([data-window='maximized']) .mc-max .mc-icon-shrink {
+:host([data-window='maximized']) .modal-max .modal-icon-shrink {
   opacity: 1;
   transform: rotate(0deg) scale(1);
 }
@@ -213,6 +232,16 @@
   max-height: none;
   border-radius: 0;
   margin: 0;
+}
+/*
+ * Zeroed on the BAR, not on .modal. Setting a custom property on the dialog
+ * only offers it for inheritance, and `.modal.has-bar ui-window-title-bar`
+ * above sets the same property directly ON the bar — a declaration on the
+ * element always beats one it would otherwise inherit. So the maximized value
+ * never reached it, and a square 0px dialog kept a rounded title-bar corner.
+ */
+:host([data-window='maximized']) .modal.has-bar ui-window-title-bar {
+  --window-title-bar-radius: 0;
 }
 /* Maximized body MUST grow to fill the 100dvh dialog. The base rule keeps it
    `flex: 0 1 auto` (content-sized, so a short modal shrink-wraps + centers) — but
@@ -275,12 +304,12 @@
    The body clearance tracks --modal-bar-h, so it scales automatically. */
 @media (max-width: 47.9375em) {
   .modal { --modal-bar-h: 3.25rem; }
-  .mc-btn,
-  .mc-close {
-    inline-size: 2.75rem;
-    block-size: 2.75rem;
+  .modal-btn,
+  .modal-close {
+    inline-size: var(--hit-min, max(2.75rem, 44px));
+    block-size: var(--hit-min, max(2.75rem, 44px));
   }
-  .mc-btn .mc-icon { transform: scale(1.15); }
+  .modal-btn .modal-icon { transform: scale(1.15); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -292,14 +321,14 @@
   @starting-style {
     .modal[open] { transform: none; }
   }
-  .mc-btn,
-  .mc-btn .mc-icon {
+  .modal-btn,
+  .modal-btn .modal-icon {
     transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
   }
-  .mc-btn:hover .mc-icon,
-  .mc-btn:active { transform: none; }
-  .mc-max .mc-icon-grow,
-  .mc-max .mc-icon-shrink {
+  .modal-btn:hover .modal-icon,
+  .modal-btn:active { transform: none; }
+  .modal-max .modal-icon-grow,
+  .modal-max .modal-icon-shrink {
     transition: color 0.15s ease, opacity 0.15s ease;
     transform: none;
   }

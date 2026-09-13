@@ -1,25 +1,27 @@
-import { movingIndicator, WebComponent } from '../../core/index.js';
-import { UITabButton } from './tab-button.js';
-// `<ui-tabs>` — reusable tab strip + slotted content area with built-in
-// switching animation: a sliding indicator bar plus a content swap that is
-// either a cross-fade (default) or a direction-aware slide+blur (opt-in
-// `transition:'slide'`, axis follows orientation or an explicit `slideAxis`).
-//
-// Usage:
-//   <ui-tabs .state=${{ items: SECTIONS, activeIndex: 'profile', orientation: 'vertical' }}
-//            @tabs:change=${this.handleTabChange}>
-//     <section slot="profile">…</section>
-//     <section slot="wallet-view">…</section>
-//   </ui-tabs>
-//
-// Each `item.id` doubles as the slot name. The active item's slot is shown; the
-// component animates the swap. The strip emits `tabs:change`
-// (detail.data: { id, previousId }) after a click but BEFORE the
-// cross-fade in finishes, so parents see the state change immediately.
-//
-// Children are <ui-tab-button> components rendered through the framework's
-// list machinery — the active button is located via `findComponent` (no
-// querySelector reach-through into shadow DOM).
+import {
+	isString,
+	isTrue,
+	movingIndicator,
+	WebComponent,
+} from '../../core/index.js';
+import { UITabButton } from '../tab-button/tab-button.js';
+/**
+ * `<ui-tabs>` — strip + optional slotted content. Pill is the default look.
+ * `contentMode:'remote'` skips the content pane; selection is announced only
+ * (`tabs:change`, plus `${channel}:change` when `channel` is set) so a sibling
+ * can `delegate` and write its own state.
+ *
+ * Usage (owned):
+ *   <ui-tabs .state=${{ items: SECTIONS, activeIndex: 'profile' }}
+ *            @tabs:change=${this.handleTabChange}>
+ *     <section slot="profile">…</section>
+ *   </ui-tabs>
+ *
+ * Usage (remote):
+ *   <ui-tabs .state.contentMode=${'remote'} .state.channel=${'preview-nav'}
+ *            .state.items=${cats} .state.activeIndex=${filter}></ui-tabs>
+ *   this.delegate('preview-nav:change', this.onNav);
+ */
 const SWITCH_OUT_MS = 140;
 const SWITCH_IN_MS = 220;
 const EASE_OUT = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
@@ -32,8 +34,13 @@ const EASE_IN = 'cubic-bezier(0.4, 0, 1, 1)';
 const SLIDE_OUT_MS = 170;
 const SLIDE_IN_MS = 300;
 const SLIDE_OFFSET = 20;
-const SLIDE_BLUR = '4px';
 const SLIDE_SPRING = 'cubic-bezier(0.34, 1.3, 0.64, 1)';
+function normalizeJoin(join) {
+	if (join === 'attached') {
+		return 'attached';
+	}
+	return 'detached';
+}
 export class UITabs extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -43,33 +50,97 @@ export class UITabs extends WebComponent {
 		items: [],
 		activeIndex: '',
 		orientation: 'horizontal',
-		// Content-swap animation. 'fade' (default — every existing strip keeps its
-		// behaviour) | 'slide' (direction-aware: panel slides + blurs in from the
-		// side it travelled). Opt-in so consumers like the settings modal are untouched.
 		transition: 'fade',
-		// Slide axis when transition==='slide': 'auto' follows orientation
-		// (x=left/right, y=up/down) — or force 'x' / 'y' / 'diagonal'.
 		slideAxis: 'auto',
+		variant: 'pill',
+		join: 'detached',
+		stripBorder: false,
+		contentMode: 'owned',
+		toggleActive: false,
+		channel: '',
+		/*
+		 * Underline / start-edge active bar on the sliding indicator.
+		 * `null` = on for generic, off for pill/blocks. Explicit true/false
+		 * overrides any variant.
+		 */
+		bar: null,
+		/*
+		 * Strip corner cap: '' (variant default) · 'start' (block-start
+		 * rounded, block-end square) · 'end' (the inverse).
+		 */
+		cap: '',
 	};
 	switching = false;
+	pendingId = '';
+	hoveredId = '';
 	stripObserver = null;
 	indicatorController = null;
 	onConnect() {
-		this.observeAsync('activeIndex', (next, prev) => {
-			if (prev !== next) {
-				// Flags BEFORE the indicator — `syncIndicator` locates the active
-				// button via its `active` state, which the flag write must set first.
-				this.syncActiveFlags();
-				this.syncIndicator();
-			}
-		});
-		this.observeAsync('items', () => {
+		this.observeAsync('activeIndex', this.onActiveIndexChange);
+		this.observeAsync('items', this.onItemsChange);
+		this.observeAsync([
+			'orientation', 'variant', 'contentMode', 'join', 'bar', 'cap',
+		], this.onStripLayoutChange);
+		this.syncHostAttrs();
+	}
+	beforeRender() {
+		this.syncHostAttrs();
+	}
+	barEnabled() {
+		if (this.state.bar === true) {
+			return true;
+		}
+		if (this.state.bar === false) {
+			return false;
+		}
+		return (this.state.variant || 'pill') === 'generic';
+	}
+	syncHostAttrs() {
+		this.dataset.variant = this.state.variant || 'pill';
+		this.dataset.content = this.state.contentMode || 'owned';
+		this.dataset.orientation = this.state.orientation || 'horizontal';
+		this.dataset.join = normalizeJoin(this.state.join);
+		this.toggleAttribute('data-bar', this.barEnabled());
+		const cap = this.state.cap;
+		if (cap === 'start' || cap === 'end') {
+			this.dataset.cap = cap;
+		} else {
+			this.removeAttribute('data-cap');
+		}
+	}
+	onActiveIndexChange(next, prev) {
+		if (prev !== next) {
 			this.syncActiveFlags();
 			this.syncIndicator();
-		});
-		this.observeAsync('orientation', () => {
-			this.syncIndicator(true);
-		});
+		}
+	}
+	onItemsChange() {
+		this.syncActiveFlags();
+		this.syncIndicator();
+	}
+	onStripLayoutChange() {
+		this.syncHostAttrs();
+		this.syncIndicator(true);
+	}
+	onStripResize() {
+		this.syncIndicator(this.indicatorPrimed !== true);
+		this.indicatorPrimed = true;
+	}
+	isRemote() {
+		return this.state.contentMode === 'remote';
+	}
+	/*
+	 * Mark the pane only when the slot actually has assigned nodes. CSS cannot
+	 * see slot assignment — `:empty` is defeated by the slot element itself, so
+	 * a strip-only ui-tabs (the preview rail, a remote-mode tracker) would
+	 * otherwise render an empty bordered box under its tabs.
+	 */
+	handleContentSlotChange(domEvent) {
+		const slot = domEvent?.target;
+		const filled = Boolean(slot?.assignedNodes({
+			flatten: true,
+		}).length);
+		this.refs.content?.toggleAttribute('data-filled', filled);
 	}
 	onMount() {
 		// The indicator engine needs its element — present now, after the first
@@ -78,8 +149,7 @@ export class UITabs extends WebComponent {
 		this.indicatorController = movingIndicator(this.refs.indicator, {
 			prefix: 'ind',
 		});
-		// Seed `activeIndex` to the first item when the parent doesn't pass one.
-		if (!this.state.activeIndex && this.state.items?.length) {
+		if (!this.state.toggleActive && !this.state.activeIndex && this.state.items?.length) {
 			this.state.activeIndex = this.state.items[0].id;
 		}
 		// Initial flag pass — buttons first render with the default `active:false`;
@@ -90,9 +160,12 @@ export class UITabs extends WebComponent {
 		// case where the first rAF still reports zero size.
 		const strip = this.refs.strip;
 		if (strip && typeof ResizeObserver !== 'undefined') {
-			this.stripObserver = new ResizeObserver(() => {
-				this.syncIndicator(true);
-			});
+			if (!this.onStripResizeTick) {
+				this.onStripResizeTick = () => {
+					this.onStripResize();
+				};
+			}
+			this.stripObserver = new ResizeObserver(this.onStripResizeTick);
 			this.stripObserver.observe(strip);
 		}
 		requestAnimationFrame(() => {
@@ -102,8 +175,12 @@ export class UITabs extends WebComponent {
 	onDisconnect() {
 		this.stripObserver?.disconnect();
 		this.stripObserver = null;
+		this.indicatorPrimed = false;
 		this.indicatorController?.destroy();
 		this.indicatorController = null;
+		this.switching = false;
+		this.pendingId = '';
+		this.hoveredId = '';
 	}
 	// Shared single-select: write the `active` flag onto the bound `state.items`
 	// at event/observe-time — NEVER a per-render enrichment loop. The deep
@@ -116,10 +193,18 @@ export class UITabs extends WebComponent {
 			return;
 		}
 		const activeIndex = this.state.activeIndex;
+		let tabStopAssigned = Boolean(activeIndex);
 		for (let index = 0; index < items.length; index += 1) {
 			const isActive = items[index].id === activeIndex;
 			if (items[index].active !== isActive) {
 				this.state.items[index].active = isActive;
+			}
+			const isTabStop = isActive || (!tabStopAssigned && items[index].empty !== true);
+			if (isTabStop && !isActive) {
+				tabStopAssigned = true;
+			}
+			if (items[index].tabStop !== isTabStop) {
+				this.state.items[index].tabStop = isTabStop;
 			}
 		}
 	}
@@ -130,10 +215,33 @@ export class UITabs extends WebComponent {
 		}
 		// `moveTo` measures the button and writes both axes; the orientation
 		// CSS picks the pair it honours. A falsy active button hides it.
-		const activeBtn = this.findComponent('ui-tab-button', (btn) => {
-			return btn.state.active;
-		});
+		const activeBtn = this.findChild('ui-tab-button', UITabs.isActiveFilledButton);
 		controller.moveTo(activeBtn, skipTransition);
+	}
+	static isActiveFilledButton(btn) {
+		return btn.state.active === true && btn.state.empty !== true;
+	}
+	emitChange(id, previousId, collapsed) {
+		const payload = {
+			id,
+			previousId,
+			collapsed,
+		};
+		this.emit('tabs:change', payload);
+		const channel = this.state.channel;
+		if (isString(channel) && channel) {
+			this.emit(`${channel}:change`, payload);
+		}
+	}
+	collapseActive() {
+		const previousId = this.state.activeIndex;
+		if (!previousId) {
+			return;
+		}
+		this.state.activeIndex = '';
+		this.syncActiveFlags();
+		this.syncIndicator(true);
+		this.emitChange('', previousId, true);
 	}
 	// Resolve the slide axis: an explicit `slideAxis` wins, else follow the strip
 	// orientation (horizontal → x = left/right, vertical → y = up/down).
@@ -191,24 +299,20 @@ export class UITabs extends WebComponent {
 					{
 						transform: 'translate(0, 0)',
 						opacity: 1,
-						filter: 'blur(0px)',
 					},
 					{
 						transform: this.axisTransform(-SLIDE_OFFSET * direction, axis),
 						opacity: 0,
-						filter: `blur(${SLIDE_BLUR})`,
 					},
 				],
 				in: [
 					{
 						transform: this.axisTransform(SLIDE_OFFSET * direction, axis),
 						opacity: 0,
-						filter: `blur(${SLIDE_BLUR})`,
 					},
 					{
 						transform: 'translate(0, 0)',
 						opacity: 1,
-						filter: 'blur(0px)',
 					},
 				],
 				outMs: SLIDE_OUT_MS,
@@ -245,27 +349,37 @@ export class UITabs extends WebComponent {
 		};
 	}
 	async setActive(id) {
-		if (!id || id === this.state.activeIndex || this.switching) {
+		if (!id) {
+			return;
+		}
+		if (this.switching) {
+			this.pendingId = id;
+			return;
+		}
+		if (id === this.state.activeIndex) {
 			return;
 		}
 		const previousId = this.state.activeIndex;
 		const items = this.state.items ?? [];
-		const prevIndex = items.findIndex((tab) => {
-			return tab.id === previousId;
+		const nextItem = items.find(UITabs.itemHasId, {
+			id,
 		});
-		const nextIndex = items.findIndex((tab) => {
-			return tab.id === id;
+		if (nextItem?.empty === true) {
+			return;
+		}
+		const prevIndex = items.findIndex(UITabs.itemMatchesPrevious, {
+			previousId,
 		});
-		// Forward (1) toward a later tab, backward (-1) toward an earlier one. A
-		// missing previous (prevIndex -1) reads as forward — a sane first-show default.
+		const nextIndex = items.findIndex(UITabs.itemHasId, {
+			id,
+		});
 		const direction = nextIndex < prevIndex ? -1 : 1;
 		this.switching = true;
 		const content = this.refs.content;
+		const remote = this.isRemote();
 		const swapFrames = this.swapKeyframes(direction);
 		let outgoing;
-		// Animate the outgoing panel out before flipping the slot name so the user
-		// sees the old content leave instead of popping out.
-		if (content && previousId) {
+		if (!remote && content && previousId) {
 			outgoing = content.animate(swapFrames.out, {
 				duration: swapFrames.outMs,
 				easing: swapFrames.outEase,
@@ -274,17 +388,15 @@ export class UITabs extends WebComponent {
 			try {
 				await outgoing.finished;
 			} catch {
-				// Interrupted — fall through and swap anyway.
+				outgoing = null;
 			}
 		}
 		this.state.activeIndex = id;
-		this.emit('tabs:change', {
-			id,
-			previousId,
-		});
-		// Wait one frame so the slot projection updates to the new panel before
-		// animating it in. Cancel the outgoing first so its pinned end state
-		// doesn't bleed past the incoming's transform-free `fill:'none'` rest.
+		this.emitChange(id, previousId, false);
+		if (remote) {
+			this.finishSwitch();
+			return;
+		}
 		requestAnimationFrame(() => {
 			outgoing?.cancel();
 			content?.animate(swapFrames.in, {
@@ -292,17 +404,58 @@ export class UITabs extends WebComponent {
 				easing: swapFrames.inEase,
 				fill: 'none',
 			});
-			this.switching = false;
+			this.finishSwitch();
 		});
+	}
+	finishSwitch() {
+		this.switching = false;
+		const queued = this.pendingId;
+		this.pendingId = '';
+		if (queued && queued !== this.state.activeIndex) {
+			this.setActive(queued);
+		}
+	}
+	static itemHasId(tab) {
+		return tab.id === this.id;
+	}
+	static itemMatchesPrevious(tab) {
+		return tab.id === this.previousId;
+	}
+	static itemMatchesActive(tab) {
+		return tab.id === this.state.activeIndex;
 	}
 	handleTabSelect(domEvent) {
 		const id = domEvent.detail?.data?.id;
-		if (id) {
-			this.setActive(id);
+		if (!id) {
+			return;
 		}
+		if (this.state.toggleActive === true && id === this.state.activeIndex) {
+			this.collapseActive();
+			return;
+		}
+		this.setActive(id);
+	}
+	handleTabHover(domEvent) {
+		const tabId = domEvent.detail?.data?.id || '';
+		if (!tabId || tabId === this.hoveredId) {
+			return;
+		}
+		this.hoveredId = tabId;
+		this.emit('tabs:hover', {
+			id: tabId,
+		});
+	}
+	handleStripLeave() {
+		this.hoveredId = '';
 	}
 	handleKey(domEvent) {
-		// Arrow-key navigation along the tab strip (a11y).
+		if (domEvent.key === 'Escape') {
+			if (isTrue(this.state.toggleActive) && this.state.activeIndex) {
+				domEvent.preventDefault();
+				this.collapseActive();
+			}
+			return;
+		}
 		const isVertical = this.state.orientation === 'vertical';
 		let delta = 0;
 		if (isVertical) {
@@ -321,35 +474,49 @@ export class UITabs extends WebComponent {
 		}
 		domEvent.preventDefault();
 		const items = this.state.items;
-		const currentIndex = items.findIndex((tab) => {
-			return tab.id === this.state.activeIndex;
-		});
-		const nextIndex = (currentIndex + delta + items.length) % items.length;
+		const itemCount = items.length;
+		const currentIndex = items.findIndex(UITabs.itemMatchesActive, this);
+		let nextIndex = (currentIndex + delta + itemCount) % itemCount;
+		for (let step = 0; step < itemCount; step++) {
+			if (items[nextIndex]?.empty !== true) {
+				break;
+			}
+			nextIndex = (nextIndex + delta + itemCount) % itemCount;
+		}
 		const nextTab = items[nextIndex];
-		if (!nextTab) {
+		if (!nextTab || nextTab.empty === true) {
 			return;
 		}
 		this.setActive(nextTab.id);
 		requestAnimationFrame(() => {
-			const target = this.findComponent('ui-tab-button', (btn) => {
+			const target = this.findChild('ui-tab-button', (btn) => {
 				return btn.state.id === nextTab.id;
 			});
 			target?.focus();
 		});
 	}
 	render() {
-		this.html `
-			<div class="tabs" data-orientation=${this.state.orientation || 'horizontal'} data-transition=${this.state.transition || 'fade'}>
+		this.html`
+			<div class="tabs"
+				data-orientation=${this.state.orientation || 'horizontal'}
+				data-transition=${this.state.transition || 'fade'}
+				data-variant=${this.state.variant || 'pill'}
+				data-join=${normalizeJoin(this.state.join)}
+				data-content=${this.state.contentMode || 'owned'}
+				?data-bar=${this.barEnabled}>
 				<div class="tab-strip"
 					role="tablist"
+					?data-strip-border=${this.state.stripBorder}
 					@tab-button:select=${this.handleTabSelect}
+					@tab-button:hover=${this.handleTabHover}
 					@keydown=${this.handleKey}
+					@pointerleave=${this.handleStripLeave}
 					#strip>
 					<div class="tab-indicator" #indicator></div>
 					${this.list('items', UITabButton)}
 				</div>
-				<div class="tab-content" #content>
-					<slot name=${this.state.activeIndex || ''}></slot>
+				<div class="tab-content" #content ?hidden=${this.isRemote}>
+					<slot name=${this.state.activeIndex || ''} @slotchange=${this.handleContentSlotChange}></slot>
 				</div>
 			</div>
 		`;

@@ -9,6 +9,9 @@
 	  chip:click  { value, selected }   fired on activation (when `interactive`)
 	  chip:remove { value }             fired by the ✕ or Delete/Backspace
 	  (payload arrives under event.detail.data; parents listen with @chip:remove=)
+	Selected + interactive paints a leading check. Removable is
+	independent — the check shows without a close button, and a removable chip
+	can stay unselected.
 	── USAGE ────────────────────────────────────────────────────────────
 	  Push data through the .state channel — a bare .label= sets a dead DOM
 	  property and does NOT reach state:
@@ -20,6 +23,7 @@
 	    <div @chip:remove=${this.handleChipRemove}>…</div>   // reads e.detail.data.value
 	──────────────────────────────────────────────────────────────────────
 */
+import '../icon/icon.js';
 import { WebComponent } from '../../core/index.js';
 export class UIChip extends WebComponent {
 	static url = import.meta.url;
@@ -56,6 +60,9 @@ export class UIChip extends WebComponent {
 			value: this.state.value,
 		});
 	}
+	hoverToken() {
+		return this.state.interactive ? 'wash' : '';
+	}
 	handleKey(domEvent) {
 		if (this.state.disabled) {
 			return;
@@ -70,20 +77,23 @@ export class UIChip extends WebComponent {
 		}
 	}
 	render() {
-		const interactive = this.state.interactive;
-		this.html `
+		this.html`
 			<span class="chip"
+				data-hover=${this.hoverToken}
 				data-tone=${this.state.tone}
 				data-size=${this.state.size}
-				?data-interactive=${interactive}
+				?data-interactive=${this.state.interactive}
 				?data-removable=${this.state.removable}
 				?data-selected=${this.state.selected}
 				?data-disabled=${this.state.disabled}
-				role=${interactive ? 'button' : 'group'}
-				tabindex=${interactive && !this.state.disabled ? '0' : '-1'}
-				aria-pressed=${interactive ? String(this.state.selected) : 'false'}
+				role=${this.state.interactive ? 'button' : 'group'}
+				tabindex=${this.state.interactive && !this.state.disabled ? '0' : '-1'}
+				aria-pressed=${this.state.interactive ? String(this.state.selected) : 'false'}
 				@click=${this.handleClick}
 				@keydown=${this.handleKey}>
+				<span class="chip-check" aria-hidden="true">
+					<ui-icon .state.name=${'check'} .state.size=${'sm'}></ui-icon>
+				</span>
 				<span class="chip-leading"><slot name="leading"></slot></span>
 				<span class="chip-label"><slot>${this.state.label}</slot></span>
 				<button type="button" class="chip-remove" tabindex="-1"

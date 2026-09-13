@@ -7,19 +7,21 @@
 			 /swap/ don't resolve assets against the current pathname. -->
 		<base href="/" />
 		<title>⩝ VIAT :: TERMINAL: COMMAND & CONTROL</title>
-		<link rel="stylesheet" href="styles/index.css" />
-		<link id="theme-sheet" rel="stylesheet" href="styles/themes/midnight.css" />
+		<!-- App pair — swap these two hrefs to load a different app. -->
+		<link rel="stylesheet" href="/apps/wallet/index.css" />
+		<!-- No theme <link> here on purpose: theme-select/theme-manager.js creates
+			 and swaps the link[data-uwc-id="theme"] sheet itself. -->
 		<!-- Import map must appear before any module that uses the mapped specifier -->
 		<script type="importmap">
 			{
 				"imports": {
-					"@universalweb/utilitylib": "/scripts/utilityLibrary/index.js",
+					"@universalweb/utilitylib": "/scripts/utils.js",
 					"viat": "/scripts/viat-client-sdk-bundle.js",
 					"webcomponent": "/components/core/index.js"
 				}
 			}
 		</script>
-		<script type="module" src="/index.js?v=2605101"></script>
+		<script type="module" src="/apps/wallet/index.js?v=260715boot"></script>
 	</head>
 
 	<body></body>

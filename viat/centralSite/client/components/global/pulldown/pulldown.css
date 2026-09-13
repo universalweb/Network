@@ -2,16 +2,29 @@
 	/* Interactive control chrome — never paint a text selection on a click or drag. */
 	user-select: none;
 	-webkit-user-select: none;
-	display: contents;
+	/* Overlay host — same box model as ui-slideout, so frost is a real hit target. */
+	display: block;
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-floating);
+	pointer-events: none;
+}
+:host(:not([data-open]):not([data-active])) {
+	/* Idle-closed overlay must not occupy the viewport. A PE-none inset:0
+	   layer still intercepts hits in Chromium (fall-through lands on body).
+	   data-active keeps the host painted during bar-driven open drag and
+	   the close snap — otherwise the sheet is display:none until commit
+	   and cannot travel with the top bar. */
+	display: none;
+}
+:host([data-open]) {
+	pointer-events: auto;
 }
 .pulldown-drawer {
-	position: fixed;
-	inset-block-start: 0;
-	inset-inline-start: 0;
-	inset-inline-end: 0;
+	position: absolute;
+	inset: 0;
 	height: 100svh;
 	overflow: hidden;
-	z-index: 90;
 	pointer-events: none;
 	display: none;
 	transform: translateY(-100%);
@@ -27,8 +40,8 @@
 .pulldown-drawer.is-fully-open {
 	pointer-events: auto;
 	background: color-mix(in srgb, var(--bg-dark) 62%, transparent);
-	-webkit-backdrop-filter: blur(18px) saturate(140%);
-	backdrop-filter: blur(18px) saturate(140%);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
+	backdrop-filter: var(--popup-glass-blur);
 	animation: pulldown-blur-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes pulldown-blur-in {
@@ -73,9 +86,20 @@
 :host([data-handle='none']) .pulldown-handle {
 	display: none;
 }
+/* Event surface behind slotted columns — click + drag/flick close. */
+.pulldown-backdrop {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: auto;
+}
 .pulldown-content {
+	position: relative;
+	z-index: 1;
+	pointer-events: none;
 	height: 100%;
 	width: 100%;
+	/* Slotted roots stay interactive; empty frost falls through to #backdrop. */
 	overflow: hidden;
 	/* Always reserve the scrollbar gutter. The content is `overflow: hidden` at
 	   rest and flips to `overflow: auto` only while `.is-fully-open`; without a

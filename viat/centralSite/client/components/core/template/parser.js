@@ -62,8 +62,17 @@ function eventContext(templateString) {
 	}
 	return null;
 }
-export function eventMarkerAttribute(eventName) {
-	return `data-event-${String(eventName).toLowerCase().replace(/[^a-z0-9:-]/g, '-')}`;
+// @engram em:network/code/click-click-capture-collided-in-two-layers-parser-marker-att — the outer of the two layers; the EVENT_SPOTS keying in template.js is the inner
+/*
+ * The slot index is part of the NAME, not just the value: two spots for the same
+ * event on one element (`@click` + `@click.capture`) would otherwise emit the
+ * same attribute twice, and duplicate attributes are first-wins — the HTML parser
+ * discards the second outright, so the planner finds no marker for it and drops
+ * the spot silently. Indexing the name keeps them distinct, exactly as the
+ * deduce-from-expr path already does with `data-uwc-evfn-${i}`.
+ */
+export function eventMarkerAttribute(eventName, slotIndex) {
+	return `data-event-${String(eventName).toLowerCase().replace(/[^a-z0-9:-]/g, '-')}-${slotIndex}`;
 }
 export function bindMarkerAttribute(index) {
 	return `${BIND_MARKER}-${index}`;
@@ -419,7 +428,7 @@ export function buildHTML(strings, exprs) {
 					expr,
 				});
 			} else {
-				html += `data-uwc ${eventMarkerAttribute(eventBinding.eventName)}="expr${stringIndex}"`;
+				html += `data-uwc ${eventMarkerAttribute(eventBinding.eventName, stringIndex)}="expr${stringIndex}"`;
 				meta.push({
 					i: stringIndex,
 					type: SPOT_TYPE.EVENT,

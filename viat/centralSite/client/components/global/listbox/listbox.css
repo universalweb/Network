@@ -1,0 +1,125 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	user-select: none;
+	-webkit-user-select: none;
+}
+.listbox {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	min-inline-size: 0;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 22%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--bg-panel, var(--bg-body, #111));
+	overflow: hidden;
+}
+.listbox[data-disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+.listbox-filter {
+	margin: 0.4rem 0.4rem 0;
+	inline-size: calc(100% - 0.8rem);
+	min-block-size: 2rem;
+	padding-block: 0.3rem;
+	padding-inline: 0.55rem;
+	font-size: var(--text-sm, 0.875rem);
+}
+.listbox-filter[hidden] {
+	display: none;
+}
+.listbox-select-all {
+	appearance: none;
+	margin: 0 0.4rem;
+	padding-block: 0.4rem;
+	padding-inline: 0.6rem;
+	border: 0;
+	border-radius: 0.35rem;
+	background: transparent;
+	color: var(--text-muted, currentColor);
+	font: inherit;
+	font-size: var(--text-sm, 0.875rem);
+	text-align: start;
+	cursor: pointer;
+}
+.listbox-select-all[hidden] {
+	display: none;
+}
+.listbox-select-all:hover,
+.listbox-select-all[aria-pressed='true'] {
+	color: var(--text-primary, currentColor);
+	background: color-mix(in oklch, var(--text-primary, currentColor) 8%, transparent);
+}
+.listbox-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	max-block-size: 16rem;
+	overflow: auto;
+	padding: 0.3rem;
+	outline: none;
+}
+.listbox-list:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--focus-ring-color, var(--teal, #14b8a6));
+}
+.listbox-item {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	inline-size: 100%;
+	padding-block: 0.45rem;
+	padding-inline: 0.6rem;
+	border: 0;
+	border-radius: 0.35rem;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-size: var(--text-sm, 0.875rem);
+	text-align: start;
+	cursor: pointer;
+}
+/* display:flex above beats the UA [hidden] rule without this override. */
+.listbox-item[hidden] {
+	display: none;
+}
+.listbox-item:hover:not(:disabled),
+.listbox-item[data-focused],
+.listbox[data-multiple] .listbox-item[data-active] {
+	background: color-mix(in oklch, var(--text-primary, currentColor) 8%, transparent);
+}
+/* Membership (selected) + single-select current (active without multi). */
+.listbox-item[data-selected],
+.listbox:not([data-multiple]) .listbox-item[data-active] {
+	background: color-mix(in oklch, var(--teal, #14b8a6) 18%, transparent);
+}
+.listbox-item:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+.listbox:not([data-multiple]) .listbox-check {
+	display: none;
+}
+.listbox-check {
+	flex: 0 0 1em;
+	inline-size: 1em;
+	color: var(--color-success, #10b981);
+	text-align: center;
+}
+.listbox-label {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+}
+.listbox-empty {
+	padding: 0.6rem 0.65rem;
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+}
+.listbox-empty[hidden] {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.listbox-item {
+		transition: none;
+	}
+}

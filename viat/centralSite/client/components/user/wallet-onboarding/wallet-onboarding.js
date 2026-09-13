@@ -1,12 +1,15 @@
 import '../../global/modal/modal.js';
 import '../../global/whitebox-modal/whitebox-modal.js';
-import { WebComponent } from '../../core/index.js';
+import { routerStore, WebComponent } from 'webcomponent';
 // Routes where a wallet is required to actually use the page. On every other
 // route (explorer, transaction detail, account detail, etc.) we leave the
 // modal closed so people can read/browse without being interrupted.
 const WALLET_REQUIRED_ROUTES = new Set(['wallet', 'swap']);
 export class WalletOnboarding extends WebComponent {
 	static url = import.meta.url;
+	static stores = {
+		router: routerStore,
+	};
 	static styles = {
 		walletOnboarding: './wallet-onboarding.css',
 	};
@@ -20,13 +23,31 @@ export class WalletOnboarding extends WebComponent {
 		visible: false,
 		hasSaved: false,
 		forcedReason: '',
+		modal: {
+			modal: true,
+			open: false,
+			showClose: true,
+			showMaximize: true,
+			// Wired once in onConnect — ui-modal calls autoFocus() with no thisArg.
+			autoFocus: null,
+		},
+		thumbModal: {
+			src: './HDSeed.png',
+			alt: 'HD seed tree diagram',
+			caption: 'HD seed tree — deterministic four-pool master entropy.',
+		},
 	};
 	forced = false;
 	onConnect() {
+		// Resolve #create_wallet_save at open-time (ref may not exist at construct).
+		if (!this.createWalletFocus) {
+			this.createWalletFocus = () => {
+				return this.refs.create_wallet_save;
+			};
+		}
+		this.state.modal.autoFocus = this.createWalletFocus;
 		this.delegate('wallet:state', this.handleWalletState);
-		this.observeGlobal('routeId', (next) => {
-			this.handleRouteChange(next);
-		});
+		this.observeStore('router', 'id', this.handleRouteChange);
 		// Wait for the boot screen to fully tear itself down before we ever
 		// auto-surface the create-wallet modal — otherwise the modal pops in
 		// over the splash and the user sees both at once.
@@ -38,7 +59,7 @@ export class WalletOnboarding extends WebComponent {
 		this.evaluateVisibility();
 	}
 	currentRouteId() {
-		return this.global.routeId || '';
+		return this.stores.router.id || '';
 	}
 	requiredForRoute(routeId = this.currentRouteId()) {
 		return WALLET_REQUIRED_ROUTES.has(routeId);
@@ -143,19 +164,8 @@ export class WalletOnboarding extends WebComponent {
 		return 'No wallet has been saved locally yet. Create & save a wallet to auto-load it on every visit, mint an ephemeral one for this session, or load a saved profile.';
 	}
 	render() {
-		this.html `
-			<ui-modal #modal .state=${{
-				modal: true,
-				open: false,
-				showClose: true,
-				showMaximize: true,
-				// Resolve the ref at open-time (button might not have been
-				// rendered when this state object was constructed). Ref names
-				// must be all-lowercase per framework rules.
-				autoFocus: () => {
-					return this.refs.create_wallet_save;
-				},
-			}} style="--ui-modal-max-width: 720px">
+		this.html`
+			<ui-modal #modal .state=${this.state.modal} style="--ui-modal-max-width: 720px">
 				<div class="wo-shell">
 					<div class="wo-hero">
 						<span class="wo-glyph" aria-hidden="true">
@@ -207,11 +217,7 @@ export class WalletOnboarding extends WebComponent {
 						<button class="wo-btn" @click=${this.handleLoad}>LOAD PROFILE</button>
 					</div>
 					<a class="wo-readmore" href="https://viat.network" target="_blank" rel="noopener noreferrer external">Read more about VIAT →</a>
-					<ui-whitebox-modal #thumb_modal .state=${{
-						src: './HDSeed.png',
-						alt: 'HD seed tree diagram',
-						caption: 'HD seed tree — deterministic four-pool master entropy.',
-					}}></ui-whitebox-modal>
+					<ui-whitebox-modal #thumb_modal .state=${this.state.thumbModal}></ui-whitebox-modal>
 				</div>
 			</ui-modal>
 		`;

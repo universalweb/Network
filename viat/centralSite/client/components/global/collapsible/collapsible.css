@@ -1,0 +1,142 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	min-inline-size: 0;
+	/* interpolate-size inherits down to ::details-content, enabling the
+	   block-size: 0 → auto transition below. */
+	interpolate-size: allow-keywords;
+}
+.collapsible {
+	inline-size: 100%;
+}
+.collapsible-trigger {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	inline-size: 100%;
+	padding: 0.65rem 0.15rem;
+	list-style: none;
+	font: inherit;
+	font-weight: 500;
+	color: var(--text-main);
+	text-align: start;
+	cursor: pointer;
+}
+.collapsible-trigger::-webkit-details-marker {
+	display: none;
+}
+.collapsible-trigger::marker {
+	content: '';
+}
+.collapsible-trigger:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--cyan));
+	outline-offset: 2px;
+}
+.collapsible[data-disabled] .collapsible-trigger {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+.collapsible-lead {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex: 1 1 auto;
+	min-inline-size: 0;
+}
+.collapsible-icon {
+	flex: 0 0 auto;
+	opacity: 0.55;
+	--icon-size: var(--nav-icon-size, 1rem);
+}
+.collapsible[open] .collapsible-icon {
+	opacity: 0.9;
+}
+.collapsible-heading {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+}
+.collapsible-count[hidden] {
+	display: none;
+}
+.collapsible-count {
+	flex: 0 0 auto;
+	margin-inline-start: auto;
+}
+.collapsible-chevron {
+	flex: 0 0 auto;
+	opacity: 0.7;
+	transition: rotate 0.18s ease;
+}
+.collapsible[open] .collapsible-chevron {
+	rotate: 180deg;
+}
+.collapsible-body {
+	inline-size: 100%;
+	padding-block: 0.25rem 0.75rem;
+	color: var(--text-muted);
+}
+/* Nav-group lists project ui-nav-link into this slot — parent gap so hover
+   of one row does not visually touch an active sibling. */
+:host-context(ui-nav-group) .collapsible-body {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+@supports (interpolate-size: allow-keywords) {
+	.collapsible::details-content {
+		block-size: 0;
+		overflow: hidden;
+		transition: block-size 0.28s ease, content-visibility 0.28s ease allow-discrete;
+	}
+	.collapsible[open]::details-content {
+		block-size: auto;
+	}
+}
+:host-context(ui-nav[data-density='slim']) .collapsible-heading,
+:host-context(ui-nav[data-density='slim']) .collapsible-chevron {
+	display: none;
+}
+:host-context(ui-nav[data-density='slim']) .collapsible-trigger {
+	position: relative;
+	justify-content: center;
+	min-block-size: var(--hit-min, max(2.75rem, 44px));
+	padding: 0.55rem 0.35rem;
+	overflow: visible;
+}
+:host-context(ui-nav[data-density='slim']) .collapsible-lead {
+	justify-content: center;
+	flex: 0 0 auto;
+	position: static;
+}
+/*
+ * `--nav-icon-size` is owned by ui-nav (nav.css: 1rem, 1.5rem at slim) and
+ * inherits in. The fallback carries the slim value so the rule still sizes
+ * correctly outside a ui-nav — and keeps the reference guarded, since the
+ * theme audit only walks ONE import hop and ui-nav reaches us through
+ * nav-group (two).
+ */
+:host-context(ui-nav[data-density='slim']) .collapsible-icon {
+	inline-size: var(--nav-icon-size, 1.5rem);
+	block-size: var(--nav-icon-size, 1.5rem);
+}
+:host-context(ui-nav[data-density='slim']) .collapsible-count {
+	position: absolute;
+	inset-block-start: 0.1rem;
+	inset-inline-end: 0.1rem;
+	margin-inline-start: 0;
+	z-index: 1;
+	transform: scale(0.72);
+	transform-origin: top right;
+}
+:host-context(ui-nav[data-density='slim']) .collapsible-body {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.collapsible-chevron {
+		transition: none;
+	}
+	.collapsible::details-content {
+		transition: none;
+	}
+}

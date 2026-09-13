@@ -3,12 +3,12 @@
 	track holds the slides; `transition` picks how the active one shows:
 	  • slide — the flex track translates by activeIndex (spring).
 	  • fade  — slides stack (grid) and cross-fade + scale.
-	Optional autoplay (pauses on hover/drag, resets on manual nav), prev/next
+	Optional autoplay (pauses on hover/drag, resets on manual carousel-nav), prev/next
 	arrows (transparent over the media so they never obscure content; shape circle |
 	rounded | square via `arrowShape`; optional reveal-on-hover via `arrowReveal` —
 	hidden until the carousel is hovered or focused), click-to-advance,
 	pointer/touch drag-to-step (the shared dragTrack
-	gesture — finger-follow in slide mode, swipe-to-step in fade), keyboard nav
+	gesture — finger-follow in slide mode, swipe-to-step in fade), keyboard carousel-nav
 	(←/→ + Home/End — document-global hotkeys gated to the FOCUSED carousel so
 	each instance owns its own keys; the per-instance `keyboard` flag enables or
 	disables them), and two indicator styles: dots, or progress bars that fill
@@ -23,44 +23,7 @@
 	─────────────────────────────────────────────────────────────────────
 */
 import { html, WebComponent } from 'webcomponent';
-class UICarouselSlide extends WebComponent {
-	static url = import.meta.url;
-	static styles = {
-		carouselSlide: './carousel-slide.css',
-	};
-	static state = {
-		id: '',
-		eyebrow: '',
-		heading: '',
-		description: '',
-		image: '',
-		tone: 'accent',
-		active: false,
-	};
-	onConnect() {
-		// Reflect active to the host so the parent's transition CSS can target it
-		// (the parent owns slide-vs-fade layout; the host is the positioned item).
-		this.observe('active', () => {
-			this.toggleAttribute('data-active', Boolean(this.state.active));
-		}, {
-			immediate: true,
-		});
-	}
-	render() {
-		this.html`
-			<article class="slide" data-tone=${this.state.tone}>
-				<span class="slide-media" ?hidden=${Boolean(this.state.image)} aria-hidden="true"></span>
-				<img class="slide-img" ?hidden=${!this.state.image} src=${this.state.image || ''} alt="" loading="lazy">
-				<span class="slide-body">
-					<span class="slide-eyebrow" ?hidden=${!this.state.eyebrow}>${this.state.eyebrow}</span>
-					<span class="slide-heading" ?hidden=${!this.state.heading}>${this.state.heading}</span>
-					<span class="slide-desc" ?hidden=${!this.state.description}>${this.state.description}</span>
-				</span>
-			</article>
-		`;
-	}
-}
-customElements.define('ui-carousel-slide', UICarouselSlide);
+import { UICarouselSlide } from '../carousel-slide/carousel-slide.js';
 export class UICarousel extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -92,7 +55,7 @@ export class UICarousel extends WebComponent {
 		});
 		this.observe('activeIndex', this.syncDots);
 		this.observe('indicators', this.syncDots);
-		// Keyboard nav binds here, not onMount: the hotkey registry is document-
+		// Keyboard carousel-nav binds here, not onMount: the hotkey registry is document-
 		// level (no refs needed) and onConnect fires once per connect, so it never
 		// double-registers on a re-render the way an onMount gesture install would.
 		// The lifecycle sweep releases the entries on disconnect.
@@ -102,7 +65,7 @@ export class UICarousel extends WebComponent {
 		this.syncActive();
 		this.syncDots();
 	}
-	/* Structural dots list + on flags (tabs-style deep write for the active dot). */
+	/* Structural dots list + on flags (tabs-style deep write for the active carousel-dot). */
 	syncDots() {
 		if (this.state.indicators === 'none') {
 			if (this.state.dots.length) {
@@ -266,7 +229,7 @@ export class UICarousel extends WebComponent {
 		//   • :focus-within       — only one element holds focus at a time, so only
 		//     the focused carousel answers. (Hover was the bug: a focused carousel
 		//     plus the mouse merely resting over a different one stepped BOTH on one
-		//     press. Keyboard nav follows focus, never the cursor.)
+		//     press. Keyboard carousel-nav follows focus, never the cursor.)
 		return this.state.keyboard && this.matches(':focus-within');
 	}
 	handleKey(keyEvent, canonical) {
@@ -346,7 +309,7 @@ export class UICarousel extends WebComponent {
 		this.restartAutoplay();
 	}
 	handleDotClick(domEvent) {
-		const button = domEvent.target.closest('button.dot');
+		const button = domEvent.target.closest('button.carousel-dot');
 		if (!button) {
 			return;
 		}
@@ -358,7 +321,7 @@ export class UICarousel extends WebComponent {
 		this.restartAutoplay();
 	}
 	dotRow(item) {
-		return html`<button type="button" class="dot" data-index=${item.id} ?data-on=${item.on} aria-label=${`Go to slide ${item.id + 1}`}><span class="dot-fill"></span></button>`;
+		return html`<button type="button" class="carousel-dot" data-index=${item.id} ?data-on=${item.on} aria-label=${`Go to slide ${item.id + 1}`}><span class="carousel-dot-fill"></span></button>`;
 	}
 	dotKey(item) {
 		return item.id;
@@ -383,7 +346,7 @@ export class UICarousel extends WebComponent {
 		return `transform: translateX(-${this.state.activeIndex * 100}%)`;
 	}
 	viewportTabIndex() {
-		// Focusable only while keyboard nav is on, so a disabled carousel stays out
+		// Focusable only while keyboard carousel-nav is on, so a disabled carousel stays out
 		// of the tab order instead of being a focus trap that does nothing.
 		return this.state.keyboard ? '0' : '-1';
 	}
@@ -406,10 +369,10 @@ export class UICarousel extends WebComponent {
 					<div #track class="track" style=${this.trackStyle} @click=${this.handleSlideClick}>
 						${this.list('items', UICarouselSlide, this.slideKey)}
 					</div>
-					<button class="nav prev" type="button" ?hidden=${!this.state.arrows} tooltip="Previous" aria-label="Previous slide" @click=${this.handlePrev}>
+					<button class="carousel-nav prev" part="prev" type="button" ?hidden=${!this.state.arrows} tooltip="Previous" aria-label="Previous slide" @click=${this.handlePrev}>
 						<ui-icon .state.name=${'chevron-left'} .state.size=${'sm'}></ui-icon>
 					</button>
-					<button class="nav next" type="button" ?hidden=${!this.state.arrows} tooltip="Next" aria-label="Next slide" @click=${this.handleNext}>
+					<button class="carousel-nav next" part="next" type="button" ?hidden=${!this.state.arrows} tooltip="Next" aria-label="Next slide" @click=${this.handleNext}>
 						<ui-icon .state.name=${'chevron-right'} .state.size=${'sm'}></ui-icon>
 					</button>
 				</div>

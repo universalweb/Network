@@ -18,8 +18,8 @@ export class MobileDashboard extends WebComponent {
 		mobileDashboard: './mobile-dashboard.css',
 	};
 	render() {
-		this.html `
-			<div class="md-shell">
+		this.html`
+			<div class="mobile-dashboard-shell">
 				<wallet-amount class="bare"></wallet-amount>
 				<transmit-panel></transmit-panel>
 				<wallet-panel></wallet-panel>

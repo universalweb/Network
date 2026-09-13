@@ -2,19 +2,20 @@
 	display: block;
 }
 /* The dashboard flows inside the shell scroll surface — it is not its own scroll
-   box, and the fixed top-bar clearance is owned by .shell-scroll (app.css), so there
-   is no top padding here. The long panels (activity-log / wallet-params) keep an
-   internal cap so the overview stays compact; everything else flows. */
+   box, and the fixed top-bar clearance is owned by .shell-scroll (app.css). Page
+   inset uses the shared --page-pad-* tokens (overridable on :host). Long panels
+   (activity-log / wallet-params) keep an internal cap; everything else flows. */
 .dashboard-center {
 	display: flex;
 	flex-direction: column;
-	padding-block-end: var(--space-12);
+	padding-block-end: var(--page-pad-block-end);
 }
 .center-content {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-4);
-	padding: var(--space-4);
+	padding-block: var(--page-pad-block-start) 0;
+	padding-inline: var(--page-pad-inline);
 	width: 100%;
 	max-width: var(--center-max-width, 1536px);
 	margin: 0 auto;

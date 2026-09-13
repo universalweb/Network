@@ -12,6 +12,13 @@ export class UILoadingScreen extends WebComponent {
 		heading: 'Loading',
 		variant: 'overlay',
 	};
+	onConnect() {
+		this.observe('open', this.syncOpenAttr);
+		this.syncOpenAttr();
+	}
+	syncOpenAttr() {
+		this.toggleAttribute('data-open', this.state.open === true);
+	}
 	open(detail = {}) {
 		this.assignState({
 			...detail,
@@ -22,7 +29,7 @@ export class UILoadingScreen extends WebComponent {
 		this.state.open = false;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div
 				class="loading-screen"
 				data-variant=${this.state.variant}
@@ -39,7 +46,7 @@ export class UILoadingScreen extends WebComponent {
 					}}></ui-spinner>
 					<div class="loading-text">
 						<div class="loading-title">${this.state.heading}</div>
-						${this.state.message ? this.htmlElement `<div class="loading-message">${this.state.message}</div>` : ''}
+						${this.state.message ? this.htmlElement`<div class="loading-message">${this.state.message}</div>` : ''}
 					</div>
 				</div>
 			</div>

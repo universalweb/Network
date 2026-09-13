@@ -54,45 +54,8 @@
 	position: relative;
 }
 
-/* Empty / loading / error message when no entries pass the active tab filter. */
-.log-empty {
-	padding: var(--space-5) var(--space-4);
-	text-align: center;
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
-	font-size: var(--text-sm);
-	letter-spacing: 0.08em;
-}
-
-/* LOAD MORE action; the controller hides the button at exhaustion → collapse
-   the bar so no empty gap trails the feed. */
-.log-loadmore-bar {
-	display: flex;
-	justify-content: center;
-	padding-block-start: var(--space-2);
-}
-.log-loadmore-bar:not(:has(.log-loadmore:not([hidden]))) {
-	display: none;
-}
-.log-btn {
-	background: transparent;
-	color: var(--dark-text-medium);
-	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.16));
-	padding: var(--space-2) var(--space-4);
-	font-family: var(--font-mono, monospace);
-	font-size: var(--text-2xs);
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
-	cursor: pointer;
-	transition: border-color 0.15s ease, color 0.15s ease;
-}
-.log-btn:hover:not(:disabled) {
-	border-color: var(--teal);
-	color: var(--teal);
-}
-.log-btn:disabled {
-	opacity: 0.35;
-	cursor: not-allowed;
-}
+/* Empty / loading / load-more / paging chrome now live inside <ui-collection>
+   (the feed host); this panel styles only the outer frame, tabs, and rows. */
 
 /* CRT scanline overlay — purely cosmetic. `pointer-events: none` is
    load-bearing: without it the pseudo-element sits over every log entry

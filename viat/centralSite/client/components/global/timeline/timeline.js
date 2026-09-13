@@ -2,10 +2,10 @@
 	DESCRIPTION: ui-timeline — a vertical (default) or horizontal event stream
 	(tx history, block events, audit trail). Binds `items[]`
 	({ time, label, description, icon, tone }) straight off state via list(); each
-	row is a <ui-timeline-item> that owns its own render. The parent owns only the
-	orientation + density decoration — applied as host data-* attrs that set
-	layout custom properties INHERITED into every child shadow (so two timelines
-	can share one items array without fighting over it). Display-only.
+	row is a feature-light row (click + circle tooltip; shared CSS — no nested
+	timeline-item shadow). Emits timeline:select { item, index }.
+	The parent owns orientation + density decoration as host data-* attrs that set
+	layout custom properties for the row CSS.
 	── STANDARD USAGE ───────────────────────────────────────────────────
 	  <ui-timeline .state.items=${[
 	    { time: '12:04', label: 'Block 4821 sealed', tone: 'success', icon: 'check' },
@@ -13,8 +13,8 @@
 	  ]} .state.orientation=${'vertical'} .state.density=${'normal'}></ui-timeline>
 	─────────────────────────────────────────────────────────────────────
 */
+import '../icon/icon.js';
 import { WebComponent } from 'webcomponent';
-import { UITimelineItem } from './timeline-item.js';
 export class UITimeline extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -27,8 +27,7 @@ export class UITimeline extends WebComponent {
 	};
 	onConnect() {
 		// Orientation + density are enumerated visual dims → host data-* attrs (the
-		// host isn't template-rendered). The CSS turns them into inherited layout
-		// props the children read; nothing is written onto the item objects.
+		// host isn't template-rendered). CSS turns them into layout custom props.
 		this.observe([
 			'orientation',
 			'density',
@@ -42,10 +41,43 @@ export class UITimeline extends WebComponent {
 	itemKey(item) {
 		return item.id ?? item.label ?? item.time;
 	}
+	handleItemClick(domEvent, item, itemIndex) {
+		this.emit('timeline:select', {
+			item,
+			index: itemIndex,
+		});
+	}
+	/*
+	 * Feature-light row — @click on the row, tooltip on the plain dot
+	 * (not a composed control). Optional icon is a nested ui-icon;
+	 * time/desc stay in-DOM with ?hidden when empty.
+	 */
+	timelineItemRow(item) {
+		const tone = item?.tone || 'neutral';
+		const icon = item?.icon || '';
+		const time = item?.time || '';
+		const label = item?.label || '';
+		const description = item?.description || '';
+		const tip = item?.tooltip || label;
+		return this.partial`
+			<div class="timeline" role="listitem" @click=${this.handleItemClick}>
+				<div class="timeline-rail">
+					<span class="timeline-dot" data-tone=${tone} tooltip=${tip}>
+						<ui-icon .state.name=${icon} .state.size=${'xs'} ?hidden=${!icon}></ui-icon>
+					</span>
+					<span class="timeline-line"></span>
+				</div>
+				<div class="timeline-body">
+					<span class="timeline-time" ?hidden=${!time}>${time}</span>
+					<span class="timeline-label">${label}</span>
+					<span class="timeline-desc" ?hidden=${!description}>${description}</span>
+				</div>
+			</div>`;
+	}
 	render() {
-		this.html `
+		this.html`
 			<div class="tl" role="list">
-				${this.list('items', UITimelineItem, this.itemKey)}
+				${this.list('items', this.timelineItemRow, this.itemKey)}
 			</div>
 		`;
 	}

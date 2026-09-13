@@ -1,0 +1,72 @@
+:host {
+	display: block;
+	position: relative;
+	inline-size: 100%;
+}
+.multi-select[data-disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+.multi-select-trigger {
+	display: flex;
+	flex: 1 1 auto;
+	align-items: center;
+	gap: 0.4rem;
+	min-inline-size: 0;
+	min-block-size: 2.125rem;
+	padding-block: 0.3rem;
+	padding-inline: 0.55rem;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+.multi-select-trigger:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal));
+	outline-offset: -2px;
+}
+.multi-select-chips {
+	display: flex;
+	flex: 1 1 auto;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.3rem;
+	min-inline-size: 0;
+}
+.multi-select-placeholder {
+	color: var(--text-muted);
+	font-size: var(--text-sm, 0.875rem);
+}
+.multi-select-placeholder[hidden] {
+	display: none;
+}
+.multi-select-icon {
+	flex: 0 0 auto;
+	opacity: 0.55;
+}
+/*
+ * Native [popover] UA chrome is a Canvas box with `border: solid` in
+ * CanvasText — white outline around the whole panel in a dark theme.
+ * ui-listbox already paints the dropdown surface; this host is a
+ * transparent popover wrapper, same reset as notification-stack.
+ */
+.multi-select-panel {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	overflow: visible;
+	z-index: var(--z-dropdown, 1000);
+}
+.multi-select-panel:focus {
+	outline: none;
+}
+.multi-select-panel ui-listbox {
+	display: block;
+}

@@ -4,7 +4,7 @@
 	inset-inline-start: 0;
 	inset-inline-end: 0;
 	inset-block-end: 0;
-	z-index: 40;
+	z-index: var(--z-dock);
 	box-sizing: border-box;
 	overflow: hidden;
 	background: var(--status-bar-bg, var(--bg-dark));

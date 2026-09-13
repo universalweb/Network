@@ -1,16 +1,20 @@
 import { computeAnchor, flipMorph, WebComponent } from 'webcomponent';
+import { SurfaceController } from '../../core/dom/surfaceController.js';
 // `MorphSurface` — shared base for the cult-ui-style "expand outward" surfaces
-// (floating-panel, popover, expandable-card, morph-drawer). It owns the open/close
-// lifecycle, the FLIP morph (via the shared `flipMorph` helper), trigger-relative
-// anchoring, and Esc / outside-click dismissal. Subclasses provide only `render()`
+// (floating-panel, popover, expandable-card, morph-drawer). It owns the FLIP morph
+// (via the shared `flipMorph` helper) and trigger-relative anchoring. Open/close
+// + dismiss live on SurfaceController (composition, keyed to the overlay
+// element). Subclasses provide only `render()`
 // and, where the geometry differs, an override of `positionSurface()` / `fromRect()`
 // / the duration + easing hooks. NOT a custom element — never `customElements.define`
 // this; each concrete surface registers its own tag.
 //
 // CONTRACT — the subclass template MUST expose these refs:
 //   #trigger  the box the surface grows OUT of (default `fromRect()` source)
-//   #overlay  a `position: fixed` viewport layer (NOT portaled — a `<portal>` would
-//             orphan the surface's <slot>; fixed already escapes ancestor overflow)
+//   #overlay  a `position: fixed` viewport layer. Put `popover="manual"` on it so
+//             the native top-layer escapes ancestor overflow / content-visibility
+//             / transform containing blocks. Do NOT `<portal>` — that orphans
+//             the surface's <slot>. `position: fixed` alone does NOT escape.
 //   #surface  the morphing surface element (the flipMorph target)
 // and read the shared anchor vars in its CSS:
 //   inset-block-start: calc(var(--ms-anchor-top, 0px) + <gap>);
@@ -28,8 +32,6 @@ export class MorphSurface extends WebComponent {
 	// The live morph handle — cancelled before a fresh open/close so the surface
 	// measures at its natural box.
 	morphAnim = null;
-	// Per-open AbortController scoping the global Esc listener.
-	dismissAbort = null;
 	// ── Feel knobs (override per subclass for a different cadence) ──────────────
 	openDuration() {
 		return DEFAULT_OPEN_MS;
@@ -52,9 +54,29 @@ export class MorphSurface extends WebComponent {
 		this.delegate('viewport:resize', this.handleViewportChange);
 	}
 	onDisconnect() {
-		this.unbindDismiss();
+		this.overlayCtl?.detach();
 		this.morphAnim?.cancel();
 		this.morphAnim = null;
+	}
+	ensureOverlayCtl() {
+		this.overlayCtl ??= new SurfaceController(this, {
+			surface: () => {
+				return this.refs.overlay;
+			},
+			closeMethod: 'runClose',
+			keepOpen: () => {
+				return this.refs.surface;
+			},
+			listenEscape: true,
+			outside: false,
+		});
+		return this.overlayCtl;
+	}
+	showOverlayPopover() {
+		this.ensureOverlayCtl().show();
+	}
+	hideOverlayPopover() {
+		this.overlayCtl?.hide();
 	}
 	// Gap between trigger and surface, in px. Lives in JS (not CSS) so the flip math
 	// can place it on the trigger-FACING edge — a flipped-up surface needs the gap
@@ -102,19 +124,20 @@ export class MorphSurface extends WebComponent {
 		// frame: no flash.
 		this.morphAnim?.cancel();
 		overlay.setAttribute('data-open', '');
+		this.showOverlayPopover();
 		this.positionSurface();
 		this.morphAnim = flipMorph(surface, this.fromRect(), {
 			duration: this.openDuration(),
 			easing: this.springEasing(),
 		});
-		this.bindDismiss();
+		this.ensureOverlayCtl().attach();
 	}
 	runClose() {
 		if (!this.state.open) {
 			return;
 		}
 		this.state.open = false;
-		this.unbindDismiss();
+		this.overlayCtl?.detach();
 		const surface = this.refs.surface;
 		if (!surface) {
 			return;
@@ -131,6 +154,7 @@ export class MorphSurface extends WebComponent {
 		anim.finished.then(() => {
 			if (this.morphAnim === anim && !this.state.open) {
 				this.refs.overlay?.removeAttribute('data-open');
+				this.hideOverlayPopover();
 			}
 		}).catch(() => {});
 	}
@@ -149,23 +173,6 @@ export class MorphSurface extends WebComponent {
 	}
 	handleCloseClick() {
 		this.runClose();
-	}
-	bindDismiss() {
-		this.dismissAbort = new AbortController();
-		globalThis.addEventListener('keydown', this, {
-			signal: this.dismissAbort.signal,
-		});
-	}
-	unbindDismiss() {
-		this.dismissAbort?.abort();
-		this.dismissAbort = null;
-	}
-	// Global Esc listener registered with `this` as the handler — the house pattern
-	// for a raw listener (pass an object implementing handleEvent).
-	handleEvent(domEvent) {
-		if (domEvent.type === 'keydown' && domEvent.key === 'Escape') {
-			this.runClose();
-		}
 	}
 	handleViewportChange() {
 		if (this.state.open) {

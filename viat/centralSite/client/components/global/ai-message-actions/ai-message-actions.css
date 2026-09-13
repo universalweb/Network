@@ -1,0 +1,46 @@
+:host {
+	display: inline-flex;
+}
+.ai-message-actions {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+}
+.ai-message-actions-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-muted, rgba(255, 255, 255, 0.5));
+	cursor: pointer;
+	transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.ai-message-actions-btn > * {
+	pointer-events: none;
+}
+.ai-message-actions-btn:hover:not(:disabled) {
+	color: var(--text-main);
+	background: var(--bg-panel, rgba(255, 255, 255, 0.04));
+}
+.ai-message-actions-btn:focus-visible {
+	outline: 2px solid var(--cyan, currentColor);
+	outline-offset: 1px;
+}
+.ai-message-actions-btn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+.ai-message-actions-btn[data-action='delete']:hover:not(:disabled) {
+	color: var(--color-danger, oklch(0.68 0.2 25));
+	border-color: color-mix(in oklab, var(--color-danger, oklch(0.68 0.2 25)) 30%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+	.ai-message-actions-btn {
+		transition: none;
+	}
+}

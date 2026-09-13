@@ -1,22 +1,24 @@
 /*
-	DESCRIPTION: ui-menubar — a horizontal application menu bar (MUI/desktop
-	"Menubar": File / Edit / View …). Extends `ui-menu` to reuse its item layer
-	wholesale — list rows, `handleClick`, `selectIndex`, and the roving
+	DESCRIPTION: ui-menubar — a horizontal application menu bar (File / Edit / View …).
+	Extends `ui-menu` to reuse its item layer
+	wholesale — list rows, `handleSelect`, `selectIndex`, and the roving
 	`move`/`focusItem`/`enabledIndexes`/`focusFirst` all operate on
-	`this.state.items`, and the native-Popover dismiss + `computeAnchor` placement
-	come along for free.
-	The ONE structural difference from a dropdown: N triggers feed ONE shared panel.
-	Switching menus does NOT close/reopen the popover — it writes the active menu's
-	items into `this.state.items`, which the patch pass diffs INTO the live panel in
-	place (verified: the popover element is not torn down), then repositions under the
-	newly-active trigger. That's smoother than a fade-out/fade-in and keeps everything
-	in ONE shadow root, so trigger roving (Arrow Left/Right) and hover-switch need no
-	cross-shadow focus plumbing.
-	Triggers render via `list('menus', this.triggerRow)` (light html — auto-escaped
-	labels; no escapeHtml / `^html` string builder). Roving tabindex + aria-expanded
-	stay imperative on the live buttons (accepted focusItem pattern).
-	Inherited `activeIndex` keeps its base meaning (focused item WITHIN the panel);
-	`openMenu` (ours) is which top-level menu's panel is open (-1 = none).
+	`this.state.items` (the OPEN menu's items), and the native-Popover dismiss
+	+ `computeAnchor` placement come along for free.
+	N triggers feed ONE shared auto-popover. Switching menus does NOT
+	close/reopen — PaneTrack slides the live panes (same mechanic as
+	ui-nav-section) and resizes the shell. `this.state.items` still points at
+	the active menu's items so inherited keyboard roving stays scoped.
+	popover="auto" — UA owns Esc + light-dismiss; SurfaceController must NOT
+	join the escape stack.
+	REJECTED MorphSurface as host — UIMenu documents why: auto popover is the
+	top-layer escape; MorphSurface's position:fixed overlay in shadow cannot.
+	tk:144 skipped auto menus for this reason, not by accident.
+	REJECTED a third sliding-dropdown CE — UIMenu + menu-surface + PaneTrack
+	is the mechanism. Visual identity stays in menubar.css (trigger strip,
+	11rem menu floor) vs nav-section.css (mega pane).
+	REJECTED reusing ui-nav-pane — that pane's policy is nav-links + slot.
+	Menu rows are ui-menu-item (ui-menubar-pane).
 	── EVENTS ───────────────────────────────────────────────────────────
 	  menu:select { value, index, menu }   (menu = index of the top-level menu)
 	── USAGE ────────────────────────────────────────────────────────────
@@ -27,14 +29,22 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { html } from 'webcomponent';
-import { computeAnchor } from '../../core/dom/anchor.js';
+import {
+	layoutViewport,
+	markSwitch,
+	resetViewportSize,
+	stampPaneStates,
+} from '../../core/dom/paneTrack.js';
+import { rafCoalesce, rafCoalesceCancel } from '../../core/dom/rafCoalesce.js';
+import { SurfaceController } from '../../core/dom/surfaceController.js';
 import { UIMenu } from '../menu/menu.js';
-import { UIMenuItem } from '../menu/menu-item.js';
+import { UIMenubarPane } from './menubar-pane.js';
 export class UIMenubar extends UIMenu {
 	static url = import.meta.url;
-	// Reuse the dropdown panel + item styles; menubar.css only adds the trigger strip.
 	static styles = {
-		menu: '../menu/menu.css',
+		menu: null,
+		menuSurface: '../menu/menu-surface.css',
+		slidePane: '../../core/dom/slide-pane.css',
 		menubar: './menubar.css',
 	};
 	static state = {
@@ -43,24 +53,46 @@ export class UIMenubar extends UIMenu {
 		side: 'bottom',
 		align: 'start',
 		offset: 4,
+		closeOnScroll: true,
 	};
-	// Which top-level menu's panel is open (-1 = none). NOT reactive — switching
-	// menus drives the panel via the `items` swap, not a re-render of this field.
+	// Which top-level menu's panel is open (-1 = none). NOT reactive.
 	openMenu = -1;
-	// Roving-tabindex cursor across the trigger strip.
 	focusedTrigger = 0;
-	// Set before showPopover/switch so opening via keyboard focuses the first item
-	// while opening via mouse (click/hover) does not steal focus into the panel.
 	keyboardOpen = false;
-	// Stashed by Escape (handled before native dismiss) so the close path can return
-	// focus to the invoking trigger; -1 when the close was an outside-click dismiss.
 	escFocusReturn = -1;
 	onConnect() {
 		super.onConnect?.();
 		this.observe('menus', this.stampMenuIndexes);
 		this.stampMenuIndexes();
+		this.ensureSurfaceCtl();
 	}
-	/* Stamp menuIndex onto each top-level menu so light rows can bind data-menu. */
+	ensureSurfaceCtl() {
+		this.surfaceCtl ??= new SurfaceController(this, {
+			surface: () => {
+				return this.refs.surface;
+			},
+			closeMethod: 'closeFromScroll',
+			keepOpen: () => {
+				return this.refs.surface;
+			},
+		});
+		return this.surfaceCtl;
+	}
+	onDisconnect() {
+		this.surfaceCtl?.detach();
+		rafCoalesceCancel(this);
+		super.onDisconnect?.();
+	}
+	closeFromScroll() {
+		if (this.state.closeOnScroll === false) {
+			return;
+		}
+		if (this.openMenu < 0) {
+			return;
+		}
+		this.refs.surface?.hidePopover();
+	}
+	/* Stamp menuIndex + panelIndex so triggers and panes share one index. */
 	stampMenuIndexes() {
 		const menus = this.state.menus;
 		if (!Array.isArray(menus)) {
@@ -68,15 +100,55 @@ export class UIMenubar extends UIMenu {
 		}
 		const count = menus.length;
 		for (let index = 0; index < count; index += 1) {
-			menus[index].menuIndex = index;
+			const menu = menus[index];
+			if (menu.menuIndex !== index) {
+				menu.menuIndex = index;
+			}
+			if (menu.panelIndex !== index) {
+				menu.panelIndex = index;
+			}
 		}
+		this.syncPanelFlags();
+	}
+	syncPanelFlags() {
+		stampPaneStates(this.findComponents('ui-menubar-pane') || [], this.openMenu);
+	}
+	layoutPanels() {
+		const panelViewport = this.refs.viewport;
+		const panes = this.findComponents('ui-menubar-pane') || [];
+		const activePanel = this.openMenu;
+		if (!panelViewport || !panes.length || activePanel < 0) {
+			return;
+		}
+		let activePane = null;
+		const paneCount = panes.length;
+		for (let index = 0; index < paneCount; index += 1) {
+			const pane = panes[index];
+			if (Number(pane.state.panelIndex) === activePanel) {
+				activePane = pane;
+				break;
+			}
+		}
+		layoutViewport(panelViewport, activePane, {
+			minWidthEm: 11,
+		});
+	}
+	scheduleLayout() {
+		rafCoalesce(this, this.runPaneLayout);
+	}
+	runPaneLayout() {
+		if (this.isDisconnected) {
+			return;
+		}
+		this.layoutPanels();
+		this.position();
 	}
 	triggerButton(index) {
 		if (index < 0) {
 			return null;
 		}
-		// Same accepted pattern as UIMenu.focusItem: query the raw list row inside a
-		// captured ref (triggers stay light html — no child component registry).
+		// Light html trigger rows — no child CE registry. Same accepted pattern
+		// as the previous menubar (captured #bar ref, not a tree walk).
 		return this.refs.bar?.querySelector(`button[data-menu="${index}"]`);
 	}
 	setTriggerExpanded(index, expanded) {
@@ -104,26 +176,22 @@ export class UIMenubar extends UIMenu {
 		this.openMenu = index;
 		this.keyboardOpen = Boolean(viaKeyboard);
 		this.setTriggerExpanded(index, true);
-		// Swap the shared panel's content to this menu (patch pass → diffs in place,
-		// popover survives). Wait a frame so offsetWidth/Height reflect the new items
-		// BEFORE positioning (else we'd anchor with stale dimensions).
 		this.state.items = menus[index].items ?? [];
+		this.syncPanelFlags();
 		const wasOpen = surface.matches(':popover-open');
-		await this.nextFrame();
-		if (this.isDisconnected) {
-			return;
-		}
+		markSwitch(surface, wasOpen);
 		if (wasOpen) {
-			// Switching while already open: relocate under the new trigger in place.
-			this.position();
+			this.scheduleLayout();
+			await this.nextFrame();
+			if (this.isDisconnected) {
+				return;
+			}
 			if (viaKeyboard) {
 				this.focusFirst();
 			}
-		} else {
-			// First open: showPopover fires `toggle` → handleToggle positions + reveals
-			// (and focuses the first item when keyboardOpen).
-			surface.showPopover();
+			return;
 		}
+		this.ensureSurfaceCtl().show();
 	}
 	moveTrigger(delta) {
 		const count = this.state.menus.length;
@@ -132,8 +200,6 @@ export class UIMenubar extends UIMenu {
 		}
 		const next = (this.focusedTrigger + delta + count) % count;
 		this.setFocusedTrigger(next);
-		// Desktop behavior: arrowing across the bar while a menu is open switches the
-		// open menu and keeps keyboard focus inside it.
 		if (this.openMenu >= 0) {
 			this.openMenuAt(next, true);
 		}
@@ -152,7 +218,6 @@ export class UIMenubar extends UIMenu {
 		}
 	}
 	handleBarHover(domEvent) {
-		// Hover only switches when a menu is ALREADY open (classic menubar feel).
 		if (this.openMenu < 0) {
 			return;
 		}
@@ -168,97 +233,114 @@ export class UIMenubar extends UIMenu {
 	}
 	handleBarKey(domEvent) {
 		switch (domEvent.key) {
-			case 'ArrowRight':
+			case 'ArrowRight': {
 				domEvent.preventDefault();
 				this.moveTrigger(1);
 				break;
-			case 'ArrowLeft':
+			}
+			case 'ArrowLeft': {
 				domEvent.preventDefault();
 				this.moveTrigger(-1);
 				break;
+			}
 			case 'ArrowDown':
 			case 'Enter':
-			case ' ':
+			case ' ': {
 				domEvent.preventDefault();
 				this.openMenuAt(this.focusedTrigger, true);
 				break;
-			case 'Home':
+			}
+			case 'Home': {
 				domEvent.preventDefault();
 				this.setFocusedTrigger(0);
 				break;
-			case 'End':
+			}
+			case 'End': {
 				domEvent.preventDefault();
 				this.setFocusedTrigger(this.state.menus.length - 1);
 				break;
-			default:
+			}
+			default: {
 				break;
+			}
 		}
 	}
-	// Panel-level keys: add cross-menu Left/Right (so arrowing works with focus INSIDE
-	// the panel too) + Escape focus-return; everything else falls to the inherited
-	// within-menu roving (Up/Down/Home/End/Enter/Space).
 	handleKey(domEvent) {
 		switch (domEvent.key) {
-			case 'ArrowRight':
+			case 'ArrowRight': {
 				domEvent.preventDefault();
 				this.moveTrigger(1);
 				break;
-			case 'ArrowLeft':
+			}
+			case 'ArrowLeft': {
 				domEvent.preventDefault();
 				this.moveTrigger(-1);
 				break;
-			case 'Escape':
-				// Let native popover dismiss run; mark the trigger to refocus on close.
+			}
+			case 'Escape': {
 				this.escFocusReturn = this.openMenu;
 				break;
-			default:
+			}
+			default: {
 				super.handleKey(domEvent);
 				break;
+			}
 		}
 	}
-	// Fully overrides UIMenu.handleToggle: position under the ACTIVE trigger, and on
-	// close reset openMenu / aria + return focus to the trigger when appropriate.
 	handleToggle(domEvent) {
 		const surface = this.refs.surface;
 		if (!surface) {
 			return;
 		}
 		if (domEvent.newState === 'open') {
-			this.position();
 			surface.classList.add('is-open');
 			this.activeIndex = -1;
+			this.scheduleLayout();
 			if (this.keyboardOpen) {
 				this.focusFirst();
 			}
-		} else {
-			surface.classList.remove('is-open');
-			const closing = this.openMenu;
-			this.openMenu = -1;
-			this.setTriggerExpanded(closing, false);
-			if (this.escFocusReturn >= 0) {
-				this.setFocusedTrigger(this.escFocusReturn);
-				this.escFocusReturn = -1;
+			if (this.state.closeOnScroll !== false) {
+				this.ensureSurfaceCtl().attach();
 			}
-		}
-	}
-	position() {
-		const surface = this.refs.surface;
-		const trigger = this.triggerButton(this.openMenu);
-		if (!surface || !trigger) {
 			return;
 		}
-		const placed = computeAnchor(trigger.getBoundingClientRect(), {
-			width: surface.offsetWidth,
-			height: surface.offsetHeight,
-		}, {
-			placement: `${this.state.side}-${this.state.align}`,
-			offset: Number(this.state.offset) || 4,
-		});
-		surface.style.top = `${placed.top}px`;
-		surface.style.left = `${placed.left}px`;
-		surface.dataset.placement = placed.placement;
+		this.surfaceCtl?.detach();
+		surface.classList.remove('is-open');
+		const closing = this.openMenu;
+		this.openMenu = -1;
+		this.setTriggerExpanded(closing, false);
+		this.syncPanelFlags();
+		resetViewportSize(this.refs.viewport);
+		if (this.escFocusReturn >= 0) {
+			this.setFocusedTrigger(this.escFocusReturn);
+			this.escFocusReturn = -1;
+		}
 	}
-	// Adds the top-level menu index to the inherited select payload.
+	anchorElement() {
+		return this.triggerButton(this.openMenu);
+	}
+	focusItem(index) {
+		const item = this.state.items[index];
+		if (!item) {
+			return;
+		}
+		const pane = this.findComponent('ui-menubar-pane', (candidate) => {
+			return this.isActivePane(candidate);
+		});
+		const row = pane?.findComponent('ui-menu-item', (candidate) => {
+			return this.rowHasValue(candidate, item.value);
+		});
+		if (row) {
+			this.activeIndex = index;
+			row.focus();
+		}
+	}
+	isActivePane(pane) {
+		return pane.state.active === true;
+	}
+	rowHasValue(candidate, value) {
+		return candidate.state.value === value;
+	}
 	selectIndex(index) {
 		const item = this.state.items[index];
 		if (!item || item.disabled || item.separator) {
@@ -269,10 +351,8 @@ export class UIMenubar extends UIMenu {
 			index,
 			menu: this.openMenu,
 		});
-		this.refs.surface?.hidePopover();
+		this.closeAfterSelect();
 	}
-	/* Light html trigger — label auto-escaped. tabindex/aria-expanded owned
-	   imperatively by setFocusedTrigger / setTriggerExpanded after mount. */
 	triggerRow(item) {
 		const index = item.menuIndex;
 		const tabIndex = index === this.focusedTrigger ? 0 : -1;
@@ -287,9 +367,11 @@ export class UIMenubar extends UIMenu {
 				@click=${this.handleBarClick} @keydown=${this.handleBarKey} @pointerover=${this.handleBarHover}>
 				${this.list('menus', this.triggerRow, this.menuKey)}
 			</div>
-			<div #surface class="menu-surface" popover="auto" role="menu"
+			<div #surface class="menu-surface glass" popover="auto" role="menu"
 				@toggle=${this.handleToggle} @menu-item:select=${this.handleSelect} @keydown=${this.handleKey}>
-				${this.list('items', UIMenuItem)}
+				<div #viewport class="slide-viewport">
+					${this.list('menus', UIMenubarPane, this.menuKey)}
+				</div>
 			</div>
 		`;
 	}

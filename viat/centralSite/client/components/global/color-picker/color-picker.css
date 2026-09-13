@@ -1,8 +1,18 @@
+@property --color-picker-color {
+	syntax: '<color>';
+	inherits: true;
+	initial-value: #fff;
+}
+@property --color-picker-alpha-color {
+	syntax: '<color>';
+	inherits: true;
+	initial-value: #fff;
+}
 :host {
 	display: block;
 	inline-size: 15rem;
 }
-.cp {
+.color-picker {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
@@ -14,9 +24,9 @@
 	/* One diagonal tile, laid twice with an offset = the transparency checkerboard
 	   behind the alpha dial + preview swatch (theme-independent, like the
 	   white/black SV gradients below). */
-	--cp-checker: linear-gradient(45deg, rgba(0, 0, 0, 0.22) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.22) 75%);
+	--color-picker-checker: linear-gradient(45deg, rgba(0, 0, 0, 0.22) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.22) 75%);
 }
-.cp-square {
+.color-picker-square {
 	position: relative;
 	inline-size: 100%;
 	block-size: 9rem;
@@ -25,19 +35,19 @@
 	cursor: crosshair;
 	touch-action: none;
 }
-.cp-sat,
-.cp-light {
+.color-picker-sat,
+.color-picker-light {
 	position: absolute;
 	inset: 0;
 	pointer-events: none;
 }
-.cp-sat {
+.color-picker-sat {
 	background: linear-gradient(to right, #fff, transparent);
 }
-.cp-light {
+.color-picker-light {
 	background: linear-gradient(to bottom, transparent, #000);
 }
-.cp-cursor {
+.color-picker-cursor {
 	position: absolute;
 	inline-size: 0.875rem;
 	block-size: 0.875rem;
@@ -47,12 +57,12 @@
 	transform: translate(-50%, -50%);
 	pointer-events: none;
 }
-.cp-controls {
+.color-picker-controls {
 	display: flex;
 	align-items: center;
 	gap: var(--space-2);
 }
-.cp-preview {
+.color-picker-preview {
 	flex: none;
 	inline-size: 2.25rem;
 	block-size: 2.25rem;
@@ -61,20 +71,20 @@
 	/* Lay the (possibly translucent) colour over the checkerboard so alpha shows. */
 	background-color: #fff;
 	background-image:
-		linear-gradient(var(--cp-color, #fff), var(--cp-color, #fff)),
-		var(--cp-checker), var(--cp-checker);
+		linear-gradient(var(--color-picker-color, #fff), var(--color-picker-color, #fff)),
+		var(--color-picker-checker), var(--color-picker-checker);
 	background-size: auto, 0.6rem 0.6rem, 0.6rem 0.6rem;
 	background-position: 0 0, 0 0, 0.3rem 0.3rem;
 }
-.cp-dials {
+.color-picker-dials {
 	flex: 1 1 auto;
 	min-inline-size: 0;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-2);
 }
-.cp-hue,
-.cp-alpha {
+.color-picker-hue,
+.color-picker-alpha {
 	-webkit-appearance: none;
 	appearance: none;
 	inline-size: 100%;
@@ -82,48 +92,78 @@
 	border-radius: 999px;
 	cursor: pointer;
 }
-.cp-hue {
+.color-picker-hue {
+	/* currentColor bridges --color-picker-alpha-color into the thumb (WebKit thumbs
+	   do not inherit custom properties from the input). */
+	color: var(--color-picker-alpha-color, #fff);
 	background: linear-gradient(
 		to right,
 		hsl(0, 100%, 50%), hsl(60, 100%, 50%), hsl(120, 100%, 50%),
 		hsl(180, 100%, 50%), hsl(240, 100%, 50%), hsl(300, 100%, 50%), hsl(360, 100%, 50%)
 	);
 }
-.cp-alpha {
+.color-picker-alpha {
+	/* currentColor = active colour at alpha, for the thumb fill. */
+	color: var(--color-picker-color, #fff);
 	/* Transparent → opaque current colour, over the same checkerboard. */
 	background-color: #fff;
 	background-image:
-		linear-gradient(to right, transparent, var(--cp-alpha-color, #fff)),
-		var(--cp-checker), var(--cp-checker);
+		linear-gradient(to right, transparent, var(--color-picker-alpha-color, #fff)),
+		var(--color-picker-checker), var(--color-picker-checker);
 	background-size: auto, 0.6rem 0.6rem, 0.6rem 0.6rem;
 	background-position: 0 0, 0 0, 0.3rem 0.3rem;
 }
-.cp-hue::-webkit-slider-thumb,
-.cp-alpha::-webkit-slider-thumb {
+/* WebKit and Moz thumb selectors MUST stay in separate rules. A mixed
+   selector list is invalid in each engine and the whole rule is dropped. */
+.color-picker-hue::-webkit-slider-thumb,
+.color-picker-alpha::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	inline-size: 1rem;
 	block-size: 1rem;
 	border-radius: 50%;
-	background: #fff;
 	border: 2px solid rgba(0, 0, 0, 0.35);
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.85);
 	cursor: pointer;
 }
-.cp-hue::-moz-range-thumb,
-.cp-alpha::-moz-range-thumb {
+.color-picker-hue::-moz-range-thumb,
+.color-picker-alpha::-moz-range-thumb {
 	inline-size: 1rem;
 	block-size: 1rem;
 	border-radius: 50%;
-	background: #fff;
 	border: 2px solid rgba(0, 0, 0, 0.35);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.85);
 	cursor: pointer;
 }
-.cp-value {
+.color-picker-hue::-webkit-slider-thumb {
+	background: currentColor;
+}
+.color-picker-hue::-moz-range-thumb {
+	background: currentColor;
+}
+.color-picker-alpha::-webkit-slider-thumb {
+	background-color: #fff;
+	background-image:
+		linear-gradient(currentColor, currentColor),
+		linear-gradient(45deg, rgba(0, 0, 0, 0.22) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.22) 75%),
+		linear-gradient(45deg, rgba(0, 0, 0, 0.22) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.22) 75%);
+	background-size: auto, 0.4rem 0.4rem, 0.4rem 0.4rem;
+	background-position: 0 0, 0 0, 0.2rem 0.2rem;
+}
+.color-picker-alpha::-moz-range-thumb {
+	background-color: #fff;
+	background-image:
+		linear-gradient(currentColor, currentColor),
+		linear-gradient(45deg, rgba(0, 0, 0, 0.22) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.22) 75%),
+		linear-gradient(45deg, rgba(0, 0, 0, 0.22) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.22) 75%);
+	background-size: auto, 0.4rem 0.4rem, 0.4rem 0.4rem;
+	background-position: 0 0, 0 0, 0.2rem 0.2rem;
+}
+.color-picker-value {
 	display: flex;
 	align-items: stretch;
 	gap: var(--space-2);
 }
-.cp-input {
+.color-picker-input {
 	flex: 1 1 auto;
 	min-inline-size: 0;
 	padding: var(--space-2);
@@ -134,11 +174,11 @@
 	font: inherit;
 	text-transform: uppercase;
 }
-.cp-input:focus-visible {
+.color-picker-input:focus-visible {
 	outline: 2px solid var(--teal);
 	outline-offset: 1px;
 }
-.cp-format {
+.color-picker-format {
 	flex: none;
 	-webkit-appearance: none;
 	appearance: none;
@@ -163,20 +203,20 @@
 		color var(--dur-fast) var(--ease-out, ease),
 		border-color var(--dur-fast) var(--ease-out, ease);
 }
-.cp-format:hover {
+.color-picker-format:hover {
 	color: var(--text-main);
 	border-color: var(--teal);
 }
-.cp-format:focus-visible {
+.color-picker-format:focus-visible {
 	outline: 2px solid var(--teal);
 	outline-offset: 1px;
 }
-.cp-presets {
+.color-picker-presets {
 	display: grid;
 	grid-template-columns: repeat(6, 1fr);
 	gap: var(--space-2);
 }
-.cp-swatch {
+.color-picker-swatch {
 	aspect-ratio: 1;
 	padding: 0;
 	border: 1px solid rgba(255, 255, 255, 0.12);
@@ -184,16 +224,16 @@
 	cursor: pointer;
 	transition: transform var(--dur-fast) var(--ease-spring);
 }
-.cp-swatch:hover {
+.color-picker-swatch:hover {
 	transform: scale(1.12);
 }
-.cp-swatch[data-on] {
+.color-picker-swatch[data-on] {
 	outline: 2px solid #fff;
 	outline-offset: 1px;
 }
 @media (prefers-reduced-motion: reduce) {
-	.cp-swatch,
-	.cp-format {
+	.color-picker-swatch,
+	.color-picker-format {
 		transition: none;
 	}
 }

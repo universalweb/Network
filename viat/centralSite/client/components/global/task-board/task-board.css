@@ -1,0 +1,28 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	container-type: inline-size;
+}
+:host(.is-reordering) {
+	cursor: grabbing;
+}
+.task-board {
+	display: grid;
+	grid-template-columns: repeat(var(--task-board-cols, 1), minmax(0, 1fr));
+	gap: 0.75rem;
+	align-items: start;
+	min-inline-size: 0;
+}
+@container (max-width: 36rem) {
+	.task-board {
+		grid-template-columns: 1fr;
+	}
+}
+.task-board-live {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}

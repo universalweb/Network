@@ -1,0 +1,31 @@
+:host {
+	--ui-modal-max-width: min(36rem, calc(100vw - 2rem));
+	display: contents;
+}
+.command {
+	display: contents;
+}
+.command-dialog {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	min-inline-size: min(32rem, calc(100vw - 2.5rem));
+	padding: 0.6rem;
+}
+.command-field {
+	flex: 0 0 auto;
+}
+.command-listbox {
+	display: flex;
+	flex-direction: column;
+	min-block-size: 0;
+	position: relative;
+}
+.command-empty[hidden] {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	:host {
+		scroll-behavior: auto;
+	}
+}

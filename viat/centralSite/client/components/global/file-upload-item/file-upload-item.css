@@ -1,0 +1,75 @@
+:host {
+	display: block;
+}
+.file-upload-item {
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	padding-block: 0.4rem;
+	padding-inline: 0.55rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
+	border-radius: var(--radius-sm, 0.35rem);
+	background: var(--bg-panel, transparent);
+}
+.file-upload-item-thumb-slot {
+	position: relative;
+	flex: 0 0 auto;
+	inline-size: 2.5rem;
+	block-size: 2.5rem;
+	overflow: hidden;
+	border-radius: var(--radius-sm, 0.35rem);
+	background: color-mix(in oklch, var(--text-muted) 12%, transparent);
+}
+.file-upload-item-media,
+.file-upload-item-fallback {
+	inline-size: 100%;
+	block-size: 100%;
+}
+.file-upload-item-media {
+	object-fit: cover;
+	background: color-mix(in oklch, var(--bg-panel, #111) 70%, transparent);
+}
+.file-upload-item-media[hidden],
+.file-upload-item-fallback[hidden] {
+	display: none;
+}
+.file-upload-item-fallback {
+	display: grid;
+	place-items: center;
+	color: var(--text-muted);
+}
+.file-upload-item-meta {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	flex: 1 1 auto;
+	min-inline-size: 0;
+}
+.file-upload-item-kind {
+	flex: 0 0 auto;
+	color: var(--text-muted);
+}
+.file-upload-item-copy {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	min-inline-size: 0;
+}
+.file-upload-item-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: var(--text-sm, 0.875rem);
+}
+.file-upload-item-size {
+	font-size: var(--text-xs, 0.75rem);
+	color: var(--text-muted);
+}
+.file-upload-item-close {
+	flex: 0 0 auto;
+}
+@media (prefers-reduced-motion: reduce) {
+	.file-upload-item-media {
+		transition: none;
+	}
+}

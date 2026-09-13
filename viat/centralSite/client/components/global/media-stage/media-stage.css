@@ -1,0 +1,266 @@
+:host {
+	display: block;
+	position: relative;
+	/*
+	 * Column-flex parents resolve flex-basis to content when inline-size is
+	 * auto, so the host shrink-wraps to the figure. Bind to the parent box;
+	 * flex on :host governs the block axis here and cannot.
+	 */
+	inline-size: 100%;
+	max-inline-size: 100%;
+	min-inline-size: 0;
+	min-block-size: 12rem;
+	--media-radius: var(--gallery-radius, var(--radius-md, 0.5rem));
+	--media-nav-glyph: 1.5rem;
+	--media-nav-pad: 0.45rem;
+}
+:host([data-fit='cover']) {
+	min-block-size: 0;
+	block-size: 100%;
+}
+:host([data-overlay]) {
+	display: flex;
+	flex: 1 1 auto;
+	min-block-size: 0;
+	block-size: auto;
+}
+.media-stage {
+	position: relative;
+	display: grid;
+	place-items: center;
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: 12rem;
+	background: color-mix(in oklch, var(--bg-panel, currentColor) 8%, transparent);
+	border-radius: var(--media-radius);
+	overflow: hidden;
+}
+:host([data-overlay]) .media-stage {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	background: transparent;
+	overflow: visible;
+	border-radius: 0;
+}
+.media-figure {
+	display: grid;
+	place-items: center;
+	gap: 0.5rem;
+	margin: 0;
+	max-inline-size: 100%;
+	max-block-size: 100%;
+	cursor: default;
+	user-select: none;
+}
+:host([data-interactive]) .media-figure {
+	cursor: zoom-in;
+}
+.media-full {
+	max-inline-size: 100%;
+	max-block-size: 22rem;
+	inline-size: auto;
+	block-size: auto;
+	object-fit: contain;
+	border-radius: var(--media-radius);
+	transform-origin: center center;
+	transition: transform 0.2s ease;
+	user-select: none;
+}
+/*
+ * Fullscreen: an image smaller than the stage stays at natural size and
+ * centres via place-items. Never width/height 100% — that stretches it.
+ */
+:host([data-overlay]) .media-full {
+	max-inline-size: 100%;
+	max-block-size: 100%;
+	inline-size: auto;
+	block-size: auto;
+}
+:host([data-fit='cover']) .media-stage,
+:host([data-fit='cover']) .media-figure {
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: 0;
+}
+:host([data-fit='cover']) .media-full {
+	inline-size: 100%;
+	block-size: 100%;
+	max-inline-size: 100%;
+	max-block-size: none;
+	object-fit: cover;
+	border-radius: 0;
+}
+.media-copy {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+	margin: 0;
+	max-inline-size: 100%;
+}
+.media-copy[data-align='center'] {
+	text-align: center;
+}
+.media-copy[data-align='start'] {
+	text-align: start;
+}
+.media-copy[data-align='end'] {
+	text-align: end;
+}
+.media-copy:not(:has(> :not([hidden]))) {
+	display: none;
+}
+.media-copy-heading,
+.media-copy-caption,
+.media-copy-subtitle,
+.media-copy-description {
+	margin: 0;
+}
+.media-copy-heading[hidden],
+.media-copy-caption[hidden],
+.media-copy-subtitle[hidden],
+.media-copy-description[hidden] {
+	display: none;
+}
+.media-copy-heading {
+	color: currentColor;
+	font-size: 1rem;
+	font-weight: 600;
+	user-select: text;
+}
+.media-copy-caption,
+.media-copy-subtitle,
+.media-copy-description {
+	color: var(--text-muted);
+	font-size: 0.85rem;
+	user-select: none;
+}
+:host([data-overlay]) .media-copy-heading {
+	color: #fff;
+}
+:host([data-overlay]) .media-copy-caption,
+:host([data-overlay]) .media-copy-subtitle,
+:host([data-overlay]) .media-copy-description {
+	color: color-mix(in oklch, #fff 80%, transparent);
+}
+.media-nav[hidden] {
+	display: none;
+}
+.media-nav {
+	position: absolute;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: #fff;
+	cursor: pointer;
+	z-index: 1;
+	inset-block: 0;
+	container-type: inline-size;
+	container-name: media-nav;
+	inline-size: var(--media-nav-zone, 25%);
+	/*
+	 * Two lg chips cannot fit in a narrow host without overlapping, so the
+	 * glyph tracks the button via cqi. Floor at min(lg chip, 50%) keeps a
+	 * usable hit target; the 50% cap keeps prev/next from crossing.
+	 */
+	min-inline-size: min(calc(var(--media-nav-glyph) + 2 * var(--media-nav-pad)), 50%);
+	max-inline-size: 50%;
+	block-size: auto;
+	user-select: none;
+	transition: background 0.16s ease;
+}
+.media-prev:hover {
+	background-image: linear-gradient(to right, color-mix(in oklch, #fff 14%, transparent), transparent);
+}
+.media-next:hover {
+	background-image: linear-gradient(to left, color-mix(in oklch, #fff 14%, transparent), transparent);
+}
+.media-nav:focus {
+	outline: none;
+}
+.media-nav:focus-visible {
+	outline: none;
+}
+.media-prev {
+	inset-inline-start: 0;
+	justify-content: flex-start;
+	padding-inline-start: min(0.75rem, 18cqi);
+}
+.media-next {
+	inset-inline-end: 0;
+	justify-content: flex-end;
+	padding-inline-end: min(0.75rem, 18cqi);
+}
+.media-nav ui-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	max-inline-size: 100%;
+	padding: clamp(0.12rem, 10cqi, var(--media-nav-pad));
+	--icon-size: clamp(0.75rem, 40cqi, var(--media-nav-glyph));
+	border-radius: 999px;
+	background: color-mix(in oklch, #000 45%, transparent);
+	transition: background 0.16s ease, scale 0.16s ease;
+}
+.media-nav:hover ui-icon {
+	background: color-mix(in oklch, #000 62%, transparent);
+	scale: 1.08;
+}
+.media-nav:focus-visible ui-icon {
+	outline: 2px solid #fff;
+	outline-offset: 2px;
+}
+.media-dots[hidden] {
+	display: none;
+}
+.media-dots {
+	position: absolute;
+	inset-block-end: 0.7rem;
+	inset-inline: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 0.4rem;
+	z-index: 2;
+	pointer-events: none;
+}
+.media-dot {
+	pointer-events: auto;
+	inline-size: 0.5rem;
+	block-size: 0.5rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	background: color-mix(in oklch, #fff 55%, transparent);
+	box-shadow: 0 0 0 1px color-mix(in oklch, #000 28%, transparent);
+	cursor: pointer;
+	transition: inline-size 0.16s ease, background 0.16s ease;
+}
+.media-dot[data-active] {
+	inline-size: 0.85rem;
+	background: #fff;
+}
+.media-dot:focus {
+	outline: none;
+}
+.media-dot:focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.media-full,
+	.media-nav,
+	.media-nav ui-icon,
+	.media-dot {
+		transition: none;
+	}
+	.media-nav:hover ui-icon {
+		scale: 1;
+	}
+}

@@ -1,0 +1,90 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	max-inline-size: 16rem;
+	color: var(--text-main);
+}
+
+.gauge {
+	display: grid;
+	justify-items: center;
+	position: relative;
+	--gauge-fill: var(--cyan, oklch(0.72 0.14 210));
+}
+
+.gauge[data-tone='accent'] {
+	--gauge-fill: var(--cyan, oklch(0.72 0.14 210));
+}
+.gauge[data-tone='success'] {
+	--gauge-fill: var(--color-success, oklch(0.72 0.17 145));
+}
+.gauge[data-tone='warning'] {
+	--gauge-fill: var(--color-warning, oklch(0.8 0.16 85));
+}
+.gauge[data-tone='danger'] {
+	--gauge-fill: var(--color-danger, oklch(0.62 0.2 25));
+}
+.gauge[data-tone='info'] {
+	--gauge-fill: var(--color-info, oklch(0.7 0.12 250));
+}
+.gauge[data-tone='neutral'] {
+	--gauge-fill: var(--text-muted, oklch(0.6 0.02 250));
+}
+
+.gauge-svg {
+	inline-size: 100%;
+	aspect-ratio: 200 / 120;
+	overflow: visible;
+}
+
+.gauge-track {
+	fill: color-mix(in oklab, var(--border-color, currentColor) 28%, transparent);
+	stroke: none;
+}
+
+.gauge-value {
+	fill: var(--gauge-fill);
+	stroke: none;
+}
+
+.gauge-readout {
+	display: grid;
+	justify-items: center;
+	gap: 0.15rem;
+}
+
+.gauge[data-readout='overlay'] .gauge-readout {
+	inset-block-end: 0.85rem;
+	inset-inline: 0;
+	margin-block-start: 0;
+	pointer-events: none;
+	position: absolute;
+}
+
+.gauge[data-readout='below'] .gauge-readout {
+	margin-block-start: 0.15rem;
+	position: static;
+}
+
+/* Default / legacy look when data-readout is absent */
+.gauge:not([data-readout]) .gauge-readout {
+	margin-block-start: -1.75rem;
+}
+
+.gauge-value-text {
+	font-size: var(--text-lg, 1.25rem);
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.gauge-label {
+	font-size: var(--text-xs, 0.75rem);
+	color: var(--text-muted, var(--text-main));
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.gauge-label[hidden],
+.gauge-value-text[hidden] {
+	display: none !important;
+}

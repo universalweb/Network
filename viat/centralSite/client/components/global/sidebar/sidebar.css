@@ -4,15 +4,14 @@
 	inset-block-start: 0;
 	inset-block-end: 0;
 	pointer-events: none;
-	z-index: 30;
-	/* Gap between the drawer's outer (docked) edge and the window edge so it reads
-	   as a floating panel. It exceeds the shell scroll surface's reserved ~11px
-	   scrollbar gutter (app.css `.shell-scroll`) so the panel clears the scrollbar
-	   instead of sitting on it. Folded into `--shell-closed-x` (the hide distance)
-	   so translateX still carries the panel fully off-screen past the float gap —
-	   otherwise a float-wide sliver would peek while closed. */
-	--sidebar-float: var(--space-6);
-	--shell-closed-x: calc(100% + var(--sidebar-float));
+	width: 0;
+	/* Overlay chrome by default. Desktop flyout docks and drops below the dock. */
+	z-index: calc(var(--z-dock) + 20);
+	--sidebar-float: 0px;
+	--shell-closed-x: 100%;
+	--sidebar-inline-pad: var(--space-3);
+	/* Painted close chrome. Hit floor is `--close-hit` (defaults to `--hit-min`). */
+	--close-size: 2.25rem;
 }
 :host([data-side='right']) {
 	inset-inline-end: 0;
@@ -22,31 +21,33 @@
 	--shell-closed-x: calc(-100% - var(--sidebar-float));
 }
 
-/* ── FLYOUT — xl / xxl ───────────────────────────────────────────────────
-   Large screens that fit the dashboard's full max width (1536px) with room
-   beside it: a BARE flyout — no shell background, no close button, no page
-   backdrop. The slotted panel carries its own solid surface. Slides in from
-   the edge; hidden by default, shown by default only on a very wide (xxl)
-   screen. */
-:host([data-mode='flyout']) {
-	width: 0;
-	/* Below the global top bar (z-index 40): the bare flyout spans the full
-	   viewport height, so a higher z-index would swallow the top bar's
-	   toggle button. The frosted top padding clears the bar visually. */
-	z-index: 30;
+/* ── MOBILE (xs/sm) ──────────────────────────────────────────────────────
+   Every mode overlays. Labeled `full` / default `flyout` is a full-viewport
+   menu; slim density is an icons-only rail that floats above content. */
+:host(:is([data-vw='xs'], [data-vw='sm']):is([data-mode='full'], [data-mode='flyout']):not([data-density='slim'])) {
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	width: auto;
+	--sidebar-inline-pad: var(--space-5);
+	--shell-closed-x: 100%;
+}
+:host(:is([data-vw='xs'], [data-vw='sm'])[data-side='left']:is([data-mode='full'], [data-mode='flyout']):not([data-density='slim'])) {
+	--shell-closed-x: -100%;
 }
 
-/* ── COVER-UP — xs / sm / md / lg ────────────────────────────────────────
-   Narrower screens, where the drawer would sit over dashboard content: a
-   frosted shell + full-page frosted backdrop, with a close button and
-   drag-to-close. */
-:host([data-mode='coverup']) {
-	width: 0;
-	z-index: 60;
+/* ── DESKTOP (md+) flyout ────────────────────────────────────────────────
+   Docked rail beside content. Float gap, below the top-bar toggle. */
+:host(:not([data-vw='xs']):not([data-vw='sm'])[data-mode='flyout']) {
+	z-index: calc(var(--z-dock) - 10);
+	--sidebar-float: var(--space-6);
+	--shell-closed-x: calc(100% + var(--sidebar-float));
+	--sidebar-inline-pad: 0px;
+}
+:host(:not([data-vw='xs']):not([data-vw='sm'])[data-side='left'][data-mode='flyout']) {
+	--shell-closed-x: calc(-100% - var(--sidebar-float));
 }
 
-/* Edge swipe sensor — a thin off-screen strip, live only while the drawer is
-   closed, so it can be dragged in with nothing else to grab. */
+/* Edge swipe sensor — thin strip while closed. Hidden on mobile full-bleed. */
 .sidebar-edge {
 	position: fixed;
 	inset-block-start: 0;
@@ -65,30 +66,39 @@
 :host(:not([open])) .sidebar-edge {
 	pointer-events: auto;
 }
+:host(:is([data-vw='xs'], [data-vw='sm']):is([data-mode='full'], [data-mode='flyout']):not([data-density='slim'])) .sidebar-edge {
+	display: none;
+	pointer-events: none;
+	width: 0;
+}
 
-/* Backdrop — cover-up only. Transparent + blur, never a dark scrim: the page
-   stays visible but pushed back behind frosted glass. */
+/* Backdrop — overlay modes. Transparent + blur, never a dark scrim. */
 .sidebar-backdrop {
 	position: fixed;
 	inset: 0;
 	background: transparent;
-	backdrop-filter: blur(7px);
-	-webkit-backdrop-filter: blur(7px);
+	backdrop-filter: var(--popup-glass-blur);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
 	opacity: 0;
 	pointer-events: none;
 	transition: opacity 0.28s ease;
 	z-index: -1;
 }
-:host([data-mode='flyout']) .sidebar-backdrop,
+:host(:not([data-vw='xs']):not([data-vw='sm'])[data-mode='flyout']) .sidebar-backdrop,
 :host([data-no-backdrop]) .sidebar-backdrop {
 	display: none;
 }
-:host([data-mode='coverup'][open]) .sidebar-backdrop {
+:host([open]) .sidebar-backdrop {
 	opacity: 1;
 	pointer-events: auto;
 }
+:host(:not([data-vw='xs']):not([data-vw='sm'])[data-mode='flyout'][open]) .sidebar-backdrop,
+:host([data-no-backdrop][open]) .sidebar-backdrop {
+	opacity: 0;
+	pointer-events: none;
+}
 
-/* ── Shell — the panel container ───────────────────────────────────────── */
+/* ── Shell ─────────────────────────────────────────────────────────────── */
 .sidebar-shell {
 	position: absolute;
 	inset-block-start: 0;
@@ -100,9 +110,32 @@
 	box-sizing: border-box;
 	pointer-events: auto;
 	padding-block-end: var(--space-12);
+	padding-inline: var(--sidebar-inline-pad);
+	padding-block-start: var(--top-bar-clearance);
 	will-change: transform;
 	transform: translateX(var(--shell-closed-x));
-	transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+	--sidebar-move-dur: 0.32s;
+	--sidebar-size-dur: 0.22s;
+	transition:
+		transform var(--sidebar-move-dur) cubic-bezier(0.4, 0, 0.2, 1),
+		inline-size var(--sidebar-size-dur) ease,
+		max-inline-size var(--sidebar-size-dur) ease,
+		width var(--sidebar-size-dur) ease;
+	touch-action: pan-y;
+	background: var(--sidebar-shell-bg, color-mix(in oklab, var(--bg-body, #080a10) 55%, transparent));
+	backdrop-filter: var(--popup-glass-blur);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
+	min-inline-size: 0;
+	width: min(100dvw, 26.25rem);
+}
+.sidebar-shell:has(ui-nav:not([hidden])) {
+	overflow-y: hidden;
+	padding-block-end: 0.75rem;
+}
+.sidebar-shell > ui-nav:not([hidden]) {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	align-self: stretch;
 }
 :host([data-side='right']) .sidebar-shell {
 	inset-inline-end: var(--sidebar-float);
@@ -110,7 +143,6 @@
 :host([data-side='left']) .sidebar-shell {
 	inset-inline-start: var(--sidebar-float);
 }
-/* While dragging, JS inlines `transition: none` so the shell tracks 1:1. */
 .sidebar-shell.is-dragging {
 	transition: none;
 }
@@ -118,69 +150,126 @@
 	transform: translateX(0);
 }
 
-/* Bare flyout shell — no background, no border, no shadow: purely a
-   positioner. The slotted panel supplies its own solid surface. The extra
-   top padding lifts the panel clear of the floating global top bar. */
-:host([data-mode='flyout']) .sidebar-shell {
-	width: 18.75rem;
+/* Desktop flyout chrome — density owns WIDTH, not this block.
+   data-mode × data-density is an explicit grid; flyout must not pin
+   --sidebar-rail-width or slim collapse is a no-op (lower-specificity
+   [data-density=slim] used to lose to this rule). */
+:host(:not([data-vw='xs']):not([data-vw='sm'])[data-mode='flyout']) .sidebar-shell {
 	background: transparent;
-	padding-block-start: 120px;
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	touch-action: auto;
+	padding-inline: 0;
+	transition:
+		transform var(--sidebar-move-dur) cubic-bezier(0.4, 0, 0.2, 1),
+		inline-size var(--sidebar-size-dur) ease,
+		max-inline-size var(--sidebar-size-dur) ease,
+		width var(--sidebar-size-dur) ease;
+}
+:host(:not([data-vw='xs']):not([data-vw='sm'])[data-mode='flyout']:not([data-density='slim'])) .sidebar-shell {
+	inline-size: var(--sidebar-rail-width);
+	max-inline-size: var(--sidebar-rail-width);
+	width: var(--sidebar-rail-width);
+}
+:host(:not([data-vw='xs']):not([data-vw='sm'])[data-mode='flyout'][data-density='slim']) .sidebar-shell {
+	inline-size: var(--sidebar-rail-slim);
+	max-inline-size: var(--sidebar-rail-slim);
+	width: var(--sidebar-rail-slim);
+	overflow-x: hidden;
+}
+:host(:not([data-vw='xs']):not([data-vw='sm'])[data-mode='flyout']) .sidebar-shell:has(ui-nav:not([hidden])) {
+	background: var(--bg-body, #080a10);
 }
 
-/* Cover-up shell — frosted glass: a near-transparent tint over a backdrop
-   blur, with an edge border + shadow. */
-:host([data-mode='coverup']) .sidebar-shell {
-	/* Subtract the float from the full-bleed width so the drawer still fits inside
-	   the window once it is inset off the docked edge (otherwise it would overhang
-	   the opposite edge on phones). Capped at the same max as before. */
-	width: min(calc(100dvw - var(--sidebar-float)), 26.25rem);
-	touch-action: pan-y;
-	background: var(--sidebar-shell-bg, rgba(8, 10, 16, 0.55));
-	backdrop-filter: blur(16px);
-	-webkit-backdrop-filter: blur(16px);
-	padding-block-start: 90px;
+/* Slim overlay (coverup / mobile flyout / desktop full) — icon rail. */
+:host([data-density='slim']) .sidebar-shell {
+	inline-size: var(--sidebar-rail-slim);
+	max-inline-size: var(--sidebar-rail-slim);
+	width: var(--sidebar-rail-slim);
+	overflow-x: hidden;
 }
-:host([data-side='right'][data-mode='coverup']) .sidebar-shell {
+
+/* Mobile labeled-full shell — fills the full-bleed host. */
+:host(:is([data-vw='xs'], [data-vw='sm']):is([data-mode='full'], [data-mode='flyout']):not([data-density='slim'])) .sidebar-shell {
+	width: 100%;
+	max-width: 100%;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	background: var(--sidebar-shell-bg, color-mix(in oklab, var(--bg-body, #080a10) 72%, transparent));
+	backdrop-filter: var(--popup-glass-blur);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
+}
+
+:host(:is([data-mode='coverup'], [data-mode='full'])) .sidebar-shell > ::slotted(*),
+:host(:is([data-vw='xs'], [data-vw='sm'])) .sidebar-shell > ::slotted(*) {
+	inline-size: 100%;
+	max-inline-size: 100%;
+	box-sizing: border-box;
+}
+
+:host([data-side='right'][data-mode='coverup']) .sidebar-shell,
+:host([data-side='right'][data-mode='full']) .sidebar-shell,
+:host(:is([data-vw='xs'], [data-vw='sm'])[data-side='right']) .sidebar-shell {
 	border-inline-start: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	box-shadow: var(--sidebar-shadow-right, -8px 0 24px rgba(0, 0, 0, 0.35));
 }
-:host([data-side='left'][data-mode='coverup']) .sidebar-shell {
+:host([data-side='left'][data-mode='coverup']) .sidebar-shell,
+:host([data-side='left'][data-mode='full']) .sidebar-shell,
+:host(:is([data-vw='xs'], [data-vw='sm'])[data-side='left']) .sidebar-shell {
 	border-inline-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	box-shadow: var(--sidebar-shadow-left, 8px 0 24px rgba(0, 0, 0, 0.35));
 }
+:host(:is([data-vw='xs'], [data-vw='sm']):is([data-mode='full'], [data-mode='flyout']):not([data-density='slim'])) .sidebar-shell {
+	border-inline-start: none;
+	border-inline-end: none;
+	box-shadow: none;
+}
 
-/* Close button — cover-up only. The bare flyout is dismissed via the top
-   bar's toggle or a swipe; it carries no close affordance of its own. */
+/* Close button — overlay modes. Desktop flyout uses top-bar toggle / swipe.
+   Hit box is `--close-hit` (≥44px). Painted face stays `--close-size`.
+   `::part(close)` + inheriting `--close-hit` / `--close-size` are the
+   consumer hatches (this control has no other escape from the shadow). */
 .sidebar-close {
 	position: absolute;
 	inset-block-start: 12px;
 	inset-inline-end: 12px;
-	width: 2.25rem;
-	height: 2.25rem;
-	display: none;
-	align-items: center;
-	justify-content: center;
+	min-inline-size: var(--close-hit, var(--hit-min, max(2.75rem, 44px)));
+	min-block-size: var(--close-hit, var(--hit-min, max(2.75rem, 44px)));
+	inline-size: auto;
+	block-size: auto;
+	display: grid;
+	place-items: center;
 	background: transparent;
-	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border: 0;
 	border-radius: var(--radius-md);
 	color: var(--text-muted, rgba(255, 255, 255, 0.6));
 	cursor: pointer;
 	padding: 0;
 	z-index: 2;
-	transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+	transition: color 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.sidebar-close-face {
+	display: grid;
+	place-items: center;
+	inline-size: var(--close-size);
+	block-size: var(--close-size);
+	background: transparent;
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border-radius: var(--radius-md);
+	transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
 :host([data-side='left']) .sidebar-close {
 	inset-inline-end: auto;
 	inset-inline-start: 12px;
 }
-:host([data-mode='coverup']) .sidebar-close {
-	display: inline-flex;
-}
+:host(:not([data-vw='xs']):not([data-vw='sm'])[data-mode='flyout']) .sidebar-close,
 :host([data-no-close]) .sidebar-close {
 	display: none;
 }
 .sidebar-close:hover {
 	color: var(--text-main);
+}
+.sidebar-close:hover .sidebar-close-face {
 	border-color: var(--dark-divider, rgba(255, 255, 255, 0.18));
 	background: rgba(255, 255, 255, 0.04);
 }
@@ -189,13 +278,20 @@
 }
 .sidebar-close:focus-visible {
 	outline: none;
+}
+.sidebar-close:focus-visible .sidebar-close-face {
 	border-color: var(--cyan);
 	box-shadow: 0 0 0 2px color-mix(in oklab, var(--cyan) 25%, transparent);
 }
 @media (prefers-reduced-motion: reduce) {
+	.sidebar-shell {
+		--sidebar-move-dur: 0s;
+		--sidebar-size-dur: 0s;
+	}
 	.sidebar-shell,
 	.sidebar-backdrop,
-	.sidebar-close {
+	.sidebar-close,
+	.sidebar-close-face {
 		transition: none;
 	}
 }

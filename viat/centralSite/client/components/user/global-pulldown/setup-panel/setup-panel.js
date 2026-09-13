@@ -11,7 +11,7 @@ export class SetupPanel extends Panel {
 		heading: 'LMSTUDIO SETUP',
 	};
 	renderBody() {
-		return this.htmlElement `
+		return this.htmlElement`
 			<ol class="sp-steps">
 				<li>Install <a class="sp-link" href="https://lmstudio.ai" target="_blank" rel="noopener">LMStudio</a>.</li>
 				<li>Download a model of your choice.</li>

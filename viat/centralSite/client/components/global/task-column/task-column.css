@@ -1,0 +1,104 @@
+:host {
+	display: flex;
+	min-inline-size: 0;
+	min-block-size: 0;
+}
+:host(.is-reordering),
+:host(.is-dragging) {
+	position: relative;
+	z-index: 4;
+	cursor: grabbing;
+	touch-action: none;
+}
+:host([data-locked]) {
+	opacity: 0.72;
+}
+:host([data-locked]) .task-column-head {
+	cursor: not-allowed;
+}
+.task-column {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+	inline-size: 100%;
+	min-inline-size: 0;
+	padding: 0.7rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 16%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: color-mix(in oklch, var(--bg-panel) 78%, transparent);
+}
+.task-column-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5rem;
+	border-radius: var(--radius-sm, 0.25rem);
+}
+:host([data-reorderable]) .task-column-head {
+	cursor: grab;
+	touch-action: none;
+}
+.task-column-head:focus-visible,
+.task-column-head[data-grabbed] {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 2px;
+}
+.task-column-collapse {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: none;
+	color: var(--text-muted);
+	cursor: pointer;
+}
+.task-column-collapse:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 1px;
+}
+.task-column-label {
+	font-size: var(--text-sm, 0.875rem);
+	font-weight: var(--weight-semibold, 600);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-main);
+}
+.task-column-label-input {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	margin: 0;
+	padding: 0.1rem 0.3rem;
+	border: 1px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	border-radius: var(--radius-sm, 0.25rem);
+	background: var(--bg-panel, Canvas);
+	color: inherit;
+	font: inherit;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	user-select: text;
+	-webkit-user-select: text;
+}
+.task-column-count {
+	font-size: var(--text-xs, 0.75rem);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-muted);
+}
+.task-column-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	min-block-size: 2rem;
+}
+:host(.is-reordering) .task-column-list {
+	overflow: visible;
+}
+:host([data-drop-target]) {
+	outline: 2px dashed var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 2px;
+}

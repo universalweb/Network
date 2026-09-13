@@ -37,21 +37,36 @@ function ensureRefsMap(component) {
 export function isValidRefName(refName) {
 	return REF_NAME_RE.test(refName);
 }
-export function registerRef(component, refName, element) {
-	const map = ensureRefsMap(component);
-	const ref = new WeakRef(element);
-	map.set(refName, ref);
-	const token = {};
-	FINALIZER.register(element, {
-		map,
-		name: refName,
-	}, token);
-	return () => {
-		FINALIZER.unregister(token);
-		if (map.get(refName) === ref) {
-			map.delete(refName);
+/*
+ * Entry object (not a per-ref closure) so full-teardown can null refsMap first
+ * and skip map ops — only FINALIZER.unregister runs when the map is already gone.
+ */
+class RefEntry {
+	constructor(component, refName, element) {
+		this.component = component;
+		this.refName = refName;
+		this.ref = new WeakRef(element);
+		this.token = {};
+		const map = ensureRefsMap(component);
+		map.set(refName, this.ref);
+		FINALIZER.register(element, {
+			map,
+			name: refName,
+		}, this.token);
+	}
+	unsubscribe() {
+		FINALIZER.unregister(this.token);
+		const map = this.component.refsMap;
+		if (!map) {
+			return;
 		}
-	};
+		if (map.get(this.refName) === this.ref) {
+			map.delete(this.refName);
+		}
+	}
+}
+export function registerRef(component, refName, element) {
+	return new RefEntry(component, refName, element);
 }
 export function getRef(component, refName) {
 	return component.refsMap?.get(refName)?.deref();

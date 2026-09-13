@@ -17,13 +17,13 @@
    inherited property, so it crosses the shadow boundary down to each
    `<ui-icon>`'s currentColor. */
 ui-icon-button {
-	color: var(--icon-color, var(--text-main));
+	color: var(--icon-color);
 	transition: color 0.15s ease;
 }
 ui-icon-button:hover {
-	color: var(--icon-color-hover, var(--cyan));
+	color: var(--icon-color-hover);
 }
 ui-icon-button[data-active],
 ui-icon-button[active] {
-	color: var(--icon-color-active, var(--cyan));
+	color: var(--icon-color-active);
 }

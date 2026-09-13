@@ -1,0 +1,23 @@
+:host {
+	display: block;
+	min-inline-size: min(100%, 12rem);
+}
+.fbi[data-kind='toggle'] {
+	min-inline-size: 0;
+}
+.fbi[data-kind='toggle'] ui-toggle-group {
+	inline-size: 100%;
+	max-inline-size: 100%;
+	min-inline-size: 0;
+}
+.fbi[data-kind='multi-select'] {
+	min-inline-size: 0;
+}
+.fbi[data-kind='multi-select'] ui-multi-select {
+	inline-size: 100%;
+	max-inline-size: 100%;
+	min-inline-size: 0;
+}
+.fbi-range {
+	min-inline-size: min(100%, 16rem);
+}

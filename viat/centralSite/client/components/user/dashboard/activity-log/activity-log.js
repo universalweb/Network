@@ -1,8 +1,13 @@
 import '../../../global/tabs/tabs.js';
-import { WebComponent } from '../../../core/index.js';
+import AppView from '../../../../modules/app.js';
+import { html } from '../../../core/index.js';
+import { COLLECTION_EVENT } from '../../../global/collection/collection.js';
 import { Panel } from '../../../global/panel/panel.js';
-import { AppView } from '../../app-view/app-view.js';
 const PAGE_SIZE = 25;
+/* Row CSS injected into <ui-collection>'s shadow via `.importStyles`, so the
+   light `html` rows render in the shared collection row format — same pattern as
+   account-detail-rows.css / explorer-rows.css. */
+const ROW_STYLES = new URL('./activity-log-rows.css', import.meta.url).href;
 const TAB_ITEMS = [
 	{
 		id: 'All',
@@ -48,11 +53,9 @@ function formatTime(iso) {
 function entryKey(entry) {
 	return entry.id;
 }
-/* Pure list keep-predicate — reads the display flag written at load/tab-change.
-   ListSpot calls filter bare (no `this`); no per-render arrow. */
-function entryVisible(entry) {
-	return !entry.hidden;
-}
+/* Pure keep-predicate the ui-collection engine runs against the active tab
+   (its filterArg). A tab switch rewrites filterArg → setFilterArg retouches the
+   loaded window → this re-runs, hiding rows client-side with no reload. */
 function keepForTab(entry, activeTab) {
 	if (activeTab === 'Inbound') {
 		return entry.direction === 'in';
@@ -62,42 +65,6 @@ function keepForTab(entry, activeTab) {
 	}
 	return true;
 }
-class ActivityLogEntry extends WebComponent {
-	static url = import.meta.url;
-	static styles = {
-		entry: './activity-log-entry.css',
-	};
-	static state = {
-		direction: '',
-		id: '',
-		txHref: '',
-		counterparty: '',
-		counterpartyHref: '',
-		counterpartyShort: '',
-		amount: '',
-		verb: '',
-		status: '',
-		timestamp: '',
-		hidden: false,
-	};
-	render() {
-		// Whole-row reactive read so an entry repaint also refreshes the
-		// embedded <a href> targets. Router intercepts anchor clicks across
-		// the shadow boundary via composedPath, so plain `<a>` is enough —
-		this.html`
-			<div class="log-entry">
-				<span class="log-ts">${this.state.timestamp}</span>
-				<span class="log-tag" data-direction=${this.state.direction}>${this.state.direction === 'in' ? '↙' : '↗'}</span>
-				<span class="log-msg" data-status=${this.state.status}>
-					<a class="log-link log-amount" href=${this.state.txHref} tooltip=${this.state.id}>${this.state.amount} ⩝</a>
-					<span class="log-verb"> ${this.state.verb} </span>
-					<a class="log-link log-addr" href=${this.state.counterpartyHref} tooltip=${this.state.counterparty}>${this.state.counterpartyShort}</a>
-				</span>
-			</div>
-		`;
-	}
-}
-customElements.define('activity-log-entry', ActivityLogEntry);
 export class ActivityLog extends Panel {
 	static url = import.meta.url;
 	static styles = {
@@ -106,34 +73,49 @@ export class ActivityLog extends Panel {
 	static state = {
 		activeTab: 'All',
 		classes: new Set(['output-panel']),
-		entries: [],
-		// Stable collection bag (not a per-render inline object).
-		entriesConfig: {
-			loader: null,
-			mode: 'button',
-			keyFn: entryKey,
-			filter: entryVisible,
-			loadMore: '#load_more',
-			dedupe: true,
-		},
 		// ui-tabs items as-is — no method-fabricated array each paint.
 		tabItems: TAB_ITEMS,
 		panelId: 'ACTIVITY',
 		showDot: true,
 		heading: 'LOG',
-		loading: false,
-		error: '',
+		// Tab-aware empty text handed to the feed (updated on tab change).
+		feedEmpty: 'No all transactions.',
+		// Row CSS pushed into <ui-collection>'s shadow via `.importStyles`.
+		rowStyles: ROW_STYLES,
 	};
 	loadedAddress = '';
+	/* <ui-collection> contract — one stable object merged via `.state=`. The
+	   loader arrow closes over page `this` (the engine calls it `.call(host)`,
+	   host = ui-collection); the row is a self-contained component; `keepForTab`
+	   filters live off filterArg, and `showBar: false` drops the meta/controls
+	   bar so the feed stays a bare list under the tabs. */
+	feedConfig = {
+		loader: (options) => {
+			return this.loadEntries(options);
+		},
+		renderRow: this.txRow,
+		keyFn: entryKey,
+		filter: keepForTab,
+		// Button-only: manual LOAD MORE, no scroll auto-load (the feed lives in a
+		// bounded dashboard panel). The button doubles as the "more available"
+		// cue and collapses to an end-of-results marker when exhausted.
+		pagingStyle: 'button',
+		showBar: false,
+		itemNoun: 'transactions',
+		loadingMessage: 'Loading activity…',
+	};
 	onConnect() {
-		this.state.entriesConfig.loader = this.loadEntries;
-		this.on('entries:loading', this.handleListLoading);
-		this.on('entries:loaded', this.handleListLoaded);
-		this.on('entries:error', this.handleListError);
 		this.observeGlobal('wallet', this.handleWalletChange);
+		this.observeGlobal('account', this.handleAccountChange);
 	}
 	walletAddress() {
 		return this.global.wallet?.address || '';
+	}
+	/* Reload the feed to page 1. Emitted rather than called through a ref: the
+	   mounted <ui-collection> listens for this on its host, so this panel needs
+	   no handle on it and no knowledge of its method names. */
+	refresh() {
+		this.emit(COLLECTION_EVENT.REFRESH);
 	}
 	/* The wallet bus fires on any wallet mutation (balance ticks etc.); only an
 	   ADDRESS change is a new history, so reset just on that. */
@@ -141,28 +123,24 @@ export class ActivityLog extends Panel {
 		const address = wallet?.address || '';
 		if (address !== this.loadedAddress) {
 			this.loadedAddress = address;
-			this.collection('entries')?.reset();
+			this.refresh();
 		}
 	}
-	handleListLoading() {
-		this.assignState({
-			loading: true,
-			error: '',
-		});
+	/* A same-address REFETCH (faucet, send, manual refresh) means new server-side
+	   history with no address change, so handleWalletChange above can't see it.
+	   `fetchedAt` is re-stamped by every account fetch, which makes it the exact
+	   signal — and reading it from the store means the reload happens for ANY
+	   refetch, whoever triggered it, with no fan-out from the app shell. */
+	handleAccountChange(account) {
+		const fetchedAt = account?.fetchedAt || '';
+		if (fetchedAt && fetchedAt !== this.loadedFetchedAt) {
+			this.loadedFetchedAt = fetchedAt;
+			this.refresh();
+		}
 	}
-	handleListLoaded() {
-		this.state.loading = false;
-		this.applyTabVisibility();
-	}
-	handleListError(domEvent) {
-		this.assignState({
-			loading: false,
-			error: domEvent?.detail?.data?.error || 'Could not load activity',
-		});
-	}
-	/* collection loader — the wallet's own tx history, paged via the cursor=page
-	   bridge (see accounts-list-page). Empty-success on no wallet so the mount
-	   auto-load is a clean no-op until a wallet loads. */
+	/* Feed loader — the wallet's own tx history, paged via the cursor=page bridge
+	   (see account-detail-page). Empty-success on no wallet so the mount auto-load
+	   is a clean no-op until a wallet loads. Runs with page `this` (loader arrow). */
 	async loadEntries({
 		reset, cursor,
 	}) {
@@ -187,12 +165,10 @@ export class ActivityLog extends Panel {
 			return null;
 		}
 		const txs = response.transactions ?? [];
-		const activeTab = this.state.activeTab;
 		const items = [];
-		for (let index = 0; index < txs.length; index += 1) {
-			const entry = this.txToEntry(txs[index], address);
-			entry.hidden = !keepForTab(entry, activeTab);
-			items.push(entry);
+		const txCount = txs.length;
+		for (let index = 0; index < txCount; index += 1) {
+			items.push(this.txToEntry(txs[index], address));
 		}
 		const hasMore = Boolean(response.pagination?.hasMore);
 		return {
@@ -201,7 +177,7 @@ export class ActivityLog extends Panel {
 			hasMore,
 		};
 	}
-	/* Map a chain tx to the entry shape ActivityLogEntry renders. Direction is
+	/* Map a chain tx to the entry shape the row renders. Direction is
 	   relative to the wallet's own address. */
 	txToEntry(tx, walletAddress) {
 		const isInbound = tx.to === walletAddress;
@@ -217,98 +193,53 @@ export class ActivityLog extends Panel {
 			verb: isInbound ? 'from' : 'to',
 			status: tx.status === 'completed' || tx.status === 'confirmed' ? 'ok' : (tx.status || 'pending'),
 			timestamp: formatTime(tx.timestamp),
-			hidden: false,
 		};
 	}
-	/* Real-time hook: a freshly observed tx is prepended to the top through the
-	   controller (so dedupe stays authoritative). Normalize first, in case a
-	   caller passes a partial entry. No live caller yet — exposed for the realtime
-	   transport to drive. */
-	addEntry(entry) {
-		const next = this.createEntry(entry);
-		next.hidden = !keepForTab(next, this.state.activeTab);
-		this.collection('entries')?.prepend(next);
-	}
-	createEntry(entry = {}) {
-		return {
-			direction: entry.direction ?? 'in',
-			id: entry.id ?? '',
-			txHref: entry.txHref ?? '',
-			counterparty: entry.counterparty ?? '',
-			counterpartyHref: entry.counterpartyHref ?? '',
-			counterpartyShort: entry.counterpartyShort ?? '—',
-			amount: entry.amount ?? '0',
-			verb: entry.verb ?? '',
-			status: entry.status ?? 'ok',
-			timestamp: entry.timestamp ?? formatTime(new Date().toISOString()),
-			hidden: false,
-		};
-	}
-	/* Stamp `hidden` for the active tab, then retouch the array so the list
-	   filter re-runs (keyed diff reuses rows; only membership flips). */
-	applyTabVisibility() {
-		const activeTab = this.state.activeTab;
-		const entries = this.state.entries;
-		if (!Array.isArray(entries) || !entries.length) {
-			return;
-		}
-		const count = entries.length;
-		for (let index = 0; index < count; index += 1) {
-			const entry = entries[index];
-			const wantHidden = !keepForTab(entry, activeTab);
-			if (Boolean(entry.hidden) !== wantHidden) {
-				entry.hidden = wantHidden;
-			}
-		}
-		this.state.entries = entries.slice();
-	}
-	visibleCount() {
-		const entries = this.state.entries ?? [];
-		let count = 0;
-		const entryCount = entries.length;
-		for (let index = 0; index < entryCount; index += 1) {
-			if (!entries[index].hidden) {
-				count += 1;
-			}
-		}
-		return count;
-	}
-	statusText() {
-		if (this.state.loading) {
-			return 'Loading activity…';
-		}
-		if (this.state.error) {
-			return this.state.error;
-		}
-		return `No ${this.state.activeTab.toLowerCase()} transactions.`;
+	/* Light `html` row rendered directly into <ui-collection>'s .collection-table and
+	   styled via the importStyles-injected activity-log-rows.css — same pattern as
+	   account-detail's txRow. Value-only expressions per the light-row contract;
+	   the router intercepts anchor clicks across the shadow boundary via
+	   composedPath, so plain `<a>` is enough. */
+	txRow(entry) {
+		return html`
+			<div class="log-row">
+				<span class="log-ts">${entry.timestamp}</span>
+				<span class="log-tag" data-direction=${entry.direction}>${entry.direction === 'in' ? '↙' : '↗'}</span>
+				<span class="log-msg" data-status=${entry.status}>
+					<a class="log-link log-amount" href=${entry.txHref} title=${entry.id}>${entry.amount} ⩝</a>
+					<span class="log-verb"> ${entry.verb} </span>
+					<a class="log-link log-addr" href=${entry.counterpartyHref} title=${entry.counterparty}>${entry.counterpartyShort}</a>
+				</span>
+			</div>
+		`;
 	}
 	handleTabChange(domEvent) {
 		const next = domEvent.detail?.data?.id;
 		if (next && next !== this.state.activeTab) {
 			this.state.activeTab = next;
-			this.applyTabVisibility();
+			this.state.feedEmpty = `No ${next.toLowerCase()} transactions.`;
 			this.emit('tabs:change', {
 				tab: this.state.activeTab,
 			});
 		}
 	}
 	renderBody() {
-		// Stable tabs + collection bag — no method-fabricated arrays / per-render config.
+		// Stable tabs + feed config — no method-fabricated arrays / per-render
+		// config. The feed owns the row list, load-more, status and empty state;
+		// filterArg (the active tab) re-filters the loaded window with no reload.
 		return this.htmlElement`
 			<div class="output-content">
 				<ui-tabs class="output-tabs-strip"
 					.state.items=${this.state.tabItems}
 					.state.activeIndex=${this.state.activeTab}
+					.state.contentMode=${'remote'}
 					@tabs:change=${this.handleTabChange}></ui-tabs>
-				<div class="output-feed">
-					${this.collection('entries', ActivityLogEntry, this.state.entriesConfig)}
-					<div class="log-empty" ?hidden=${() => {
-						return this.visibleCount() > 0;
-					}}>∅ ${this.statusText}</div>
-					<div class="log-loadmore-bar">
-						<button class="log-btn log-loadmore" #load_more>LOAD MORE ▾</button>
-					</div>
-				</div>
+				<ui-collection class="output-feed"
+					.state=${this.feedConfig}
+					.state.filterArg=${this.state.activeTab}
+					.state.emptyMessage=${this.state.feedEmpty}
+					.importStyles=${this.state.rowStyles}
+					#feed></ui-collection>
 			</div>
 		`;
 	}

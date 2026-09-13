@@ -1,35 +1,210 @@
 :host {
 	display: block;
 }
-.trk {
+.tracker-root {
 	display: flex;
+	flex-direction: column;
+	gap: 0;
+	position: relative;
+}
+.tracker-strip-row {
+	display: flex;
+	align-items: center;
 	gap: 0.15rem;
-	align-items: stretch;
-	block-size: 1.75rem;
+	min-inline-size: 0;
 }
-.trk-seg {
-	flex: 1 1 0;
-	min-inline-size: 0.18rem;
-	border-radius: var(--radius-xs, 2px);
-	/* Tone comes from the shared `[data-tone]` fill map (util-surface.css); the
-	   segment applies its own 70% mix so the bar reads as a tint, not a slab. */
-	background: color-mix(in oklab, var(--tone-fill, var(--text-muted)) 70%, transparent);
-	transition: opacity 0.15s ease, transform 0.15s ease;
+.tracker-tabs {
+	display: block;
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	--tab-strip-gap: 0;
+	/*
+	 * Block corner radius is NOT set here: `[data-variant='blocks'] .tab-strip`
+	 * re-declares --tab-block-radius on itself, so a value set on this host is
+	 * shadowed and would be dead code. It lives in tabs.css.
+	 */
 }
-.trk-seg:hover {
-	transform: scaleY(1.08);
-	opacity: 0.85;
+.tracker-arrow {
+	flex: 0 0 auto;
+	align-self: center;
+	padding: 0;
 }
-/* Neutral = inactive / unknown — mixed weaker than the active tones so it recedes
-   and never reads as a "filled" segment (the whole point of a health bar). */
-.trk-seg[data-tone='neutral'] {
-	background: color-mix(in oklab, var(--tone-fill, var(--text-muted)) 30%, transparent);
+.tracker-arrow[hidden] {
+	display: none !important;
+}
+.tracker-root[data-arrows='overlay'] .tracker-strip-row {
+	position: relative;
+}
+.tracker-root[data-arrows='overlay'] .tracker-arrow {
+	position: absolute;
+	z-index: 3;
+	/* Start-only + translate: inset-block:50% set BOTH edges, so the
+	   1.7rem disc grew upward from the midline (arrows sat on the top). */
+	inset-block-start: 50%;
+	inset-block-end: auto;
+	translate: 0 -50%;
+	inline-size: 1.7rem;
+	block-size: 1.7rem;
+	min-inline-size: 1.7rem;
+	padding: 0;
+	border-radius: 50%;
+	background: color-mix(in oklab, black 58%, transparent);
+	backdrop-filter: var(--popup-glass-blur);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
+	border: 1px solid rgb(255 255 255 / 0.12);
+	color: var(--text-main, #f5f6fa);
+	box-shadow: 0 0.25rem 0.7rem rgb(0 0 0 / 0.35);
+}
+.tracker-root[data-arrows='overlay'] .tracker-arrow[data-dir='start'] {
+	inset-inline-start: 0.2rem;
+}
+.tracker-root[data-arrows='overlay'] .tracker-arrow[data-dir='end'] {
+	inset-inline-end: 0.2rem;
+}
+.tracker-root[data-arrows='overlay'] .tracker-tabs {
+	padding-inline: 0;
+}
+/*
+ * Detail sits flush under the blocks strip. The sliding tab-indicator
+ * already points at the open block — no diamond caret.
+ */
+.tracker-detail {
+	position: relative;
+	margin-block-start: 0.35rem;
+	padding: 0;
+	border: 1px solid color-mix(in oklch, var(--tone-fill, var(--text-muted)) 28%, transparent);
+	border-radius: var(--radius-md, 0.55rem);
+	background: var(--bg-panel, var(--bg-body));
+	box-shadow: none;
+	animation: tracker-detail-in 0.26s cubic-bezier(0.34, 1.35, 0.64, 1);
+	overflow: hidden;
+}
+.tracker-detail[hidden] {
+	display: none;
+}
+.tracker-detail-viewport {
+	overflow: hidden;
+	transition: block-size 0.28s cubic-bezier(0.34, 1.05, 0.64, 1);
+}
+.tracker-detail-pane {
+	/* Was 0.8/0.9/0.85rem — three near-identical values that read as drift rather
+	   than intent, and heavy against this pane's ~12px type. One token, even. */
+	padding: var(--space-4, 0.75rem);
+}
+.tracker-detail-pane[data-slide='next'] {
+	animation: tracker-slide-next 0.28s cubic-bezier(0.34, 1.1, 0.64, 1);
+}
+.tracker-detail-pane[data-slide='prev'] {
+	animation: tracker-slide-prev 0.28s cubic-bezier(0.34, 1.1, 0.64, 1);
+}
+.tracker-detail-pane[data-slide='in'] {
+	animation: tracker-slide-in 0.26s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+.tracker-detail-head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3, 0.5rem);
+	margin-block-end: var(--space-3, 0.5rem);
+}
+.tracker-detail-swatch {
+	flex: 0 0 auto;
+	inline-size: 0.65rem;
+	block-size: 0.65rem;
+	border-radius: 2px;
+	background: color-mix(in oklab, var(--tone-fill, var(--text-muted)) 88%, transparent);
+	box-shadow: 0 0 0 1px color-mix(in oklab, var(--tone-fill, currentColor) 35%, transparent);
+}
+.tracker-detail-title {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	font-size: var(--text-xs, 0.75rem);
+	font-weight: var(--weight-semibold, 600);
+	letter-spacing: 0.04em;
+	color: var(--text-main);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.tracker-detail-close {
+	flex: 0 0 auto;
+	/* Dense header: the close sits beside ~12px type, so it paints at the
+	   smallest step instead of filling the default icon box. */
+	--btn-face: 1.5rem;
+}
+.tracker-detail-icon[hidden] {
+	display: none !important;
+}
+.tracker-detail-label,
+.tracker-detail-meta {
+	font-size: 0.68rem;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+	margin-block-end: 0.2rem;
+}
+.tracker-detail-label[hidden],
+.tracker-detail-meta[hidden],
+.tracker-detail-actions[hidden] {
+	display: none !important;
+}
+.tracker-detail-body {
+	font-size: var(--text-xs, 0.75rem);
+	line-height: 1.5;
+	color: var(--text-muted);
+	word-break: break-word;
+}
+.tracker-detail-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	margin-block-start: 0.6rem;
+}
+@keyframes tracker-detail-in {
+	from {
+		opacity: 0;
+		transform: translateY(-0.3rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes tracker-slide-next {
+	from {
+		opacity: 0.28;
+		transform: translateX(1.15rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+@keyframes tracker-slide-prev {
+	from {
+		opacity: 0.28;
+		transform: translateX(-1.15rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+@keyframes tracker-slide-in {
+	from {
+		opacity: 0;
+		transform: translateY(-0.2rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 @media (prefers-reduced-motion: reduce) {
-	.trk-seg {
+	.tracker-arrow,
+	.tracker-detail,
+	.tracker-detail-viewport,
+	.tracker-detail-pane[data-slide] {
 		transition: none;
-	}
-	.trk-seg:hover {
+		animation: none;
 		transform: none;
 	}
 }

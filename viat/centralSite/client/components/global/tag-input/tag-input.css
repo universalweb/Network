@@ -3,12 +3,12 @@
 }
 /* The field reads as one input box: chips + the text input wrap inside a single
    bordered surface that lights up on focus-within. */
-.ti {
+.tag-input {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--space-2);
-	min-block-size: 2.75rem;
+	min-block-size: var(--hit-min, max(2.75rem, 44px));
 	padding: var(--space-2);
 	border: 1px solid var(--tag-input-border, var(--border-light-color, var(--dark-divider)));
 	border-radius: var(--radius-md);
@@ -19,15 +19,15 @@
 		border-color var(--dur-fast, 0.15s) var(--ease-out, ease),
 		box-shadow var(--dur-fast, 0.15s) var(--ease-out, ease);
 }
-.ti:focus-within {
+.tag-input:focus-within {
 	border-color: var(--teal);
 	box-shadow: 0 0 0 2px color-mix(in oklab, var(--teal) 22%, transparent);
 }
-.ti[data-disabled] {
+.tag-input[data-disabled] {
 	opacity: 0.55;
 	cursor: not-allowed;
 }
-.ti-input {
+.tag-input-input {
 	flex: 1 1 6rem;
 	min-inline-size: 6rem;
 	border: 0;
@@ -37,14 +37,14 @@
 	font: inherit;
 	padding: var(--space-1, 0.25rem);
 }
-.ti-input::placeholder {
+.tag-input-input::placeholder {
 	color: var(--text-muted);
 }
-.ti-input:disabled {
+.tag-input-input:disabled {
 	cursor: not-allowed;
 }
 @media (prefers-reduced-motion: reduce) {
-	.ti {
+	.tag-input {
 		transition: none;
 	}
 }

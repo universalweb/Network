@@ -1,0 +1,17 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	min-inline-size: 0;
+}
+.px-surface {
+	display: block;
+	inline-size: 100%;
+	min-inline-size: 0;
+	will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+	.px-surface {
+		will-change: auto;
+		transform: none !important;
+	}
+}

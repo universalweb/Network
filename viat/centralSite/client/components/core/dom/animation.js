@@ -47,7 +47,7 @@ function forceReflow(element) {
  */
 async function settleAnimations(element) {
 	forceReflow(element);
-	const animations = element.getAnimations();
+	const animations = typeof element.getAnimations === 'function' ? element.getAnimations() : [];
 	if (!animations.length) {
 		return;
 	}

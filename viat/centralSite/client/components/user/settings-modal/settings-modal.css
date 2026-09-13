@@ -13,6 +13,9 @@
 	   modal-body top clearance and inset the strip + content areas instead — the
 	   sidebar bg then flows up under the frosted window bar with no gap. */
 	--modal-body-pad-top: 0;
+	--modal-body-padding-inline: 0;
+	--modal-body-padding-block-end: 0;
+	--modal-body-padding-block-start: 0;
 	color: var(--text-main);
 	font-family: var(--font-mono, 'JetBrains Mono', monospace);
 }
@@ -37,7 +40,7 @@
    see the inner dialog's state). Two rules cooperate: the modal's own
    `[data-window='maximized']` grows `.modal-body` (`flex: 1 1 auto`) to the full
    100dvh dialog — giving it a DEFINITE height — and this rule then lets `.sm-tabs`
-   take 100% of it. `.modal-controls` is absolutely positioned, so `.modal-body` is
+   take 100% of it. `ui-window-title-bar` is absolutely positioned, so `.modal-body` is
    the sole in-flow child, and the slot is `display:contents`, so 100% resolves. */
 .sm-modal[data-window='maximized'] .sm-tabs {
 	block-size: 100%;

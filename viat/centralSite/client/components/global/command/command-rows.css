@@ -1,0 +1,22 @@
+/* Adopted into <ui-collection>'s shadow — hide list-shell chrome the palette
+   does not use, and drop the collection empty (ui-empty-state paints it). */
+.collection-bar,
+.collection-pager,
+.collection-loadmore-bar,
+.collection-empty,
+.collection-sentinel {
+	display: none;
+}
+.collection-shell {
+	color: inherit;
+	font-family: inherit;
+	gap: 0;
+}
+.collection-table {
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+}
+.collection-rows {
+	gap: 0.1rem;
+}

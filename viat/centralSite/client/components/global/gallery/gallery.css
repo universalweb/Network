@@ -1,0 +1,62 @@
+:host {
+	display: block;
+	overflow: visible;
+	--gallery-radius: var(--radius-md, 0.5rem);
+	--gallery-thumb-pad: 0.5rem;
+}
+.gallery {
+	display: flex;
+	flex-direction: column;
+	inline-size: 100%;
+	overflow: visible;
+	gap: 0.75rem;
+}
+.gallery[data-radius='none'] {
+	--gallery-radius: 0;
+}
+.gallery[data-radius='sm'] {
+	--gallery-radius: var(--radius-sm, 0.25rem);
+}
+.gallery[data-radius='md'] {
+	--gallery-radius: var(--radius-md, 0.5rem);
+}
+.gallery[data-radius='lg'] {
+	--gallery-radius: var(--radius-lg, 0.75rem);
+}
+.gallery-toolbar {
+	display: flex;
+	justify-content: flex-end;
+	user-select: none;
+}
+.gallery-toolbar[hidden] {
+	display: none;
+}
+.gallery[data-layout='grid'] > .gallery-toolbar,
+.gallery[data-layout='grid'] > ui-media-stage {
+	display: none;
+}
+.gallery[data-layout='viewer']:not([data-thumbs]) > .gallery-thumbs {
+	display: none;
+}
+/*
+ * Horizontal scrollport. overflow-x:auto computes overflow-y to auto too,
+ * so padding must cover scale/lift + ring or the active thumb clips.
+ */
+.gallery-thumbs {
+	display: flex;
+	gap: 0.5rem;
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding: var(--gallery-thumb-pad);
+	scroll-padding: var(--gallery-thumb-pad);
+	scrollbar-width: thin;
+	user-select: none;
+}
+.gallery[data-layout='viewer'] .gallery-thumbs > ui-gallery-thumb {
+	flex: none;
+	inline-size: 4.5rem;
+}
+.gallery[data-layout='grid'] .gallery-thumbs {
+	display: grid;
+	overflow: visible;
+}

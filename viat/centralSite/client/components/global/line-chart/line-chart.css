@@ -1,0 +1,109 @@
+:host {
+	container-type: inline-size;
+	display: block;
+	inline-size: 100%;
+	min-block-size: 12rem;
+	color: var(--text-main);
+}
+
+.line-chart {
+	block-size: 100%;
+	min-block-size: inherit;
+	--line-chart-series: var(--cyan, oklch(0.72 0.14 210));
+}
+
+.line-chart-svg-stack {
+	display: grid;
+	inline-size: 100%;
+	aspect-ratio: 400 / 220;
+	min-block-size: 11rem;
+	position: relative;
+}
+
+/* Base axes + light ticks + partial series/hits share one cell */
+.line-chart-svg-stack > .line-chart-base,
+.line-chart-svg-stack > .line-chart-layer,
+.line-chart-svg-stack > .chart-series-svg,
+.line-chart-svg-stack > .chart-candle-svg,
+.line-chart-svg-stack > .chart-hit-svg {
+	grid-area: 1 / 1;
+	inline-size: 100%;
+	block-size: 100%;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.line-chart-base {
+	pointer-events: none;
+}
+
+.line-chart-layer {
+	pointer-events: none;
+}
+
+.line-chart-grid {
+	fill: none;
+	stroke: color-mix(in oklab, var(--border-color, currentColor) 35%, transparent);
+	stroke-width: 1;
+	vector-effect: non-scaling-stroke;
+}
+
+.line-chart-line {
+	fill: none;
+	stroke: var(--line-chart-series);
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	vector-effect: non-scaling-stroke;
+}
+
+.line-chart-area {
+	fill: color-mix(in oklab, var(--line-chart-series) 22%, transparent);
+	stroke: none;
+}
+
+.line-chart-tick {
+	fill: var(--text-muted, var(--text-main));
+	font-size: 10px;
+}
+
+.line-chart-legend {
+	display: block;
+	min-inline-size: 0;
+}
+
+.line-chart-empty {
+	display: grid;
+	place-items: center;
+	min-block-size: 11rem;
+	color: var(--text-muted, var(--text-main));
+	font-size: var(--text-sm, 0.875rem);
+}
+
+.line-chart-empty[hidden] {
+	display: none !important;
+}
+
+.chart-candle-svg {
+	display: block;
+}
+
+.chart-candle-wick {
+	stroke: var(--tone-fill, currentColor);
+	stroke-width: 1.25;
+	vector-effect: non-scaling-stroke;
+}
+
+.chart-candle-body {
+	cursor: pointer;
+	fill: color-mix(in oklch, var(--tone-fill, currentColor) 78%, transparent);
+	pointer-events: all;
+	stroke: var(--tone-fill, currentColor);
+	stroke-width: 1;
+	vector-effect: non-scaling-stroke;
+}
+
+.chart-candle-body:hover,
+.chart-candle-body:focus-visible {
+	fill: color-mix(in oklch, var(--tone-fill, currentColor) 92%, transparent);
+}

@@ -1,0 +1,136 @@
+/*
+	Shared chart chrome layout: legend placement grid + axis title labels.
+	Charts put data-legend-pos / data-legend-orient / data-compact on the shell.
+	Resize only flips those attrs (via chartLayout.js) — no geometry thrash.
+*/
+
+.chart-plot {
+	/* Compositor layer for live geometry / hit targets */
+	backface-visibility: hidden;
+	contain: layout style;
+	inline-size: 100%;
+	position: relative;
+	transform: translateZ(0);
+}
+
+.chart-plot[data-motion] {
+	will-change: transform, contents;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.chart-plot[data-motion] {
+		will-change: auto;
+	}
+}
+
+.chart-shell {
+	display: grid;
+	gap: var(--space-2, 0.5rem);
+	inline-size: 100%;
+	min-inline-size: 0;
+	/* default: plot then legend (bottom) */
+	grid-template-areas:
+		'plot'
+		'legend';
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.chart-shell[data-legend-pos='top'] {
+	grid-template-areas:
+		'legend'
+		'plot';
+}
+
+.chart-shell[data-legend-pos='bottom'] {
+	grid-template-areas:
+		'plot'
+		'legend';
+}
+
+.chart-shell[data-legend-pos='left'] {
+	grid-template-areas: 'legend plot';
+	grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+	align-items: center;
+}
+
+.chart-shell[data-legend-pos='right'] {
+	grid-template-areas: 'plot legend';
+	grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+	align-items: center;
+}
+
+.chart-plot-area {
+	grid-area: plot;
+	min-inline-size: 0;
+	display: grid;
+	gap: 0.35rem;
+}
+
+.chart-legend-slot {
+	grid-area: legend;
+	min-inline-size: 0;
+	display: block;
+}
+
+.chart-legend-slot[hidden] {
+	display: none !important;
+}
+
+/* Cartesian axis title labels (HTML chrome — cheap, no SVG rebuild). */
+.chart-axis-labels {
+	display: grid;
+	gap: 0.15rem;
+	min-inline-size: 0;
+}
+
+.chart-axis-label {
+	color: var(--text-muted, var(--text-main));
+	font-size: var(--text-xs, 0.75rem);
+	line-height: 1.2;
+	min-inline-size: 0;
+}
+
+.chart-axis-label[hidden] {
+	display: none !important;
+}
+
+.chart-axis-label-x {
+	text-align: center;
+}
+
+.chart-axis-label-y {
+	/* upright label above plot; compact alternative to rotated SVG text */
+	text-align: start;
+	font-weight: 500;
+}
+
+.chart-heading {
+	color: var(--text-secondary, var(--text-main));
+	font-size: var(--text-sm, 0.875rem);
+	font-weight: 600;
+	line-height: 1.25;
+	min-inline-size: 0;
+}
+
+.chart-heading[hidden] {
+	display: none !important;
+}
+
+/* Narrow host: stack always (belt + suspenders with JS compact fold). */
+.chart-shell[data-compact][data-legend-pos='left'],
+.chart-shell[data-compact][data-legend-pos='right'] {
+	grid-template-areas:
+		'plot'
+		'legend';
+	grid-template-columns: minmax(0, 1fr);
+}
+
+@container (max-width: 26rem) {
+	.chart-shell[data-layout='auto'][data-legend-pos='left'],
+	.chart-shell[data-layout='auto'][data-legend-pos='right'] {
+		grid-template-areas:
+			'plot'
+			'legend';
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

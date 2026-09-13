@@ -1,0 +1,7 @@
+/*
+ * Wallet document sheet. Shared framework tokens and modules live in
+ * styles/index.css; this file is the app's render-blocking entry so
+ * swapping the document's <link> swaps the app's CSS. Wallet chrome
+ * (app.css) stays on the AppView shadow host.
+ */
+@import '../../styles/index.css';

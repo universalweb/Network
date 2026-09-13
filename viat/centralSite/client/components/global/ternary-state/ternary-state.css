@@ -1,0 +1,62 @@
+:host {
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-flex;
+	flex: 0 0 auto;
+	max-inline-size: 100%;
+	--tab-button-hover-transform: none;
+	/*
+	 * Ternary labels read as status chips, so uppercase is part of the style.
+	 * Done with text-transform rather than uppercasing the string, so the value
+	 * stays intact for assistive tech and for anything reading the label.
+	 * The pill tab-button sets an explicit text-transform, which beats plain
+	 * inheritance — hence the token rather than a bare declaration here.
+	 */
+	--tab-button-text-transform: uppercase;
+	--tab-button-letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+/*
+ * Tone drives the colour, so ease the label with the indicator rather than
+ * letting it snap a frame apart from the fill.
+ */
+:host,
+.ternary-state {
+	transition: color 0.28s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+	:host,
+	.ternary-state {
+		transition: none;
+	}
+}
+:host([data-tone='success']) {
+	--tab-indicator-fill: color-mix(in oklch, var(--color-success, oklch(0.68 0.17 155)) 32%, transparent);
+	--tab-button-selected-color: var(--color-success, oklch(0.68 0.17 155));
+}
+:host([data-tone='danger']) {
+	--tab-indicator-fill: color-mix(in oklch, var(--color-danger, oklch(0.62 0.2 25)) 32%, transparent);
+	--tab-button-selected-color: var(--color-danger, oklch(0.62 0.2 25));
+}
+:host([data-tone='warning']) {
+	--tab-indicator-fill: color-mix(in oklch, var(--color-warning, oklch(0.78 0.16 85)) 36%, transparent);
+	--tab-button-selected-color: var(--color-warning, oklch(0.78 0.16 85));
+}
+:host([data-color-target='icon']) {
+	--tab-indicator-fill: color-mix(in oklch, var(--text-main) 12%, transparent);
+}
+:host([data-size='sm']) {
+	--tab-button-pad-size: 0.3rem 0.6rem;
+	--tab-button-font: var(--text-xs, 0.75rem);
+}
+:host([data-size='lg']) {
+	--tab-button-pad-size: 0.55rem 1.15rem;
+	--tab-button-font: var(--text-md, 1rem);
+}
+.ternary-state {
+	display: inline-flex;
+	inline-size: 100%;
+}
+:host([data-disabled]) {
+	opacity: 0.45;
+}

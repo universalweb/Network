@@ -1,6 +1,21 @@
-import { WebComponent } from '../../core/index.js';
-const SNAP_MS = 320;
-const SNAP_CURVE = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+import { SNAP_CURVE, SNAP_MS, WebComponent } from '../../core/index.js';
+/*
+ * `<ui-pulldown>` — full-viewport top sheet. Opens off the `pulldown:toggle`
+ * document-bus event; drag-to-close through `dragSnap` (axis y, opensToward down).
+ *
+ * NOT BUILT ON ui-slideout, deliberately — and this has been asked twice.
+ * The mechanic is ALREADY shared: core/gestures/dragSnap.js is the one
+ * drag-to-snap engine, and its header records that this sheet's handle and the
+ * sidebar's swipe were the two private line-for-line copies it absorbed. The
+ * engine owns the pointer lifecycle, threshold, snap verdict and click
+ * suppression; each consumer owns only its own visuals, through callbacks.
+ *
+ * What remains DIFFERS rather than duplicates: slideout is an inline-axis (x)
+ * edge panel, this is a y-axis full-viewport sheet, and `isDragSurface` is one
+ * NAME over two unrelated policies — slideout allows its panel minus an
+ * interactive deny-list, this allows four specific refs. A shared base would
+ * force one policy onto both callers and break one of them.
+ */
 export class UIPullDown extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -24,14 +39,38 @@ export class UIPullDown extends WebComponent {
 		// One reusable settle timer, pre-declared disarmed; handleState arms it via
 		// .run() and handleDragStart cancels via .clear() — no per-toggle allocation.
 		this.settleTimer ??= this.createTimeout(this.settleSnap, SNAP_MS);
+		this.syncHandleAttr();
+		this.syncOpenAttr();
+		this.observe('handlePosition', this.syncHandleAttr);
+		this.observe('open', this.syncOpenAttr);
 		this.delegate('pulldown:dragstart', this.handleDragStart);
 		this.delegate('pulldown:drag', this.handleDrag);
 		this.delegate('pulldown:toggle', this.handleState);
 		this.delegate('pulldown:dragend', this.handleDragEnd);
 	}
 	onMount() {
-		this.dataset.handle = this.state.handlePosition;
+		this.syncHandleAttr();
+		this.syncOpenAttr();
 		this.installDragClose();
+	}
+	syncHandleAttr() {
+		this.dataset.handle = this.state.handlePosition;
+	}
+	syncOpenAttr() {
+		this.toggleAttribute('data-open', this.state.open === true);
+	}
+	/*
+	 * Host visibility is data-open OR data-active. data-open is the committed
+	 * rest state; data-active is the in-flight drawer (bar-driven open drag
+	 * and close snap). handleState writes both in the same tick — data-active
+	 * first — so close never hits a frame where both are off (display:none
+	 * would kill the snap-out). observe('open') is async; syncOpenAttr here
+	 * is the CSS-contract write, not a duplicate of the observer.
+	 */
+	syncActiveAttr() {
+		const drawer = this.refs.drawer;
+		const isActive = drawer?.classList.contains('is-active') === true;
+		this.toggleAttribute('data-active', isActive);
 	}
 	// Drag-up-to-close, built into the base component (bottom-sheet style). The
 	// gesture binds to the whole DRAWER, not just the handle, so any empty area of
@@ -72,18 +111,26 @@ export class UIPullDown extends WebComponent {
 			},
 		});
 	}
-	// The drag starts only on the sheet's OWN surface — the drawer, the content
-	// wrapper (incl. its handle-clearing padding), or the grab handle — never on
-	// slotted content. Event retargeting reports the real slotted node here (its
-	// root is the document, not our shadow root), so a whitelist of our own
-	// elements cleanly excludes "anything inside it".
+	// The drag starts only on the sheet's OWN chrome — backdrop, drawer, content
+	// wrapper, grab handle — never on slotted descendants. Event retargeting
+	// reports the real slotted node (its root is the document, not our shadow),
+	// so a whitelist of our own elements excludes anything inside the slot.
 	isDragSurface(domEvent) {
 		const { target } = domEvent;
 		const handle = this.refs.handle;
-		return target === this.refs.drawer ||
+		return target === this.refs.backdrop ||
+			target === this.refs.drawer ||
 			target === this.refs.content ||
 			target === handle ||
 			handle?.contains(target) === true;
+	}
+	handleBackdropClick() {
+		if (this.state.open !== true) {
+			return;
+		}
+		this.emit('pulldown:toggle', {
+			open: false,
+		});
 	}
 	handleSelfDragMove(delta) {
 		const drawer = this.refs.drawer;
@@ -93,6 +140,21 @@ export class UIPullDown extends WebComponent {
 		// `delta` is the upward (negative) travel from the resting open position —
 		// translate the drawer to follow the finger 1:1.
 		drawer.style.transform = `translateY(${delta}px)`;
+		this.publishDrag(delta);
+	}
+	/*
+	 * Live geometry for an external bar (global-top-bar). progress 1 = fully
+	 * open (drawer at rest), 0 = fully closed. barTop is the viewport Y of the
+	 * drawer's bottom edge — the bar pins just under that edge.
+	 */
+	publishDrag(delta) {
+		const travel = globalThis.innerHeight || 1;
+		const progress = Math.max(0, Math.min(1, 1 + (delta / travel)));
+		this.emit('pulldown:drag', {
+			progress,
+			barTop: travel + delta,
+			delta,
+		});
 	}
 	handleSelfDragSettle(shouldOpen) {
 		// handleState owns the settle animation (single source of truth); it does
@@ -116,8 +178,9 @@ export class UIPullDown extends WebComponent {
 		drawer.classList.remove('is-active', 'is-fully-open', 'is-open');
 		drawer.style.transform = '';
 		drawer.style.transition = '';
+		this.syncActiveAttr();
 	}
-	handleDragStart() {
+	handleDragStart(domEvent) {
 		// Kill any pending settle from the PREVIOUS snap. A close→reopen inside
 		// SNAP_MS starts this drag while the close's settle timer is still armed;
 		// it fires mid-drag, sees `state.open` still false (the reopen hasn't
@@ -125,13 +188,28 @@ export class UIPullDown extends WebComponent {
 		// panel then reads as fully hidden, so the reopen's `handleState` takes the
 		// wasHidden path and replays the whole top→bottom animation. Cancelling
 		// here — not just on the next settle — keeps the in-flight drag intact.
+		if (domEvent?.detail?.source === this) {
+			return;
+		}
 		this.settleTimer.clear();
 		const drawer = this.refs.drawer;
 		drawer.style.transition = 'none';
 		drawer.classList.add('is-active');
 		drawer.classList.remove('is-fully-open');
+		this.syncActiveAttr();
+		// Local dragSnap onStart calls this with no event. Re-emitting that
+		// onto the bus would re-enter this handler via delegate and loop.
+		if (domEvent) {
+			return;
+		}
+		this.emit('pulldown:dragstart', {
+			open: this.state.open,
+		});
 	}
 	handleDrag(domEvent) {
+		if (domEvent.detail?.source === this) {
+			return;
+		}
 		const { barTop } = domEvent.detail.data;
 		const drawer = this.refs.drawer;
 		drawer.style.transform = `translateY(${barTop - globalThis.innerHeight}px)`;
@@ -149,7 +227,12 @@ export class UIPullDown extends WebComponent {
 		drawer.style.transition = `transform ${SNAP_MS}ms ${SNAP_CURVE}`;
 		drawer.style.transform = isOpen ? 'translateY(0)' : 'translateY(-100%)';
 		drawer.classList.toggle('is-open', isOpen);
+		if (isOpen) {
+			drawer.classList.add('is-active');
+		}
+		this.syncActiveAttr();
 		this.state.open = isOpen;
+		this.syncOpenAttr();
 		// One settle timer at a time. A rapid open→close→open lands three
 		// transitions inside SNAP_MS; a stale close-settle firing on the drawer
 		// that has since reopened would strip `is-active`/transform off it,
@@ -175,10 +258,12 @@ export class UIPullDown extends WebComponent {
 			drawer.style.transform = '';
 			drawer.style.transition = '';
 		}
+		component.syncActiveAttr();
 	}
 	render() {
 		this.html`
 			<div #drawer class="pulldown-drawer">
+				<div #backdrop class="pulldown-backdrop" @click=${this.handleBackdropClick}></div>
 				<div #content class="pulldown-content">
 					<slot></slot>
 				</div>

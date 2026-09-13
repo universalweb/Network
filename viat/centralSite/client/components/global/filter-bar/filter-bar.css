@@ -1,0 +1,45 @@
+:host {
+	display: block;
+	container-type: inline-size;
+}
+/*
+ * The filter row WRAPS. A bar of five filters on one line runs off the side of
+ * a narrow window, and the controls that fall off are unreachable rather than
+ * merely cramped. Wrapping to a second row keeps every filter usable at any
+ * width; `collapsible` is the stronger option that hides the extras behind
+ * More, for a bar that must stay one line tall.
+ */
+.fb-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2);
+	min-inline-size: 0;
+}
+/* Each filter may shrink, but never below what its control needs to be usable. */
+.fb-row > ui-filter-bar-item {
+	flex: 0 1 auto;
+	min-inline-size: min(12rem, 100%);
+}
+/* A multi toggle strip must be allowed to consume leftover row width so its
+   middle scrollport can overflow instead of growing to max-content. */
+.fb-row > ui-filter-bar-item[data-kind='toggle'],
+.fb-row > ui-filter-bar-item[data-kind='multi-select'] {
+	flex: 1 1 12rem;
+	min-inline-size: 0;
+	max-inline-size: 100%;
+}
+.fb-more {
+	display: none;
+}
+@container (max-inline-size: 40rem) {
+	:host([data-collapsible]) ui-filter-bar-item[data-extra] {
+		display: none;
+	}
+	:host([data-collapsible][data-more]) ui-filter-bar-item[data-extra] {
+		display: block;
+	}
+	:host([data-collapsible]) .fb-more {
+		display: inline-flex;
+	}
+}

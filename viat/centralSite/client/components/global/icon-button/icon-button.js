@@ -2,15 +2,18 @@ import '../button/button.js';
 import '../icon/icon.js';
 import { classList, WebComponent } from '../../core/index.js';
 /*
- * `<ui-icon-button>` — a thin composition: a `<ui-button>` in its icon variant
- * wrapping a `<ui-icon>`. The two raw primitives stay independent, first-class
- * framework elements; this only pairs them so every piece of chrome (dock, top
- * bar, toolbar) gets one consistent icon control instead of three near-copies.
+ * `<ui-icon-button>` — a thin composition: a `<ui-button>` wrapping a `<ui-icon>`.
+ * Defaults to variant `icon` / tone `neutral` (dock, toolbar). Split-button and
+ * other chrome can pass solid/outline + tone so the caret matches a primary.
  *
- * Configured by the flat keys `icon` / `tooltip` / `size` / `animated`, bound
- * straight onto the children as direct `.prop=` bindings — each bare read is a
- * tracked renderDep, so a flat-key change patches the exact child property.
- * No child-state bundles, no observers, no sync methods.
+ * Configured by flat keys `icon` / `tooltip` / `size` / `tone` / `variant` /
+ * `animated`, bound straight onto the children as direct `.state.key=` reads.
+ *
+ * The class is IconButtonBase because this module is both the shipped
+ * element (`customElements.define('ui-icon-button', IconButtonBase)`) and
+ * the extendable base (DockIconButton, toolbar / app-bar itemComponent).
+ * The Base suffix is load-bearing, not naming debt — do not rename it to
+ * UIIconButton. CATALOG_ALIASES maps IconButtonBase → UIIconButton.
  */
 export class IconButtonBase extends WebComponent {
 	static url = import.meta.url;
@@ -24,9 +27,22 @@ export class IconButtonBase extends WebComponent {
 		classes: new Set(),
 		icon: '',
 		tooltip: '',
+		// Forced tooltip side (top|bottom|left|right); empty keeps the automatic
+		// placement. Forwarded to ui-button, which owns the hover target.
+		tooltipPlacement: '',
 		size: 'md',
+		tone: 'neutral',
+		// Default chrome-light icon control; use solid/outline to match a split.
+		variant: 'icon',
+		// True disc (FAB-like). Off by default — dock/toolbar stay rounded-square.
+		circle: false,
 		animated: '',
+		disabled: false,
 		emitName: 'icon-button:click',
+		// Forwarded to the real <button> (native popover invoker + a11y).
+		popoverTarget: '',
+		expanded: '',
+		hasPopup: '',
 	};
 	constructor(state = {}, config = {}) {
 		super(state, {
@@ -46,6 +62,9 @@ export class IconButtonBase extends WebComponent {
 		});
 	}
 	handleActivate() {
+		if (this.state.disabled) {
+			return;
+		}
 		const {
 			id, icon, active,
 		} = this.state;
@@ -56,13 +75,21 @@ export class IconButtonBase extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<ui-button class=${classList('icon-button', this.state.classes, {
 				active: this.state.active,
 			})}
-				.state.variant=${'icon'}
-				.state.tone=${'neutral'}
+				exportparts="button"
+				.state.variant=${this.state.variant || 'icon'}
+				.state.tone=${this.state.tone || 'neutral'}
+				.state.size=${this.state.size || 'md'}
+				.state.circle=${this.state.circle}
+				.state.disabled=${this.state.disabled}
 				.state.tooltip=${this.state.tooltip}
+				.state.tooltipPlacement=${this.state.tooltipPlacement}
+				.state.popoverTarget=${this.state.popoverTarget}
+				.state.expanded=${this.state.expanded}
+				.state.hasPopup=${this.state.hasPopup}
 				@button:click=${this.handleActivate}>
 				<ui-icon slot="lead" .state.name=${this.state.icon} .state.size=${this.state.size} .state.animated=${this.state.animated}></ui-icon>
 			</ui-button>

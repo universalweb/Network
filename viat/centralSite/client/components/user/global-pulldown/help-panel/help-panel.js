@@ -16,7 +16,7 @@ class HelpShortcutRow extends WebComponent {
 		desc: '',
 	};
 	render() {
-		this.html `
+		this.html`
 			<div class="hp-row">
 				<ui-kbd .state.values=${this.state.keys} .state.separator=${this.state.separator}></ui-kbd>
 				<span class="hp-desc">${this.state.desc}</span>
@@ -64,7 +64,7 @@ export class HelpPanel extends Panel {
 		],
 	};
 	renderBody() {
-		return this.htmlElement `
+		return this.htmlElement`
 			<div class="hp-body">
 				<div class="hp-list">
 					${this.list('shortcuts', HelpShortcutRow)}

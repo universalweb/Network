@@ -11,7 +11,7 @@
 [hidden] {
 	display: none !important;
 }
-.aim {
+.ai-message {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-2);
@@ -22,49 +22,49 @@
 	background: var(--bg-panel, rgba(255, 255, 255, 0.025));
 	cursor: text;
 }
-.aim[data-role='user'] {
+.ai-message[data-role='user'] {
 	background: var(--cyan-glow-faint, rgba(0, 240, 255, 0.06));
 	border-color: var(--cyan-glow-soft, rgba(0, 240, 255, 0.2));
 }
-.aim[data-role='assistant'] {
+.ai-message[data-role='assistant'] {
 	background: var(--bg-panel, rgba(255, 255, 255, 0.03));
 }
-.aim-head {
+.ai-message-head {
 	display: flex;
 	align-items: center;
 	gap: var(--space-2);
 }
-.aim-dot {
+.ai-message-dot {
 	inline-size: 0.5rem;
 	block-size: 0.5rem;
 	border-radius: 50%;
 	background: var(--tone-dot, var(--text-muted, rgba(255, 255, 255, 0.4)));
 	flex: none;
 }
-.aim-role {
+.ai-message-role {
 	font-size: var(--text-xs);
 	letter-spacing: 0.16em;
 	text-transform: uppercase;
 	color: var(--text-muted, rgba(255, 255, 255, 0.45));
 }
-.aim[data-role='user'] {
+.ai-message[data-role='user'] {
 	--tone-dot: var(--cyan);
 }
-.aim[data-role='assistant'] {
+.ai-message[data-role='assistant'] {
 	--tone-dot: var(--teal);
 }
-.aim[data-role='user'] .aim-role {
+.ai-message[data-role='user'] .ai-message-role {
 	color: var(--cyan);
 }
-.aim[data-role='assistant'] .aim-role {
+.ai-message[data-role='assistant'] .ai-message-role {
 	color: var(--teal);
 }
-.aim-time {
+.ai-message-time {
 	font-size: var(--text-xs);
 	color: var(--text-muted, rgba(255, 255, 255, 0.4));
 	font-variant-numeric: tabular-nums;
 }
-.aim-copy {
+.ai-message-copy {
 	margin-inline-start: auto;
 	display: inline-flex;
 	align-items: center;
@@ -76,82 +76,82 @@
 	cursor: pointer;
 	transition: color 0.15s ease, background 0.15s ease;
 }
-.aim-copy:hover {
+.ai-message-copy:hover {
 	color: var(--text-main);
 	background: var(--bg-hover, rgba(255, 255, 255, 0.06));
 }
-.aim-copy:focus-visible {
+.ai-message-copy:focus-visible {
 	outline: 2px solid var(--cyan, currentColor);
 	outline-offset: 1px;
 }
 @media (prefers-reduced-motion: reduce) {
-	.aim-copy {
+	.ai-message-copy {
 		transition: none;
 	}
 }
-.aim-stream,
-.aim-md {
+.ai-message-stream,
+.ai-message-md {
 	font-size: var(--text-md);
 	line-height: 1.55;
 	color: var(--text-main);
 	overflow-wrap: break-word;
 	cursor: text;
 }
-.aim-stream,
-.aim-plain {
+.ai-message-stream,
+.ai-message-plain {
 	white-space: pre-wrap;
 }
-.aim-rich {
+.ai-message-rich {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-2);
 }
 /* Rendered-markdown blocks (output of markdownToHtml, injected via ^html). */
-.aim-md > :first-child {
+.ai-message-md > :first-child {
 	margin-block-start: 0;
 }
-.aim-md > :last-child {
+.ai-message-md > :last-child {
 	margin-block-end: 0;
 }
-.md-p {
+.markdown-p {
 	margin-block: 0.5em;
 }
-.md-h {
+.markdown-h {
 	margin-block: 0.8em 0.4em;
 	line-height: 1.25;
 	font-weight: 600;
 	color: var(--text-strong, var(--text-main));
 }
-.md-h1 {
+.markdown-h1 {
 	font-size: 1.4em;
 }
-.md-h2 {
+.markdown-h2 {
 	font-size: 1.25em;
 }
-.md-h3 {
+.markdown-h3 {
 	font-size: 1.12em;
 }
-.md-h4,
-.md-h5,
-.md-h6 {
+.markdown-h4,
+.markdown-h5,
+.markdown-h6 {
 	font-size: 1em;
 }
-.md-list {
+.markdown-list {
 	margin-block: 0.5em;
 	padding-inline-start: 1.4em;
 }
-.md-li {
+.markdown-li {
 	margin-block: 0.2em;
 }
-.md-link {
+.markdown-link {
 	color: var(--cyan, currentColor);
 	text-decoration: underline;
 	text-underline-offset: 0.15em;
 }
-.md-link:hover {
+.markdown-link:hover {
 	text-decoration-thickness: 2px;
 }
-.md-icode {
+.markdown-inline-code {
 	font-family: var(--font-mono, ui-monospace, monospace);
 	font-size: 0.92em;
 	padding-block: 0.05em;
@@ -160,31 +160,31 @@
 	background: var(--bg-code, rgba(255, 255, 255, 0.08));
 	overflow-wrap: anywhere;
 }
-.md-quote {
+.markdown-quote {
 	margin-block: 0.5em;
 	padding-inline-start: 0.9em;
 	border-inline-start: 3px solid var(--cyan-glow-soft, rgba(0, 240, 255, 0.25));
 	color: var(--text-muted, rgba(255, 255, 255, 0.7));
 }
-.md-hr {
+.markdown-hr {
 	margin-block: 0.9em;
 	border: none;
 	border-block-start: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
 }
-.md-table {
+.markdown-table {
 	width: 100%;
 	margin-block: 0.6em;
 	border-collapse: collapse;
 	font-size: 0.95em;
 }
-.md-table th,
-.md-table td {
+.markdown-table th,
+.markdown-table td {
 	padding-block: 0.35em;
 	padding-inline: 0.6em;
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.1));
 	text-align: start;
 }
-.md-table th {
+.markdown-table th {
 	font-weight: 600;
 	background: var(--bg-panel, rgba(255, 255, 255, 0.04));
 }

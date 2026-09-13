@@ -122,7 +122,7 @@ function hexToHsl(hex) {
 	);
 }
 // The saturation/value SQUARE is a standard HSV plane (white→hue left-to-right,
-// hue→black top-to-bottom — see the .cp-sat / .cp-light gradients). The picker's
+// hue→black top-to-bottom — see the .color-picker-sat / .color-picker-light gradients). The picker's
 // source of truth is HSL, so the square converts between the two models on the
 // SAME hue at its boundary: pointer XY → HSV → HSL going in, HSL → HSV to place the
 // cursor going out. (Mapping XY straight onto HSL made the whole top edge read pure
@@ -333,15 +333,20 @@ export class UIColorPicker extends WebComponent {
 		return `left: ${satV * 100}%; top: ${(1 - valV) * 100}%`;
 	}
 	previewStyle() {
-		return `--cp-color: ${this.cssColorAlpha()}`;
+		return `--color-picker-color: ${this.cssColorAlpha()}`;
+	}
+	// Both sliders inherit these: hue thumb = opaque `--color-picker-alpha-color`,
+	// alpha thumb = current color at alpha (`--color-picker-color`) over the checkerboard.
+	colorVars() {
+		return `--color-picker-color: ${this.cssColorAlpha()}; --color-picker-alpha-color: ${this.cssColor()}`;
 	}
 	// The alpha track fades transparent → the current opaque color (over the
 	// checkerboard baked into the CSS), so the dial reads as a transparency ramp.
 	alphaTrackStyle() {
-		return `--cp-alpha-color: ${this.cssColor()}`;
+		return `--color-picker-alpha-color: ${this.cssColor()}; --color-picker-color: ${this.cssColorAlpha()}`;
 	}
 	renderSwatch(hex) {
-		return html`<button type="button" class="cp-swatch" data-color=${hex} style=${`background:${hex}`} aria-label=${hex}></button>`;
+		return html`<button type="button" class="color-picker-swatch" data-color=${hex} style=${`background:${hex}`} aria-label=${hex}></button>`;
 	}
 	// One source for the emitted payload. `hex` (6-digit) and `hsl` keep their
 	// original meaning for existing consumers; alpha-aware forms are additive.
@@ -477,31 +482,31 @@ export class UIColorPicker extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="cp">
+			<div class="color-picker" style=${this.colorVars}>
 				<div
-					class="cp-square" #square
+					class="color-picker-square" #square
 					style=${this.hueLayerStyle}
 					@pointerdown=${this.handleSquareDown}
 					@pointermove=${this.handleSquareMove}
 					@pointerup=${this.handleSquareUp}
 					@pointercancel=${this.handleSquareUp}
 					@lostpointercapture=${this.handleSquareUp}>
-					<span class="cp-sat" aria-hidden="true"></span>
-					<span class="cp-light" aria-hidden="true"></span>
-					<span class="cp-cursor" style=${this.cursorStyle} aria-hidden="true"></span>
+					<span class="color-picker-sat" aria-hidden="true"></span>
+					<span class="color-picker-light" aria-hidden="true"></span>
+					<span class="color-picker-cursor" style=${this.cursorStyle} aria-hidden="true"></span>
 				</div>
-				<div class="cp-controls">
-					<span class="cp-preview" style=${this.previewStyle} aria-hidden="true"></span>
-					<div class="cp-dials">
-						<input class="cp-hue" type="range" min="0" max="360" value=${this.state.hue} @input=${this.handleHue} aria-label="Hue">
-						<input class="cp-alpha" type="range" min="0" max="100" value=${this.state.alpha} style=${this.alphaTrackStyle} @input=${this.handleAlpha} aria-label="Alpha">
+				<div class="color-picker-controls">
+					<span class="color-picker-preview" style=${this.previewStyle} aria-hidden="true"></span>
+					<div class="color-picker-dials">
+						<input class="color-picker-hue" type="range" min="0" max="360" value=${this.state.hue} style=${this.colorVars} @input=${this.handleHue} aria-label="Hue">
+						<input class="color-picker-alpha" type="range" min="0" max="100" value=${this.state.alpha} style=${this.alphaTrackStyle} @input=${this.handleAlpha} aria-label="Alpha">
 					</div>
 				</div>
-				<div class="cp-value">
-					<input class="cp-input" #valueinput type="text" spellcheck="false" @input=${this.handleValue} aria-label="Color value">
-					<select class="cp-format" #formatselect @change=${this.handleFormatChange} aria-label="Color format">${this.each(FORMATS, this.formatOption)}</select>
+				<div class="color-picker-value">
+					<input class="color-picker-input" #valueinput type="text" spellcheck="false" @input=${this.handleValue} aria-label="Color value">
+					<select class="color-picker-format" #formatselect @change=${this.handleFormatChange} aria-label="Color format">${this.each(FORMATS, this.formatOption)}</select>
 				</div>
-				<div class="cp-presets" #presets @click=${this.handlePreset}>${this.list('presets', this.renderSwatch)}</div>
+				<div class="color-picker-presets" #presets @click=${this.handlePreset}>${this.list('presets', this.renderSwatch)}</div>
 			</div>
 		`;
 	}

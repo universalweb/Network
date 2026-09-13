@@ -24,15 +24,20 @@ export function register(component) {
 	if (!key) {
 		return;
 	}
-	defaultLogger.debug('registry', `${component.constructor.name}<${component.localName}>`, key);
+	// Pin the key used at register time — id may change before unregister.
+	component.registryKey = key;
+	if (defaultLogger.debugOn) {
+		defaultLogger.debug('registry', `${component.constructor.name}<${component.localName}>`, key);
+	}
 	store.set(key, component);
 }
 export function unregister(component) {
-	const key = getRegistryKey(component);
+	const key = component.registryKey;
 	if (!key) {
 		return;
 	}
 	if (store.get(key) === component) {
 		store.delete(key);
 	}
+	component.registryKey = null;
 }

@@ -1,0 +1,277 @@
+:host {
+	display: block;
+	inline-size: 100%;
+}
+.meter-group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.65rem;
+	padding-block: 0.4rem;
+	--meter-group-h: 0.85rem;
+	--meter-group-r: var(--radius-sm, 0.35rem);
+	--meter-group-track: color-mix(in oklab, var(--text-muted, oklch(0.6 0 0)) 18%, transparent);
+}
+.meter-group[data-orientation='vertical'] {
+	flex-direction: row;
+	align-items: stretch;
+	min-block-size: 12rem;
+}
+.meter-group-track {
+	display: flex;
+	flex-direction: row;
+	overflow: visible;
+	isolation: isolate;
+	inline-size: 100%;
+	block-size: var(--meter-group-h);
+	border-radius: var(--meter-group-r);
+	background: var(--meter-group-track);
+	transform-origin: inline-start center;
+}
+.meter-group[data-orientation='vertical'] .meter-group-track {
+	flex-direction: column;
+	inline-size: var(--meter-group-h);
+	block-size: auto;
+	min-block-size: 12rem;
+	transform-origin: center block-end;
+}
+.meter-group-seg {
+	appearance: none;
+	border: 0;
+	margin: 0;
+	padding: 0;
+	border-radius: 0;
+	flex: var(--meter-group-share, 0) 1 0;
+	min-inline-size: 0;
+	min-block-size: 0;
+	background: var(--tone-fill, var(--cyan, oklch(0.72 0.12 200)));
+	cursor: pointer;
+	transform-origin: center center;
+	/*
+	 * The active/hover swell rides a BACK-OUT curve so the block overshoots a
+	 * touch and settles, instead of easing flatly into its new size — that slight
+	 * settle is what reads as modern rather than mechanical. Share resizing keeps
+	 * the expo ease-out (no overshoot on a proportional bar, or neighbouring
+	 * shares visibly bounce against each other).
+	 *
+	 * `background-color`, not `background`: the shorthand carries un-animatable
+	 * parts, and only the colour ever changes here.
+	 */
+	transition:
+		flex-grow var(--dur-slow, 0.4s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+		transform var(--dur-med, 0.32s) var(--ease-back, cubic-bezier(0.34, 1.35, 0.64, 1)),
+		background-color var(--dur-med, 0.32s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+		opacity var(--dur-fast, 0.18s) ease !important;
+}
+.meter-group-seg:first-child {
+	border-start-start-radius: var(--meter-group-r);
+	border-end-start-radius: var(--meter-group-r);
+}
+.meter-group-seg:last-child {
+	border-start-end-radius: var(--meter-group-r);
+	border-end-end-radius: var(--meter-group-r);
+}
+.meter-group-seg:hover {
+	transform: scaleY(1.35);
+	opacity: 0.92;
+	z-index: 1;
+}
+.meter-group-seg[data-active] {
+	transform: scaleY(1.7);
+	opacity: 1;
+	z-index: 2;
+}
+.meter-group[data-orientation='vertical'] .meter-group-seg:first-child {
+	border-start-start-radius: var(--meter-group-r);
+	border-start-end-radius: var(--meter-group-r);
+	border-end-start-radius: 0;
+}
+.meter-group[data-orientation='vertical'] .meter-group-seg:last-child {
+	border-end-start-radius: var(--meter-group-r);
+	border-end-end-radius: var(--meter-group-r);
+	border-start-end-radius: 0;
+}
+.meter-group[data-orientation='vertical'] .meter-group-seg:hover {
+	transform: scaleX(1.55);
+}
+.meter-group[data-orientation='vertical'] .meter-group-seg[data-active] {
+	transform: scaleX(1.85);
+}
+.meter-group-seg:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal));
+	outline-offset: -2px;
+	z-index: 2;
+}
+:host(.is-entering) .meter-group-track {
+	animation: meter-group-intro var(--dur-slower, 0.6s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+:host(.is-entering) .meter-group[data-orientation='vertical'] .meter-group-track {
+	animation-name: meter-group-intro-y;
+}
+@keyframes meter-group-intro {
+	from { transform: scaleX(0); }
+	to { transform: scaleX(1); }
+}
+@keyframes meter-group-intro-y {
+	from { transform: scaleY(0); }
+	to { transform: scaleY(1); }
+}
+.meter-group-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.55rem 1rem;
+	align-items: center;
+}
+.meter-group[data-labels='vertical'] .meter-group-legend,
+.meter-group[data-orientation='vertical'] .meter-group-legend {
+	flex-direction: column;
+	align-items: flex-start;
+	flex-wrap: nowrap;
+}
+.meter-group-legend[hidden] { display: none !important; }
+.meter-group-leg {
+	appearance: none;
+	border: 0;
+	margin: 0;
+	padding: 0.28rem 0.5rem;
+	border-radius: var(--radius-sm, 0.35rem);
+	background: transparent;
+	color: inherit;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	cursor: pointer;
+	font: inherit;
+	line-height: 1.2;
+	transform: none;
+	/*
+	 * `background-color` rather than the `background` shorthand, and the expo
+	 * ease-out rather than a flat `ease`, so the legend chip fades its fill in and
+	 * out smoothly instead of snapping between states.
+	 */
+	transition:
+		background-color var(--dur-med, 0.28s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+		color var(--dur-med, 0.28s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.meter-group-leg:hover {
+	background: color-mix(in oklab, var(--tone-fill, currentColor) 18%, transparent);
+	border-color: transparent;
+	box-shadow: none;
+	transform: none;
+	color: inherit;
+}
+.meter-group-leg:hover .meter-group-leg-label {
+	color: var(--text-main);
+}
+.meter-group-leg[data-active] {
+	background: color-mix(in oklab, var(--tone-fill, currentColor) 30%, transparent);
+	border-color: transparent;
+	box-shadow: none;
+	/* Selection should feel like a press that settled, not a repaint. */
+	scale: 1.03;
+}
+.meter-group-leg[data-active] .meter-group-leg-label {
+	color: var(--text-main);
+	font-weight: var(--weight-semibold, 600);
+}
+.meter-group-leg[data-active] .meter-group-leg-detail {
+	color: var(--text-main);
+}
+/*
+ * The swatch is the item's identity mark, so it carries the clearest selection
+ * signal: it swells and gains a ring in the item's own tone.
+ */
+.meter-group-leg[data-active] .meter-group-swatch {
+	scale: 1.35;
+	box-shadow: 0 0 0 3px color-mix(in oklab, var(--tone-fill, currentColor) 28%, transparent);
+}
+.meter-group-swatch {
+	flex: 0 0 auto;
+	inline-size: 0.55rem;
+	block-size: 0.55rem;
+	border-radius: 999px;
+	background: var(--tone-fill, var(--cyan));
+	/* Same back-out settle the segments use, so bar and legend agree. */
+	transition:
+		scale var(--dur-med, 0.32s) var(--ease-back, cubic-bezier(0.34, 1.35, 0.64, 1)),
+		box-shadow var(--dur-med, 0.32s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.meter-group-icon {
+	display: none;
+	flex: 0 0 auto;
+	color: var(--tone-fill, var(--cyan));
+}
+.meter-group-leg[data-mark='icon'] .meter-group-swatch { display: none; }
+.meter-group-leg[data-mark='icon'] .meter-group-icon { display: inline-flex; }
+/*
+ * The label and the readout are CHILDREN of .meter-group-leg, and the selected rules
+ * change their colour and weight there — but the transition lived only on the
+ * button, so those two properties snapped while the button's own background
+ * eased. That mismatch is what made selection read as unanimated. Each element
+ * that changes now carries its own transition.
+ */
+.meter-group-leg-label {
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+	transition:
+		color var(--dur-med, 0.3s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+		font-weight var(--dur-med, 0.3s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.meter-group-leg-detail {
+	font-size: var(--text-xs);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-muted);
+	transition: color var(--dur-med, 0.3s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+@media (prefers-reduced-motion: reduce) {
+	.meter-group-seg,
+	.meter-group-leg,
+	.meter-group-swatch,
+	.meter-group-leg-label,
+	.meter-group-leg-detail { transition: none; }
+	.meter-group-seg:hover,
+	.meter-group-seg[data-active],
+	.meter-group[data-orientation='vertical'] .meter-group-seg:hover,
+	.meter-group[data-orientation='vertical'] .meter-group-seg[data-active] {
+		transform: none;
+	}
+	/* Selection must still be VISIBLE without motion — colour and weight carry
+	   it, so only the movement is dropped. */
+	.meter-group-leg[data-active],
+	.meter-group-leg[data-active] .meter-group-swatch {
+		scale: 1;
+	}
+	:host(.is-entering) .meter-group-track { animation: none; }
+}
+
+/*
+ * TWO classes, deliberately. core/styles/modules/animations.css puts a blanket
+ * transition on `button:not([data-variant])` — specificity (0,1,1) — and both
+ * .meter-group-seg and .meter-group-leg ARE plain buttons, so the single-class rules above (0,1,0)
+ * lose on the class column and were being silently replaced by that generic
+ * 0.18s ease-out. (0,2,0) beats it.
+ *
+ * The swell rides a BACK-OUT curve so the block overshoots a touch and settles
+ * instead of easing flatly into its new size — that settle is what reads as
+ * modern. Share resizing keeps the expo ease-out: no overshoot on a proportional
+ * bar, or neighbouring shares visibly bounce against one another.
+ */
+.meter-group-track .meter-group-seg {
+	transition:
+		flex-grow var(--dur-slow, 0.4s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+		transform var(--dur-med, 0.34s) var(--ease-back, cubic-bezier(0.34, 1.35, 0.64, 1)),
+		background-color var(--dur-med, 0.34s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+		opacity var(--dur-fast, 0.18s) ease !important;
+}
+.meter-group-legend .meter-group-leg {
+	transition:
+		background-color var(--dur-med, 0.3s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+		scale var(--dur-med, 0.3s) var(--ease-back, cubic-bezier(0.34, 1.35, 0.64, 1)),
+		color var(--dur-med, 0.3s) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+	.meter-group-track .meter-group-seg,
+	.meter-group-legend .meter-group-leg,
+	.meter-group-legend .meter-group-swatch,
+	.meter-group-legend .meter-group-leg-label,
+	.meter-group-legend .meter-group-leg-detail { transition: none; }
+}

@@ -1,0 +1,133 @@
+:host {
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-flex;
+	max-inline-size: 100%;
+	cursor: pointer;
+}
+:host([aria-disabled='true']) {
+	pointer-events: none;
+}
+.tri {
+	--tri-size: 1.125rem;
+	--tri-radius: 0.25rem;
+	--tri-border: color-mix(in oklch, var(--text-muted) 42%, transparent);
+	--tri-bg: color-mix(in oklch, var(--bg-panel, var(--bg-body)) 70%, transparent);
+	--tri-on-bg: var(--text-main, oklch(0.2 0 0));
+	--tri-on-fg: var(--bg-body, oklch(0.98 0 0));
+	--tri-false: var(--color-danger, oklch(0.58 0.2 25));
+	--tri-invalid: var(--color-danger, oklch(0.58 0.2 25));
+	position: relative;
+	display: inline-flex;
+	align-items: flex-start;
+	gap: var(--space-3, 0.75rem);
+	cursor: pointer;
+	font-family: var(--font-display, system-ui, sans-serif);
+	font-size: var(--text-sm, 0.875rem);
+	color: var(--text-main);
+	line-height: 1.35;
+	text-align: start;
+}
+.tri[data-size='sm'] {
+	--tri-size: 1rem;
+	--tri-radius: 0.2rem;
+	font-size: var(--text-xs, 0.75rem);
+}
+.tri[data-size='lg'] {
+	--tri-size: 1.35rem;
+	--tri-radius: 0.3rem;
+	font-size: var(--text-md, 1rem);
+}
+.tri-face {
+	position: relative;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+	inline-size: var(--tri-size);
+	block-size: var(--tri-size);
+	margin-block-start: 0.1em;
+	border-radius: var(--tri-radius);
+	border: 1.5px solid var(--tri-border);
+	background: var(--tri-bg);
+	color: var(--tri-on-fg);
+	box-shadow: 0 1px 2px color-mix(in oklch, var(--text-main) 6%, transparent);
+	transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+.tri[data-face='true'] .tri-face {
+	background: var(--tri-on-bg);
+	border-color: var(--tri-on-bg);
+	color: var(--tri-on-fg);
+	box-shadow: none;
+}
+.tri[data-face='false'] .tri-face {
+	background: color-mix(in oklch, var(--tri-false) 16%, transparent);
+	border-color: var(--tri-false);
+	color: var(--tri-false);
+	box-shadow: none;
+}
+.tri-slot,
+.tri-icon {
+	position: absolute;
+	inset: 1px;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	color: inherit;
+}
+.tri-slot::slotted(*) {
+	inline-size: 100%;
+	block-size: 100%;
+}
+.tri-icon {
+	--icon-size: 100%;
+	inline-size: auto;
+	block-size: auto;
+}
+.tri[data-named] .tri-icon {
+	display: inline-flex;
+}
+:host([data-slot-unset]) .tri[data-face='unset'] .tri-slot-unset,
+:host([data-slot-false]) .tri[data-face='false'] .tri-slot-false,
+:host([data-slot-true]) .tri[data-face='true'] .tri-slot-true {
+	display: inline-flex;
+}
+:host([data-slot-unset]) .tri[data-face='unset'] .tri-icon,
+:host([data-slot-false]) .tri[data-face='false'] .tri-icon,
+:host([data-slot-true]) .tri[data-face='true'] .tri-icon {
+	display: none;
+}
+:host(:focus-visible) .tri-face {
+	box-shadow: 0 0 0 2px var(--bg-body, #fff), 0 0 0 4px var(--focus-ring-color, var(--cyan, oklch(0.7 0.12 200)));
+}
+.tri[data-invalid] .tri-face {
+	border-color: var(--tri-invalid);
+}
+.tri[data-disabled] {
+	cursor: not-allowed;
+	opacity: 0.72;
+}
+.tri-copy {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	min-inline-size: 0;
+	padding-block-start: 0.05em;
+}
+.tri-label {
+	font-weight: 500;
+	letter-spacing: -0.01em;
+	color: var(--text-main);
+}
+.tri-desc {
+	font-size: 0.9em;
+	font-weight: 400;
+	color: var(--text-muted);
+	line-height: 1.4;
+}
+.tri[data-invalid] .tri-desc {
+	color: var(--tri-invalid);
+}
+@media (prefers-reduced-motion: reduce) {
+	.tri-face {
+		transition: none;
+	}
+}

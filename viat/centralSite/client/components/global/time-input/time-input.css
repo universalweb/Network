@@ -1,0 +1,5 @@
+/* Native type=time preset. Shell, tone, size, and picker chrome live on ui-input. */
+:host {
+	display: block;
+	inline-size: 100%;
+}

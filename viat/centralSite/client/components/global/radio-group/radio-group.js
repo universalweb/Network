@@ -11,6 +11,8 @@
 	── EVENTS ───────────────────────────────────────────────────────────
 	  radio-group:change { value }
 	── USAGE ────────────────────────────────────────────────────────────
+	  size / tone ride as host data-* (never class tokens). `--radio-size` is the
+	  glyph; `--radio-hit` is the 44px tap floor. Consumers override either.
 	  <ui-radio-group .state.legend=${'Plan'} .state.value=${'pro'} .state.items=${[
 	    { value: 'free', label: 'Free' },
 	    { value: 'pro',  label: 'Pro', description: 'Everything in Free, plus…' },
@@ -19,29 +21,7 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';
-class UIRadioOption extends WebComponent {
-	static useShadow = false;
-	static state = {
-		value: '',
-		label: '',
-		description: '',
-		disabled: false,
-	};
-	render() {
-		this.html`<label class="radio" ?data-disabled=${this.state.disabled}>
-			<input type="radio" name="opt" value=${this.state.value} ?disabled=${this.state.disabled}>
-			<span class="radio-control" aria-hidden="true"></span>
-			<span class="radio-text">
-				<span class="radio-label">${this.state.label}</span>
-				${this.renderDescription}
-			</span>
-		</label>`;
-	}
-	renderDescription() {
-		return this.state.description ? this.htmlElement`<span class="radio-desc">${this.state.description}</span>` : '';
-	}
-}
-customElements.define('ui-radio-option', UIRadioOption);
+import { UIRadioOption } from '../radio-option/radio-option.js';
 export class UIRadioGroup extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -53,7 +33,20 @@ export class UIRadioGroup extends WebComponent {
 		legend: '',
 		orientation: 'vertical',
 		disabled: false,
+		size: 'md',
+		tone: 'info',
 	};
+	onConnect() {
+		this.observe([
+			'size',
+			'tone',
+		], this.syncHostAttrs);
+		this.syncHostAttrs();
+	}
+	syncHostAttrs() {
+		this.dataset.size = this.state.size || 'md';
+		this.dataset.tone = this.state.tone || 'info';
+	}
 	onMount() {
 		this.syncChecked();
 		/*
@@ -92,6 +85,8 @@ export class UIRadioGroup extends WebComponent {
 		this.html`
 			<fieldset #group class="radio-group"
 				data-orientation=${this.state.orientation}
+				data-size=${this.state.size || 'md'}
+				data-tone=${this.state.tone || 'info'}
 				?disabled=${this.state.disabled}
 				@change=${this.handleChange}>
 				${this.renderLegend}

@@ -65,16 +65,16 @@ export class UICodeBlock extends WebComponent {
 		}, 1400);
 	}
 	render() {
-		this.html `
-			<figure class="cb">
-				<figcaption class="cb-bar">
-					<span class="cb-lang">${this.state.language || 'code'}</span>
-					<button class="cb-copy" type="button" tooltip="Copy to clipboard" @click=${this.handleCopy}>
-						<ui-icon class="cb-copy-icon" .state.name=${this.state.copied ? 'check' : 'copy'} .state.size=${'xs'}></ui-icon>
-						<span class="cb-copy-text">${this.state.copied ? 'Copied' : 'Copy'}</span>
+		this.html`
+			<figure class="code-block">
+				<figcaption class="code-block-bar">
+					<span class="code-block-lang">${this.state.language || 'code'}</span>
+					<button class="code-block-copy" type="button" tooltip="Copy to clipboard" @click=${this.handleCopy}>
+						<ui-icon class="code-block-copy-icon" .state.name=${this.state.copied ? 'check' : 'copy'} .state.size=${'xs'}></ui-icon>
+						<span class="code-block-copy-text">${this.state.copied ? 'Copied' : 'Copy'}</span>
 					</button>
 				</figcaption>
-				<pre class="cb-pre"><code class="cb-code">^text${this.displayCode}</code></pre>
+				<pre class="code-block-pre"><code class="code-block-code">^text${this.displayCode}</code></pre>
 			</figure>
 		`;
 	}

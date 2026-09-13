@@ -1,0 +1,94 @@
+:host {
+	display: inline-flex;
+	flex: 0 0 auto;
+	vertical-align: middle;
+}
+.rating {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4em;
+	line-height: 1;
+	font-weight: 650;
+	color: var(--text-main, oklch(0.95 0 0));
+}
+[data-size='sm'] {
+	font-size: var(--text-xs, 0.75rem);
+	--icon-size: 0.875rem;
+}
+[data-size='md'] {
+	font-size: var(--text-sm, 0.875rem);
+	--icon-size: 1.125rem;
+}
+[data-size='lg'] {
+	font-size: var(--text-md, 1rem);
+	--icon-size: 1.375rem;
+}
+.rating-stars {
+	position: relative;
+	display: inline-flex;
+	flex: 0 0 auto;
+	isolation: isolate;
+	outline: none;
+}
+[data-interactive] .rating-stars {
+	cursor: pointer;
+}
+.rating-stars:focus-visible {
+	outline: 2px solid var(--color-info, currentColor);
+	outline-offset: 2px;
+	border-radius: var(--radius-sm, 0.25rem);
+}
+.rating-base,
+.rating-fill-inner {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.08em;
+}
+.rating-base {
+	color: var(--text-muted, oklch(0.7 0 0));
+}
+.rating-fill {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: 0;
+	inline-size: var(--rating-fill, 0%);
+	overflow: hidden;
+	pointer-events: none;
+	color: var(--color-warning, oklch(0.8 0.15 85));
+	--icon-fill: currentColor;
+}
+.rating-fill-inner {
+	inline-size: max-content;
+}
+.rating-star {
+	display: inline-flex;
+	flex: 0 0 auto;
+	line-height: 0;
+}
+.rating-value {
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.02em;
+}
+.rating-count {
+	color: var(--text-muted, oklch(0.7 0 0));
+	font-weight: 500;
+}
+.rating-medallion {
+	display: none;
+	align-items: center;
+	justify-content: center;
+	min-inline-size: 2.1em;
+	padding-block: 0.2em;
+	padding-inline: 0.45em;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: color-mix(in oklab, var(--color-warning, oklch(0.8 0.15 85)) 22%, transparent);
+	color: var(--color-warning, oklch(0.8 0.15 85));
+	font-variant-numeric: tabular-nums;
+}
+[data-variant='medallion'] .rating-stars,
+[data-variant='medallion'] .rating-value {
+	display: none;
+}
+[data-variant='medallion'] .rating-medallion {
+	display: inline-flex;
+}

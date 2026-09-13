@@ -7,7 +7,7 @@
 	position: relative;
 	z-index: 1;
 }
-.hv {
+.hover-video-player {
 	position: relative;
 	inline-size: 100%;
 	aspect-ratio: 16 / 9;
@@ -21,28 +21,28 @@
 		box-shadow var(--dur-base) var(--ease-out, ease);
 }
 /* The animated expand — the player springs up + lifts as it starts playing. The
-   pop size is the --hv-hover-scale knob: 1.14 default (a larger, cult-ui-style
+   pop size is the --hover-video-player-hover-scale knob: 1.14 default (a larger, cult-ui-style
    lift), retunable per-instance via the `hoverScale` state or globally by a theme
    overriding the custom property. */
-.hv:hover {
-	transform: scale(var(--hv-hover-scale, 1.14));
+.hover-video-player:hover {
+	transform: scale(var(--hover-video-player-hover-scale, 1.14));
 	box-shadow: 0 1.25rem 3rem -0.75rem color-mix(in oklab, var(--cyan) 40%, transparent);
 }
-.hv-video,
-.hv-poster {
+.hover-video-player-video,
+.hover-video-player-poster {
 	position: absolute;
 	inset: 0;
 	inline-size: 100%;
 	block-size: 100%;
 	object-fit: cover;
 }
-.hv-poster {
+.hover-video-player-poster {
 	transition: opacity var(--dur-base) var(--ease-out, ease);
 }
-.hv[data-playing] .hv-poster {
+.hover-video-player[data-playing] .hover-video-player-poster {
 	opacity: 0;
 }
-.hv-overlay {
+.hover-video-player-overlay {
 	position: absolute;
 	inset: 0;
 	display: grid;
@@ -51,10 +51,10 @@
 	pointer-events: none;
 	transition: opacity var(--dur-base) var(--ease-out, ease);
 }
-.hv[data-playing] .hv-overlay {
+.hover-video-player[data-playing] .hover-video-player-overlay {
 	opacity: 0;
 }
-.hv-play {
+.hover-video-player-play {
 	display: grid;
 	place-items: center;
 	inline-size: 3rem;
@@ -64,17 +64,17 @@
 	color: var(--bg-body);
 	transition: transform var(--dur-fast) var(--ease-spring);
 }
-.hv:hover .hv-play {
+.hover-video-player:hover .hover-video-player-play {
 	transform: scale(1.1);
 }
 @media (prefers-reduced-motion: reduce) {
-	.hv,
-	.hv-poster,
-	.hv-overlay,
-	.hv-play {
+	.hover-video-player,
+	.hover-video-player-poster,
+	.hover-video-player-overlay,
+	.hover-video-player-play {
 		transition: none;
 	}
-	.hv:hover {
+	.hover-video-player:hover {
 		transform: none;
 	}
 }

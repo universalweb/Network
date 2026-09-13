@@ -1,11 +1,15 @@
 import '../../global/dock/dock.js';
-import { WebComponent } from 'webcomponent';
+import { routerStore, WebComponent } from 'webcomponent';
 // `<global-dock>` — the Viat navigation rail. A thin composition over the
 // built-in `<ui-dock>`: it supplies the six section items and owns the router
-// coupling — the `dockSelect` event and `observeGlobal('routeSection')` both
-// drive `<ui-dock>`'s `activeIndex`. The built-in never reads the router.]
+// coupling — the `dockSelect` event and the router store's `section` (observed
+// via observeStore) both drive `<ui-dock>`'s `activeIndex`. The built-in never
+// reads the router.]
 export class GlobalDock extends WebComponent {
 	static url = import.meta.url;
+	static stores = {
+		router: routerStore,
+	};
 	static styles = {
 		globalDock: './global-dock.css',
 	};
@@ -20,27 +24,23 @@ export class GlobalDock extends WebComponent {
 			items: [
 				{
 					id: 'wallet',
-					icon: 'wallet',
+					icon: 'anim-bob',
 					tooltip: 'Wallet',
-					animated: 'bob',
 				},
 				{
 					id: 'explorer',
-					icon: 'compass',
+					icon: 'anim-compass',
 					tooltip: 'Explorer',
-					animated: 'compass',
 				},
 				{
 					id: 'accounts',
-					icon: 'users',
+					icon: 'anim-hop',
 					tooltip: 'Accounts',
-					animated: 'hop',
 				},
 				{
 					id: 'swap',
-					icon: 'repeat-2',
+					icon: 'anim-flip',
 					tooltip: 'Swap',
-					animated: 'flip',
 				},
 				{
 					id: 'exchange',
@@ -66,12 +66,16 @@ export class GlobalDock extends WebComponent {
 		// `dock.activeIndex` STATE — that back-edge (state → command → state) is what made
 		// the dock/router cycle, and it swallowed re-taps (a same-value write never fires).
 		this.on('dock:select', this.handleDockClick);
-		// DISPLAY flows DOWN, one-way: `routeSection` is the source of truth, the rail
-		// is its projection. This reconciles the highlight; it never navigates, so no
-		// cycle can form regardless of write-dedup or the router's current-section guard.
-		this.observeGlobal('routeSection', (sectionId) => {
-			this.state.dock.activeIndex = sectionId || '';
+		// DISPLAY flows DOWN, one-way: the router store's `section` is the source of
+		// truth, the rail is its projection. `immediate` seeds the initial highlight
+		// from the already-primed store; it reconciles the highlight and never
+		// navigates, so no cycle can form regardless of the current-section guard.
+		this.observeStore('router', 'section', this.syncActiveFromRoute, {
+			immediate: true,
 		});
+	}
+	syncActiveFromRoute(sectionId) {
+		this.state.dock.activeIndex = sectionId || '';
 	}
 	handleDockClick(domEvent) {
 		// The clicked icon-button row reports its `id` — same payload shape <ui-dock>
@@ -86,7 +90,7 @@ export class GlobalDock extends WebComponent {
 		});
 	}
 	render() {
-		this.html `<ui-dock #dock .state=${this.state.dock}></ui-dock>`;
+		this.html`<ui-dock #dock .state=${this.state.dock}></ui-dock>`;
 	}
 }
 customElements.define('global-dock', GlobalDock);

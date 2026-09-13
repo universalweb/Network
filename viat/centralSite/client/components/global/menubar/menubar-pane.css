@@ -1,0 +1,19 @@
+/*
+ * Inner chrome only. Slide transform lives on the host via .slide-pane
+ * (parent-imported slide-pane.css). Size follows content with the menu floor.
+ */
+:host {
+	display: block;
+	box-sizing: border-box;
+	inline-size: max-content;
+	min-inline-size: 11rem;
+	max-inline-size: min(20rem, calc(100vw - 2rem));
+}
+.menubar-pane-inner {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	padding: 0.3rem;
+	box-sizing: border-box;
+	min-inline-size: 11rem;
+}

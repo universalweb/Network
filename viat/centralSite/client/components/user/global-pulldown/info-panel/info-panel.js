@@ -11,7 +11,7 @@ export class InfoPanel extends Panel {
 		heading: 'LOCAL AI',
 	};
 	renderBody() {
-		return this.htmlElement `
+		return this.htmlElement`
 			<div class="ip-body">
 				<p class="ip-lede">Privacy-first local AI, native to Viat and Viat dApps.</p>
 				<p class="ip-copy">

@@ -1,0 +1,119 @@
+/*
+ * Shared fused-rail layout. No :host rules — imported by ui-toggle-group
+ * and ui-multi-select (a shared :host would leak onto every importer). The shell paints one
+ * bordered surface; lead/trail buttons pin on opposite edges; the middle
+ * scrolls. Policy (what each button does) stays with the caller.
+ *
+ * Class names `.tg-*` are the rail vocabulary (born on ui-toggle-group).
+ * Callers add `rail-shell` on the fused surface; toggle-group also keeps
+ * `toggle-group` for its own size/indicator tokens.
+ */
+.rail-shell {
+	display: inline-flex;
+	align-items: stretch;
+	inline-size: 100%;
+	min-inline-size: 0;
+	background: color-mix(in oklab, var(--bg-panel) 70%, transparent);
+	border: 1px solid color-mix(in oklab, var(--text-primary, currentColor) 14%, transparent);
+	border-radius: var(--radius-md);
+	gap: 0;
+	overflow: hidden;
+}
+.tg-scroll {
+	position: relative;
+	display: flex;
+	flex: 1 1 auto;
+	align-items: stretch;
+	min-inline-size: 0;
+	padding: var(--tg-strip-pad, 0.2rem);
+	gap: 0.2rem;
+}
+[data-overflow='auto'] .tg-scroll,
+[data-overflow='scroll'] .tg-scroll {
+	overflow-x: auto;
+	overflow-y: hidden;
+	overscroll-behavior-inline: contain;
+	/* Stylesheet hide — an inline scrollbar-width:none aborts scrollTo(smooth) at 1px. */
+	scrollbar-width: none;
+}
+[data-overflow='wrap'] .tg-scroll {
+	flex-wrap: wrap;
+	overflow: visible;
+}
+.tg-rail[hidden] {
+	display: none;
+}
+/*
+ * Rails are input-group addons: they fill the group's block axis, carry no
+ * own fill/radius, and separate from the strip with one inner hairline.
+ * Hover brightens colour; activation is transform/opacity only.
+ */
+.tg-rail {
+	appearance: none;
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	align-self: stretch;
+	min-inline-size: var(--hit-min, 2.75rem);
+	margin: 0;
+	padding-block: 0;
+	padding-inline: 0.45rem;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	box-shadow: none;
+	color: var(--text-muted, currentColor);
+	cursor: pointer;
+	line-height: 0;
+	user-select: none;
+	--icon-color-hover: currentColor;
+	--icon-color-active: currentColor;
+	transition:
+		color var(--dur-fast, 0.18s) var(--ease-out, ease),
+		transform var(--dur-fast, 0.18s) var(--ease-out, ease),
+		opacity var(--dur-fast, 0.18s) var(--ease-out, ease);
+}
+.tg-rail-lead {
+	border-inline-end: 1px solid color-mix(in oklch, var(--text-muted) 16%, transparent);
+}
+.tg-rail-trail {
+	border-inline-start: 1px solid color-mix(in oklch, var(--text-muted) 16%, transparent);
+}
+.tg-rail:hover {
+	color: var(--text-primary, currentColor);
+	background: transparent;
+	box-shadow: none;
+}
+.tg-rail:active {
+	transform: scale(var(--press-scale, 0.96));
+}
+.tg-rail[aria-pressed='true'],
+.tg-rail[data-active] {
+	color: var(--cyan, var(--color-info));
+	background: color-mix(in oklch, var(--cyan, var(--color-info)) 6%, transparent);
+	animation: tg-rail-activate var(--dur-fast, 0.18s) var(--ease-out, ease);
+}
+.tg-rail:focus-visible {
+	outline: 2px solid var(--color-info, currentColor);
+	outline-offset: -2px;
+}
+@keyframes tg-rail-activate {
+	from {
+		transform: scale(var(--press-scale, 0.96));
+		opacity: 0.72;
+	}
+	to {
+		transform: none;
+		opacity: 1;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.tg-rail {
+		transition: none;
+		animation: none;
+	}
+	.tg-rail:active {
+		transform: none;
+	}
+}

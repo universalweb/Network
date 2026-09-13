@@ -1,0 +1,68 @@
+:host {
+	container-type: inline-size;
+	display: block;
+	inline-size: 100%;
+	min-block-size: 14rem;
+	color: var(--text-main);
+}
+
+.radar-chart {
+	justify-items: center;
+}
+
+.radar-chart .chart-plot-area {
+	inline-size: 100%;
+	justify-items: center;
+	max-inline-size: 18rem;
+}
+
+.radar-chart-svg-stack {
+	aspect-ratio: 1;
+	display: grid;
+	inline-size: 100%;
+	position: relative;
+}
+
+.radar-chart-svg-stack > .radar-chart-layer,
+.radar-chart-svg-stack > .chart-series-svg,
+.radar-chart-svg-stack > .chart-hit-svg {
+	block-size: 100%;
+	grid-area: 1 / 1;
+	inline-size: 100%;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.radar-chart-ring {
+	fill: none;
+	stroke: color-mix(in oklab, var(--border-color, currentColor) 40%, transparent);
+	stroke-width: 1;
+}
+
+.radar-chart-axis {
+	stroke: color-mix(in oklab, var(--border-color, currentColor) 45%, transparent);
+	stroke-width: 1;
+}
+
+.radar-chart-label {
+	fill: var(--text-muted, var(--text-main));
+	font-size: 0.625rem;
+}
+
+.radar-chart-legend {
+	display: block;
+	justify-self: center;
+	min-inline-size: 0;
+}
+
+.radar-chart-empty {
+	color: var(--text-muted, var(--text-main));
+	display: grid;
+	font-size: var(--text-sm, 0.875rem);
+	min-block-size: 12rem;
+	place-items: center;
+}
+
+.radar-chart-empty[hidden] {
+	display: none !important;
+}

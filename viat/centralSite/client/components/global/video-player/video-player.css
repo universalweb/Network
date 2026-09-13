@@ -1,0 +1,262 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	min-inline-size: 0;
+}
+.video-player {
+	position: relative;
+	display: grid;
+	/*
+	 * Same defect class as media-stage: a child took its intrinsic size
+	 * instead of the host. Replaced <video> contributes min-content block
+	 * size, the auto grid row grows past the aspect-ratio shell, and
+	 * overflow:hidden clips the chrome. Overlay stays one cell; this
+	 * binds the row to the shell.
+	 */
+	grid-template-rows: minmax(0, 1fr);
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: 0;
+	overflow: hidden;
+	border-radius: var(--radius-lg, 0.75rem);
+	background: var(--bg-panel);
+	color: var(--text-main);
+	box-shadow: none;
+	container-type: inline-size;
+	container-name: video-player;
+}
+.video-player-media {
+	grid-area: 1 / 1;
+	inline-size: 100%;
+	block-size: 100%;
+	min-inline-size: 0;
+	min-block-size: 0;
+	object-fit: cover;
+	background: var(--bg-panel);
+}
+.video-player-live {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+.video-player-empty,
+.video-player-error {
+	display: none;
+	grid-area: 1 / 1;
+	place-self: center;
+	align-items: center;
+	gap: var(--space-3, 0.75rem);
+	padding: var(--space-4, 1rem);
+	color: var(--text-muted);
+	font-size: var(--text-sm, 0.75rem);
+	z-index: 1;
+}
+.video-player[data-phase='empty'] .video-player-empty,
+.video-player[data-phase='error'] .video-player-error {
+	display: flex;
+}
+.video-player[data-phase='empty'] .video-player-chrome,
+.video-player[data-phase='error'] .video-player-chrome {
+	display: none;
+}
+.video-player-error {
+	color: var(--color-danger, var(--text-muted));
+}
+.video-player-status-title {
+	font-weight: var(--weight-medium, 500);
+	color: inherit;
+}
+.video-player-status-hint {
+	color: var(--text-muted);
+}
+.video-player-status-hint:empty {
+	display: none;
+}
+.video-player-chrome {
+	grid-area: 1 / 1;
+	align-self: end;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, 0.5rem);
+	padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+	background: color-mix(in oklab, var(--bg-panel) 82%, transparent);
+	z-index: 1;
+}
+.video-player-heading {
+	font-size: var(--text-sm, 0.75rem);
+	font-weight: var(--weight-semibold, 600);
+	line-height: var(--leading-tight, 1.2);
+	text-wrap: balance;
+}
+.video-player-seek-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2, 0.5rem);
+	min-inline-size: 0;
+}
+.video-player-time {
+	flex: none;
+	min-inline-size: 2.5rem;
+	color: var(--text-muted);
+	font-size: var(--text-xs, 0.6875rem);
+	font-variant-numeric: tabular-nums;
+	font-family: var(--font-mono, ui-monospace, monospace);
+}
+.video-player-time:last-child {
+	text-align: end;
+}
+.video-player-seek-stack,
+.video-player-vol-stack {
+	position: relative;
+	display: grid;
+	align-items: center;
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	block-size: 1.25rem;
+}
+.video-player-vol-stack {
+	flex: 0 1 auto;
+	inline-size: clamp(4.25rem, 16cqi, 7rem);
+}
+.video-player-seek-rail,
+.video-player-vol-rail,
+.video-player-seek,
+.video-player-vol {
+	grid-area: 1 / 1;
+}
+.video-player-seek-rail,
+.video-player-vol-rail {
+	position: relative;
+	pointer-events: none;
+	inline-size: 100%;
+	block-size: 0.28rem;
+	border-radius: var(--radius-pill, 999px);
+	background: color-mix(in oklab, var(--text-muted) 22%, transparent);
+}
+.video-player-seek-rail::before,
+.video-player-seek-rail::after,
+.video-player-vol-rail::before {
+	content: '';
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: 0;
+	border-radius: inherit;
+}
+.video-player-seek-rail::before {
+	inline-size: var(--video-player-buffered, 0%);
+	background: color-mix(in oklab, var(--teal) 32%, transparent);
+}
+.video-player-seek-rail::after {
+	inline-size: var(--video-player-played, 0%);
+	background: var(--teal);
+}
+.video-player-vol-rail::before {
+	inline-size: var(--video-player-volume, 100%);
+	background: var(--teal);
+}
+.video-player-seek,
+.video-player-vol {
+	appearance: none;
+	margin: 0;
+	padding: 0;
+	inline-size: 100%;
+	block-size: 1.25rem;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+	accent-color: transparent;
+	cursor: pointer;
+	touch-action: pan-y;
+	z-index: 1;
+}
+.video-player-seek::-webkit-slider-runnable-track,
+.video-player-vol::-webkit-slider-runnable-track {
+	background: transparent;
+	block-size: 0.28rem;
+	border: 0;
+}
+.video-player-seek::-moz-range-track,
+.video-player-vol::-moz-range-track {
+	background: transparent;
+	block-size: 0.28rem;
+	border: 0;
+}
+.video-player-seek::-webkit-slider-thumb,
+.video-player-vol::-webkit-slider-thumb {
+	appearance: none;
+	inline-size: 0.7rem;
+	block-size: 0.7rem;
+	margin-block-start: calc((0.28rem - 0.7rem) / 2);
+	border: 2px solid var(--bg-panel);
+	border-radius: var(--radius-pill, 999px);
+	background: var(--teal);
+	cursor: grab;
+}
+.video-player-seek::-moz-range-thumb,
+.video-player-vol::-moz-range-thumb {
+	appearance: none;
+	inline-size: 0.7rem;
+	block-size: 0.7rem;
+	border: 2px solid var(--bg-panel);
+	border-radius: var(--radius-pill, 999px);
+	background: var(--teal);
+	cursor: grab;
+}
+.video-player-seek:focus-visible,
+.video-player-vol:focus-visible,
+.video-player-rate:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal));
+	outline-offset: 2px;
+}
+.video-player-seek:disabled {
+	cursor: default;
+	opacity: 0.55;
+}
+.video-player-transport {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+	flex-wrap: wrap;
+	min-inline-size: 0;
+}
+.video-player-cluster,
+.video-player-gain {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1, 0.25rem);
+	min-inline-size: 0;
+}
+.video-player-play {
+	--btn-hit: var(--hit-min, max(2.75rem, 44px));
+	--btn-face: var(--hit-min, max(2.75rem, 44px));
+	--ui-btn-radius: var(--radius-pill, 999px);
+}
+.video-player-rate {
+	appearance: none;
+	margin: 0;
+	padding-block: 0.2rem;
+	padding-inline: 0.55rem 1.35rem;
+	border: 1px solid var(--border-light-color, var(--dark-divider));
+	border-radius: var(--radius-pill, 999px);
+	background-color: color-mix(in oklab, var(--text-main) 4%, var(--bg-panel));
+	color: var(--text-muted);
+	font-size: var(--text-xs, 0.6875rem);
+	font-variant-numeric: tabular-nums;
+	font-family: var(--font-mono, ui-monospace, monospace);
+	cursor: pointer;
+	box-shadow: none;
+}
+@container video-player (max-inline-size: 26rem) {
+	.video-player-vol-stack {
+		display: none;
+	}
+}
+@container video-player (max-inline-size: 20rem) {
+	.video-player-skip {
+		display: none;
+	}
+}

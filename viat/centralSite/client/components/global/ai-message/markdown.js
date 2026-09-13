@@ -50,7 +50,7 @@ function safeUrl(url) {
 	return '#';
 }
 function renderLink(match, label, url) {
-	return `<a class="md-link" href="${safeUrl(url)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+	return `<a class="markdown-link" href="${safeUrl(url)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
 }
 function applyEmphasis(text) {
 	// Links first so a URL's parens aren't eaten by italic; bold before italic
@@ -72,7 +72,7 @@ function renderInline(text) {
 	let out = '';
 	for (let index = 0; index < segments.length; index += 1) {
 		if (index % 2 === 1) {
-			out += `<code class="md-icode">${segments[index]}</code>`;
+			out += `<code class="markdown-inline-code">${segments[index]}</code>`;
 			continue;
 		}
 		out += applyEmphasis(segments[index]);
@@ -107,7 +107,7 @@ function startsNewBlock(lines, index) {
 function renderHeading(line) {
 	const match = HEADING_RE.exec(line);
 	const level = match[1].length;
-	return `<h${level} class="md-h md-h${level}">${renderInline(match[2].trim())}</h${level}>`;
+	return `<h${level} class="markdown-h markdown-h${level}">${renderInline(match[2].trim())}</h${level}>`;
 }
 function collectBlockquote(lines, start, blocks) {
 	// Inline-only quote body (one <p>, soft breaks). Chat quotes are short prose;
@@ -118,7 +118,7 @@ function collectBlockquote(lines, start, blocks) {
 		inner.push(renderInline(lines[index].replace(/^\s*>\s?/, '')));
 		index += 1;
 	}
-	blocks.push(`<blockquote class="md-quote"><p class="md-p">${inner.join('<br>')}</p></blockquote>`);
+	blocks.push(`<blockquote class="markdown-quote"><p class="markdown-p">${inner.join('<br>')}</p></blockquote>`);
 	return index;
 }
 function collectList(lines, start, tag, itemRe, blocks) {
@@ -126,10 +126,10 @@ function collectList(lines, start, tag, itemRe, blocks) {
 	let items = '';
 	while (index < lines.length && itemRe.test(lines[index])) {
 		const match = itemRe.exec(lines[index]);
-		items += `<li class="md-li">${renderInline(match[1].trim())}</li>`;
+		items += `<li class="markdown-li">${renderInline(match[1].trim())}</li>`;
 		index += 1;
 	}
-	blocks.push(`<${tag} class="md-list md-${tag}">${items}</${tag}>`);
+	blocks.push(`<${tag} class="markdown-list markdown-${tag}">${items}</${tag}>`);
 	return index;
 }
 function collectTable(lines, start, blocks) {
@@ -149,7 +149,7 @@ function collectTable(lines, start, blocks) {
 	for (let column = 0; column < headers.length; column += 1) {
 		head += `<th>${renderInline(headers[column])}</th>`;
 	}
-	blocks.push(`<table class="md-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`);
+	blocks.push(`<table class="markdown-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`);
 	return index;
 }
 function collectParagraph(lines, start, blocks) {
@@ -162,7 +162,7 @@ function collectParagraph(lines, start, blocks) {
 		rows.push(renderInline(lines[index].trim()));
 		index += 1;
 	}
-	blocks.push(`<p class="md-p">${rows.join('<br>')}</p>`);
+	blocks.push(`<p class="markdown-p">${rows.join('<br>')}</p>`);
 	return index;
 }
 export function markdownToHtml(source) {
@@ -177,7 +177,7 @@ export function markdownToHtml(source) {
 			blocks.push(renderHeading(line));
 			index += 1;
 		} else if (HR_RE.test(line)) {
-			blocks.push('<hr class="md-hr">');
+			blocks.push('<hr class="markdown-hr">');
 			index += 1;
 		} else if (BLOCKQUOTE_RE.test(line)) {
 			index = collectBlockquote(lines, index, blocks);

@@ -82,9 +82,9 @@ export class SwapPage extends WebComponent {
 	}
 	renderAssetGlyph(asset) {
 		if (asset.glyph) {
-			return this.htmlElement `<span class="sp-glyph">${asset.glyph}</span>`;
+			return this.htmlElement`<span class="sp-glyph">${asset.glyph}</span>`;
 		}
-		return this.htmlElement `<ui-icon class="sp-icon" .state.name=${'bitcoin'} .state.size=${'md'}></ui-icon>`;
+		return this.htmlElement`<ui-icon class="sp-icon" .state.name=${'bitcoin'} .state.size=${'md'}></ui-icon>`;
 	}
 	flipDirection() {
 		const next = this.state.fromSymbol === 'VIAT' ? 'BTC' : 'VIAT';
@@ -108,7 +108,7 @@ export class SwapPage extends WebComponent {
 	}
 	renderFromCard() {
 		const asset = this.fromAsset;
-		return this.htmlElement `
+		return this.htmlElement`
 			<section class="sp-card sp-card-from">
 				<div class="sp-card-head">
 					<span class="sp-card-label">FROM</span>
@@ -132,7 +132,7 @@ export class SwapPage extends WebComponent {
 		`;
 	}
 	renderFlipButton() {
-		return this.htmlElement `
+		return this.htmlElement`
 			<button class="sp-flip" @click=${this.handleFlip} aria-label="Flip swap direction" tooltip="Flip direction">
 				<ui-icon class="sp-flip-icon" .state.name=${'arrow-up-down'} .state.size=${'md'}></ui-icon>
 			</button>
@@ -140,7 +140,7 @@ export class SwapPage extends WebComponent {
 	}
 	renderToCard() {
 		const asset = this.toAsset;
-		return this.htmlElement `
+		return this.htmlElement`
 			<section class="sp-card sp-card-to">
 				<div class="sp-card-head">
 					<span class="sp-card-label">TO</span>
@@ -157,7 +157,7 @@ export class SwapPage extends WebComponent {
 		`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="sp-shell">
 				<div class="sp-frame">
 					<header class="sp-header">

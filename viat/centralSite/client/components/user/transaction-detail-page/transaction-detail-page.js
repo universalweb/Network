@@ -1,6 +1,5 @@
 import '../../global/icon/icon.js';
-import { html, WebComponent } from '../../core/index.js';
-import { AppView } from '../app-view/app-view.js';
+import { html, routerStore, WebComponent } from '../../core/index.js';
 function formatAmount(value) {
 	if (value == null) {
 		return '0';
@@ -21,21 +20,114 @@ function formatTimestamp(value) {
 	}
 	return date.toISOString().replace('T', ' ').replace(/\..+$/, '');
 }
+/* Shape a chain tx into the flat field rows the detail grid renders. Built once
+   at load time (like account-detail's shapeTx) so the row fn stays a pure map and
+   the grid can paint through list() — a method-returned html`` in a content spot
+   would stringify to JSON text instead of mounting. */
+function buildFields(tx) {
+	const from = tx.from ?? '';
+	const to = tx.to ?? '';
+	return [
+		{
+			id: 'type',
+			label: 'Type',
+			value: (tx.type || 'transfer').toUpperCase(),
+		},
+		{
+			id: 'status',
+			label: 'Status',
+			value: (tx.status || '—').toUpperCase(),
+		},
+		{
+			id: 'amount',
+			label: 'Amount',
+			value: `${formatAmount(tx.amount)} VIAT`,
+		},
+		{
+			id: 'timestamp',
+			label: 'Timestamp',
+			value: formatTimestamp(tx.timestamp),
+		},
+		{
+			id: 'from',
+			label: 'From',
+			value: from || '—',
+			href: from ? `/account/${encodeURIComponent(from)}/` : '',
+			wide: true,
+		},
+		{
+			id: 'to',
+			label: 'To',
+			value: to || '—',
+			href: to ? `/account/${encodeURIComponent(to)}/` : '',
+			wide: true,
+		},
+		{
+			id: 'signature',
+			label: 'Signature',
+			value: tx.signature ?? '—',
+			wide: true,
+		},
+	];
+}
+/* Lazy AppView import — app.js imports this page at module top, so a static
+   `import AppView from app.js` is a circular edge. Dynamic import runs after both
+   modules have finished evaluating, so `ensureSDK` is always the real static. */
+let appViewModule = null;
+async function ensureSDK() {
+	appViewModule ??= import('../../../modules/app.js');
+	const mod = await appViewModule;
+	return mod.default.ensureSDK();
+}
 export class TransactionDetailPage extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
 		transaction: './transaction-detail-page.css',
 	};
+	static stores = {
+		router: routerStore,
+	};
 	static state = {
 		txId: '',
 		transaction: null,
+		fields: [],
 		loading: false,
 		error: '',
 	};
 	previousId = '';
+	/* Bumps on every load start — stale responses from a prior id never land. */
+	loadSeq = 0;
+	/*
+	 * Route-driven, not pushed. Every page component stays MOUNTED (the shell
+	 * hides inactive ones with CSS), so the guard on the router store's
+	 * `activeView` is what keeps this page inert while another one is showing —
+	 * without it a route change anywhere would refetch here.
+	 */
+	onConnect() {
+		/* immediate: true so a late connect (after router.prime) still loads the
+		   already-published /tx/:id/ — without it the first paint can miss the
+		   route if the store write landed before this observer existed. */
+		this.observeStore('router', [
+			'activeView',
+			'params',
+		], this.handleRoute, {
+			immediate: true,
+		});
+	}
+	handleRoute() {
+		if (this.stores.router.activeView !== 'transaction') {
+			return;
+		}
+		const id = this.stores.router.params?.id;
+		if (id) {
+			this.setTxId(id);
+		}
+	}
 	setTxId(id) {
 		const next = id || '';
-		if (next === this.previousId && this.state.transaction) {
+		/* Cache hit only when we actually painted rows for this id — a prior
+		   partial failure (transaction set, empty fields / dead list) must reload. */
+		if (next === this.previousId && this.state.transaction && this.state.fields.length) {
 			return;
 		}
 		this.previousId = next;
@@ -47,13 +139,52 @@ export class TransactionDetailPage extends WebComponent {
 		}
 	}
 	async loadTransaction(id) {
+		const seq = ++this.loadSeq;
 		this.assignState({
 			loading: true,
 			error: '',
 			transaction: null,
+			fields: [],
 		});
-		const sdk = await AppView.ensureSDK();
-		const response = await sdk.getTransaction(id);
+		let sdk;
+		try {
+			sdk = await ensureSDK();
+		} catch (error) {
+			if (seq !== this.loadSeq) {
+				return;
+			}
+			this.assignState({
+				loading: false,
+				error: error?.message || 'SDK unavailable',
+			});
+			return;
+		}
+		if (seq !== this.loadSeq) {
+			return;
+		}
+		if (!sdk) {
+			this.assignState({
+				loading: false,
+				error: 'SDK unavailable',
+			});
+			return;
+		}
+		let response;
+		try {
+			response = await sdk.getTransaction(id);
+		} catch (error) {
+			if (seq !== this.loadSeq) {
+				return;
+			}
+			this.assignState({
+				loading: false,
+				error: error?.message || 'Failed to load transaction',
+			});
+			return;
+		}
+		if (seq !== this.loadSeq) {
+			return;
+		}
 		if (!response) {
 			this.assignState({
 				loading: false,
@@ -61,9 +192,31 @@ export class TransactionDetailPage extends WebComponent {
 			});
 			return;
 		}
+		const transaction = response.transaction ?? response;
+		const fields = buildFields(transaction);
 		this.assignState({
 			loading: false,
-			transaction: response.transaction ?? response,
+			transaction,
+			fields,
+		});
+		/* If the list spot missed the bus write (install race / flush skip), force
+		   a keyed re-diff once the DOM has settled this assignState. */
+		this.queueListRefresh(seq);
+	}
+	queueListRefresh(seq) {
+		queueMicrotask(() => {
+			if (seq !== this.loadSeq || !this.state.fields.length) {
+				return;
+			}
+			const handle = this.list('fields');
+			const spot = handle?.spot;
+			if (!spot) {
+				return;
+			}
+			/* DOM still empty while state has rows → re-diff. */
+			if (!spot.element?.childElementCount) {
+				spot.refresh(null);
+			}
 		});
 	}
 	async handleCopyId() {
@@ -78,46 +231,54 @@ export class TransactionDetailPage extends WebComponent {
 			// silent
 		}
 	}
-	renderField(label, value, href, wide) {
-		const safeValue = value ?? '—';
-		const className = wide ? 'td-field td-field-wide' : 'td-field';
-		if (href) {
+	txIdDisplay() {
+		return this.state.txId || '—';
+	}
+	/* Status line for the non-grid states — empty string when the field grid is live. */
+	statusMessage() {
+		if (this.state.loading) {
+			return 'Loading transaction…';
+		}
+		if (this.state.error) {
+			return this.state.error;
+		}
+		if (!this.state.fields.length) {
+			return 'Transaction not found.';
+		}
+		return '';
+	}
+	/* Paint the grid only when rows exist — not merely when `transaction` is set. */
+	hasGrid() {
+		return this.state.fields.length > 0 && !this.state.loading && !this.state.error;
+	}
+	/* Inverse of hasGrid — ?hidden needs a bare method/fn, not `!this.hasGrid`. */
+	hideGrid() {
+		return !this.hasGrid();
+	}
+	statusClass() {
+		return this.state.error ? 'td-empty td-error' : 'td-empty';
+	}
+	fieldRow(field) {
+		const className = field.wide ? 'td-field td-field-wide' : 'td-field';
+		if (field.href) {
 			return html`<div class=${className}>
-				<span class="td-key">${label}</span>
-				<a class="td-val td-link" href=${href}>${safeValue}</a>
+				<span class="td-key">${field.label}</span>
+				<a class="td-val td-link" href=${field.href}>${field.value}</a>
 			</div>`;
 		}
 		return html`<div class=${className}>
-			<span class="td-key">${label}</span>
-			<span class="td-val">${safeValue}</span>
+			<span class="td-key">${field.label}</span>
+			<span class="td-val">${field.value}</span>
 		</div>`;
 	}
-	renderBody() {
-		if (this.state.loading) {
-			return this.htmlElement`<div class="td-empty">Loading transaction…</div>`;
-		}
-		if (this.state.error) {
-			return this.htmlElement`<div class="td-empty td-error">${this.state.error}</div>`;
-		}
-		const tx = this.state.transaction;
-		if (!tx) {
-			return this.htmlElement`<div class="td-empty">Transaction not found.</div>`;
-		}
-		const fromHref = `/account/${encodeURIComponent(tx.from)}/`;
-		const toHref = `/account/${encodeURIComponent(tx.to)}/`;
-		return this.htmlElement`
-			<div class="td-grid">
-				${this.renderField('Type', (tx.type || 'transfer').toUpperCase())}
-				${this.renderField('Status', (tx.status || '—').toUpperCase())}
-				${this.renderField('Amount', `${formatAmount(tx.amount)} VIAT`)}
-				${this.renderField('Timestamp', formatTimestamp(tx.timestamp))}
-				${this.renderField('From', tx.from, fromHref, true)}
-				${this.renderField('To', tx.to, toHref, true)}
-				${this.renderField('Signature', tx.signature, null, true)}
-			</div>
-		`;
-	}
 	render() {
+		/*
+		 * Status + grid host are STABLE in the main template. The list lives on
+		 * an INNER `.td-grid` so `?hidden` never sits on the list's own element
+		 * (elided list spots own their host — toggling hidden on that host mixed
+		 * attr + list ownership). No custom elements in the body — only light
+		 * html rows — so CE upgrade timing cannot empty the grid.
+		 */
 		this.html`
 			<div class="td-shell">
 				<header class="td-header">
@@ -125,11 +286,12 @@ export class TransactionDetailPage extends WebComponent {
 						<ui-icon class="td-title-icon" .state.name=${'receipt'} .state.size=${'md'}></ui-icon>
 						<span class="td-title">// TRANSACTION DETAIL</span>
 					</div>
-					<button class="td-copy" @click=${this.handleCopyId} tooltip="Copy transaction ID">${() => {
-						return this.state.txId || '—';
-					}}</button>
+					<button class="td-copy" @click=${this.handleCopyId} tooltip="Copy transaction ID">${this.txIdDisplay}</button>
 				</header>
-				${this.renderBody}
+				<div class=${this.statusClass} ?hidden=${this.hasGrid}>${this.statusMessage}</div>
+				<div class="td-grid-host" ?hidden=${this.hideGrid}>
+					<div class="td-grid">${this.list('fields', this.fieldRow)}</div>
+				</div>
 			</div>
 		`;
 	}

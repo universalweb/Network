@@ -27,48 +27,58 @@
  * and routes through `entry.unsubscribe()`.
  */
 import {
-	isError, isFunction, isObject, isPromiseLike, isString,
+	isFunction, isObject, isPromiseLike, isString, sweepEntrySet, weakRefFor,
 } from '../utilities.js';
 import { EventEntry } from './eventEntry.js';
-export function emit(eventName, data = {}, options, source) {
-	const {
-		bubbles = true,
-		cancelable = false,
-		composed = true,
-	} = isObject(options) ? options : {};
-	const init = {
-		bubbles,
-		cancelable,
-		composed,
-		detail: {
-			data,
-			source: source || this,
-		},
+import { queueEventError, settleEventResult } from './settle.js';
+const EMPTY_EMIT_OPTIONS = {};
+// @engram em:network/code/events-e7-e8-shared-customevent-init-weakreffor-one-ref-per- — why sharing the init dict is safe and what must stay fresh
+/*
+ * Shared CustomEvent init, mutated per emit. Safe to reuse because the
+ * CustomEvent constructor converts the dictionary synchronously and never
+ * retains it — a nested emit from inside a handler only touches the init
+ * AFTER the outer event captured its values. Only the `detail` wrapper (the
+ * public { data, source } contract) is allocated fresh; it is nulled out
+ * after construction so the shared init pins nothing between emits.
+ */
+const busEventInit = {
+	bubbles: true,
+	cancelable: false,
+	composed: true,
+	detail: null,
+};
+/**
+ * Build a bus-shaped CustomEvent — the one constructor path behind `emit` and
+ * `emitDelegate`. Defaults: bubbles + composed true, cancelable false.
+ * @param {string} eventName - The event type.
+ * @param {*} data - Payload placed on `detail.data`.
+ * @param {*} source - Emitter placed on `detail.source`.
+ * @param {object} [options] - `{ bubbles, cancelable, composed }` overrides.
+ * @returns {CustomEvent} The constructed event.
+ */
+export function createBusEvent(eventName, data, source, options) {
+	const resolved = isObject(options) ? options : EMPTY_EMIT_OPTIONS;
+	busEventInit.bubbles = resolved.bubbles === undefined ? true : Boolean(resolved.bubbles);
+	busEventInit.cancelable = Boolean(resolved.cancelable);
+	busEventInit.composed = resolved.composed === undefined ? true : Boolean(resolved.composed);
+	busEventInit.detail = {
+		data,
+		source,
 	};
-	return this.dispatchEvent(new CustomEvent(eventName, init));
+	const busEvent = new CustomEvent(eventName, busEventInit);
+	busEventInit.detail = null;
+	return busEvent;
 }
-export function handleEventError(error, domEvent, element, eventName) {
-	queueMicrotask(() => {
-		throw Object.assign(isError(error) ? error : new Error(String(error)), {
-			element,
-			event: domEvent,
-			eventName,
-		});
-	});
+export function emit(eventName, data = {}, options, source) {
+	return this.dispatchEvent(createBusEvent(eventName, data, source || this, options));
 }
 /*
- * Await-based settle instead of `.catch` — a bare thenable passes
- * `isPromiseLike` with only `.then`, so `.catch` is not guaranteed to exist;
- * `await` normalizes any thenable. Named module fn with the context passed as
- * args = no per-dispatch closure. Invoked UNAWAITED — a side-observer of the
- * result the caller already holds.
+ * Default per-component async-error sink (prototype method — override to
+ * route to telemetry / a UI fallback). Settle paths call it only when the
+ * owner is alive; the shared queue rethrow is the owner-less fallback.
  */
-async function settleHandlerResult(component, result, domEvent, element, eventName) {
-	try {
-		await result;
-	} catch (error) {
-		component.handleEventError(error, domEvent, element, eventName);
-	}
+export function handleEventError(error, domEvent, element, eventName) {
+	queueEventError(error, domEvent, element, eventName);
 }
 export function runEventHandler(handlerFunction, domEvent, element, eventName = domEvent?.type) {
 	if (!isFunction(handlerFunction)) {
@@ -76,7 +86,7 @@ export function runEventHandler(handlerFunction, domEvent, element, eventName = 
 	}
 	const result = handlerFunction.call(this, domEvent, element, eventName);
 	if (isPromiseLike(result)) {
-		settleHandlerResult(this, result, domEvent, element, eventName);
+		settleEventResult(result, this, domEvent, element, eventName);
 	}
 	return result;
 }
@@ -129,14 +139,14 @@ export function addEvent(eventName, handler, element, options) {
 		resolvedElement = eventName.element;
 		resolvedOptions = eventName.options;
 	}
-	if (!isString(resolvedEventName) || !resolvedEventName.trim()) {
+	const trimmedEventName = isString(resolvedEventName) ? resolvedEventName.trim() : '';
+	if (!trimmedEventName) {
 		throw new TypeError('eventName must be a non-empty string');
 	}
 	if (!isFunction(resolvedHandler)) {
 		throw new TypeError('handler must be a function');
 	}
 	const component = this;
-	const trimmedEventName = resolvedEventName.trim();
 	const target = resolvedElement || component;
 	const entry = EventEntry.create(component, trimmedEventName, resolvedHandler, target, resolvedOptions);
 	entry.subscribe();
@@ -162,7 +172,7 @@ export function listener(handlerFunction) {
 		return cached;
 	}
 	const wrapper = {
-		componentRef: new WeakRef(this),
+		componentRef: weakRefFor(this),
 		handler: handlerFunction,
 		handleEvent: dispatchCachedListener,
 	};
@@ -180,17 +190,6 @@ export function listener(handlerFunction) {
  */
 export function on(eventName, handlerFunction, options) {
 	return this.addEvent(eventName, handlerFunction, this, options);
-}
-/**
- * Thin wrapper over `addEvent` that pins the element to the component itself.
- * Returns the same `EventEntry` addEvent returns, so callers can hold it and
- * call `entry.unsubscribe()`. Validation lives in `addEvent`.
- * @param {Function} handlerFunction - The event handler also used as the event name via .name or .constructor.name.
- * @param {AddEventListenerOptions} [options] - Native listener options.
- * @returns {EventEntry} The subscription entry.
- */
-export function onFn(handlerFunction, options) {
-	return on(handlerFunction.name || handlerFunction?.constructor.name, handlerFunction, options);
 }
 /**
  * Like `on`, but merges `once: true` into options so the listener fires a
@@ -220,7 +219,8 @@ export function once(eventName, handlerFunction, options) {
  * @returns {WebComponent} The component, for chaining.
  */
 export function off(eventName, handlerFunction, options) {
-	if (!isString(eventName) || !eventName.trim()) {
+	const trimmedEventName = isString(eventName) ? eventName.trim() : '';
+	if (!trimmedEventName) {
 		throw new TypeError('eventName must be a non-empty string');
 	}
 	const entries = this.eventEntries;
@@ -228,7 +228,6 @@ export function off(eventName, handlerFunction, options) {
 		return this;
 	}
 	const component = this;
-	const trimmedEventName = eventName.trim();
 	const matchCapture = options === undefined ? null : getCaptureFlag(options);
 	const snapshot = Array.from(entries);
 	const snapshotLength = snapshot.length;
@@ -251,22 +250,11 @@ export function off(eventName, handlerFunction, options) {
 	return this;
 }
 /**
- * Lifecycle disconnect hook — walks the component's `eventEntries` and
- * unsubscribes each. Every entry is an `EventEntry` instance (Phase 2 unified
- * the shape), so `entry.unsubscribe()` covers detach + Set removal + abort-
- * listener cleanup in one call. Snapshot first because `unsubscribe()`
- * mutates `eventEntries` during the walk; `entries.clear()` at the end is
- * defensive — by then the Set is already empty.
+ * Lifecycle disconnect hook — tears down every `eventEntries` member. Each is
+ * an `EventEntry` (Phase 2 unified the shape), so one `unsubscribe()` covers
+ * detach + Set removal + abort-listener cleanup. Sweep mechanics (the
+ * load-bearing snapshot) live in `sweepEntrySet`.
  */
 export function clearEventListeners() {
-	const entries = this.eventEntries;
-	if (!entries?.size) {
-		return;
-	}
-	const snapshot = Array.from(entries);
-	const snapshotLength = snapshot.length;
-	for (let index = 0; index < snapshotLength; index++) {
-		snapshot[index].unsubscribe();
-	}
-	entries.clear();
+	sweepEntrySet(this.eventEntries);
 }

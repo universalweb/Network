@@ -1,0 +1,53 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	min-inline-size: 0;
+	container-type: inline-size;
+}
+.schedule-route {
+	display: grid;
+	gap: 0.75rem;
+}
+.schedule-route-map {
+	inline-size: 100%;
+	min-block-size: 16rem;
+	block-size: 22rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	overflow: hidden;
+}
+.schedule-route-map ui-map-leaflet {
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+}
+.schedule-route-legs {
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 0.35rem;
+}
+.schedule-route-leg {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 0.75rem;
+	padding-block: 0.25rem;
+	padding-inline: 0.15rem;
+	font-size: 0.875rem;
+}
+.schedule-route-leg[data-conflict] {
+	color: var(--tone-text, var(--text-danger, currentColor));
+}
+.schedule-route-leg-time {
+	font-variant-numeric: tabular-nums;
+	color: var(--text-muted);
+}
+.schedule-route-leg[data-conflict] .schedule-route-leg-time {
+	color: inherit;
+}
+@media (prefers-reduced-motion: reduce) {
+	.schedule-route-map {
+		scroll-behavior: auto;
+	}
+}

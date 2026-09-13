@@ -1,0 +1,144 @@
+:host {
+	display: flex;
+	min-inline-size: 0;
+	flex: var(--segment-flex, 1 1 0);
+	position: relative;
+}
+
+.segment-item {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+	gap: var(--segment-gap, var(--space-4));
+	inline-size: 100%;
+	min-inline-size: 0;
+	padding: var(--segment-padding, var(--space-4) var(--space-5));
+	border-radius: var(--segment-item-radius, var(--radius-lg));
+	color: inherit;
+	text-decoration: none;
+	background: transparent;
+	border: 0;
+	--segment-accent: var(--tone-fill, var(--cyan));
+}
+
+.segment-item[data-interactive] {
+	cursor: pointer;
+}
+
+.segment-item[data-interactive]:focus-visible {
+	outline: 2px solid var(--color-info, currentColor);
+	outline-offset: 2px;
+}
+
+/* ── Icon tile ─────────────────────────────────────────── */
+.segment-item-icon {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	inline-size: var(--segment-icon-size, var(--space-9));
+	block-size: var(--segment-icon-size, var(--space-9));
+	border-radius: var(--segment-icon-radius, var(--radius-lg));
+	color: var(--segment-accent, var(--cyan));
+	/*
+	 * Matte tile: mix the tone into --bg-panel (opaque). Mixing toward
+	 * transparent lets the page glow through.
+	 */
+	background: color-mix(in oklab, var(--segment-accent, var(--cyan)) 22%, var(--bg-panel));
+	border: 1px solid color-mix(in oklab, var(--segment-accent, var(--cyan)) 35%, transparent);
+	box-shadow: none;
+	transition: border-color var(--dur-fast, 0.18s) var(--ease-out, ease);
+}
+
+.segment-item[data-interactive]:hover .segment-item-icon {
+	border-color: color-mix(in oklab, var(--segment-accent, var(--cyan)) 55%, transparent);
+}
+
+.segment-item-icon[hidden] {
+	display: none !important;
+}
+
+/* ── Structured body ───────────────────────────────────── */
+.segment-item-body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	min-inline-size: 0;
+	flex: 1 1 auto;
+}
+
+.segment-item-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--space-3);
+	min-inline-size: 0;
+}
+
+.segment-item-label {
+	font-family: var(--font-display, inherit);
+	font-size: var(--segment-label-size, 0.88rem);
+	font-weight: var(--weight-semibold, 650);
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+	line-height: 1.25;
+	color: var(--text-main, var(--text-primary, inherit));
+	min-inline-size: 0;
+	overflow-wrap: anywhere;
+}
+
+.segment-item-hint {
+	flex-shrink: 0;
+	font-size: var(--text-2xs, 0.7rem);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	opacity: 0.85;
+}
+
+.segment-item-hint[hidden],
+.segment-item-value[hidden],
+.segment-item-description[hidden] {
+	display: none !important;
+}
+
+.segment-item-value {
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: var(--segment-value-size, 1.35rem);
+	font-weight: var(--weight-bold, 700);
+	font-variant-numeric: tabular-nums;
+	line-height: 1.15;
+	color: var(--segment-accent, var(--text-main, inherit));
+	overflow-wrap: anywhere;
+}
+
+.segment-item-description {
+	font-size: var(--segment-description-size, 0.88rem);
+	line-height: 1.5;
+	color: var(--text-muted);
+	overflow-wrap: anywhere;
+}
+
+/* Inter-item divider — geometry via custom props so the strip can flip axis */
+:host(:not(:last-child))::after {
+	content: '';
+	position: absolute;
+	inset-block-start: var(--segment-divider-block-start, var(--segment-divider-inset, var(--space-3)));
+	inset-block-end: var(--segment-divider-block-end, var(--segment-divider-inset, var(--space-3)));
+	inset-inline-start: var(--segment-divider-inline-start, auto);
+	inset-inline-end: var(--segment-divider-inline-end, 0);
+	inline-size: var(--segment-divider-inline-size, 1px);
+	block-size: var(--segment-divider-block-size, auto);
+	background: var(
+		--segment-divider,
+		color-mix(in oklab, var(--text-muted) 22%, transparent)
+	);
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.segment-item-icon {
+		transition: none;
+	}
+}

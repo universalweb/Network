@@ -15,7 +15,7 @@
 	--json-max-height: 24rem;
 	font-family: var(--font-mono, ui-monospace, "SF Mono", monospace);
 }
-.ji {
+.json-inspector {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-2, 0.5rem);
@@ -24,12 +24,12 @@
 	border-radius: var(--radius-md, 0.5rem);
 	background: var(--surface-sunken, var(--bg-elevated, transparent));
 }
-.ji-toolbar {
+.json-inspector-toolbar {
 	display: flex;
 	gap: var(--space-2, 0.5rem);
 	align-items: center;
 }
-.ji-search {
+.json-inspector-search {
 	flex: 1;
 	min-inline-size: 0;
 	padding: 0.35rem 0.6rem;
@@ -40,12 +40,12 @@
 	font: inherit;
 	font-size: 0.8125rem;
 }
-.ji-search:focus-visible {
+.json-inspector-search:focus-visible {
 	outline: none;
 	border-color: var(--teal, currentColor);
 	box-shadow: 0 0 0 3px color-mix(in oklab, var(--teal, currentColor) 25%, transparent);
 }
-.ji-btn {
+.json-inspector-btn {
 	flex: none;
 	padding: 0.35rem 0.6rem;
 	border: 1px solid var(--border-light-color, var(--dark-divider));
@@ -57,23 +57,23 @@
 	cursor: pointer;
 	transition: color var(--dur-fast, 0.15s) var(--ease-out, ease);
 }
-.ji-btn:hover {
+.json-inspector-btn:hover {
 	color: inherit;
 }
-.ji-tree {
+.json-inspector-tree {
 	display: flex;
 	flex-direction: column;
 	overflow: auto;
 	max-block-size: var(--json-max-height);
 }
-.ji-empty {
+.json-inspector-empty {
 	padding: var(--space-3, 0.75rem);
 	color: var(--text-muted);
 	font-size: 0.8125rem;
 	text-align: center;
 }
 @media (prefers-reduced-motion: reduce) {
-	.ji-btn {
+	.json-inspector-btn {
 		transition: none;
 	}
 }

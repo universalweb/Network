@@ -3,7 +3,7 @@
  * so it beats the uwc.base button module. x.ai icon buttons stay flat on hover:
  * the glyph reacts (colour), but no background wash and no border appear.
  */
-button[data-variant='icon']:hover:not(:disabled) {
+:is(button, a)[data-variant='icon']:hover:not(:disabled):not([aria-disabled='true']) {
 	background: transparent;
 	border-color: transparent;
 }

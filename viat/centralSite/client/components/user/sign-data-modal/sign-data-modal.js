@@ -1,5 +1,5 @@
 import '../../global/modal/modal.js';
-import { WebComponent } from '../../core/index.js';
+import { WebComponent } from 'webcomponent';
 /* `<sign-data-modal>` — arbitrary-data signing dialog. Chrome comes from the
    shared modal-chrome.css + base element styles; the warning banner and status
    line are colocated in sign-data-modal.css. */
@@ -15,6 +15,13 @@ export class SignDataModal extends WebComponent {
 		busy: false,
 		statusTone: '',
 		statusMessage: '',
+		modal: {
+			modal: true,
+			open: false,
+			showClose: true,
+			showMaximize: true,
+			heading: 'SIGN // ARBITRARY DATA',
+		},
 	};
 	onConnect() {
 		this.delegate('sign:result', this.handleSignResult);
@@ -94,18 +101,9 @@ export class SignDataModal extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
-			<ui-modal #modal .state=${{
-				modal: true,
-				open: false,
-				showClose: true,
-				showMaximize: true,
-			}} style="--ui-modal-max-width: min(640px, calc(100vw - 32px))">
+		this.html`
+			<ui-modal #modal .state=${this.state.modal} style="--ui-modal-max-width: min(640px, calc(100vw - 32px))">
 				<div class="modal-shell">
-					<header class="modal-head">
-						<span class="modal-head-id">SIGN</span>
-						<span class="modal-head-title">// ARBITRARY DATA</span>
-					</header>
 					<div class="sign-warning">
 						<div class="sign-warning-head">⚠ Security warning</div>
 						<p class="sign-warning-body">Signing arbitrary data with your primary ed25519 key proves you control this wallet. A malicious site can ask you to sign challenges that grant access to other systems or authorize off-chain actions. <strong>Only sign payloads you understand and trust.</strong></p>

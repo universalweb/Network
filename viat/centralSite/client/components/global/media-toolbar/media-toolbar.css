@@ -1,0 +1,17 @@
+:host {
+	display: block;
+}
+.media-tools {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.15rem;
+}
+.media-tools:not([data-flip]) [data-tool='flip'],
+.media-tools:not([data-zoom]) [data-tool='zoom'],
+.media-tools:not([data-rotate]) [data-tool='rotate'],
+.media-tools:not([data-download]) [data-tool='download'],
+.media-tools:not([data-open]) [data-tool='close'] {
+	display: none;
+}

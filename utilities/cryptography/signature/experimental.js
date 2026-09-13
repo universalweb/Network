@@ -1,6 +1,6 @@
 // NOTE: Testing and benchmarking file for PQ signature schemes
-import dilithium65 from './dilithium65.js';
 import { runBench } from '#utilities/benchmark';
+import dilithium65 from './dilithium65.js';
 import sphincs192 from './sphincs192.js';
 async function createFunctions(algo, keypair) {
 	const msg = Buffer.from('hello world');

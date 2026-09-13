@@ -1,0 +1,76 @@
+:host {
+	display: block;
+	position: relative;
+	inline-size: 100%;
+}
+.tree-select[data-disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+.tree-select-trigger {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	inline-size: 100%;
+	min-block-size: 2.125rem;
+	padding-inline: 0.7rem;
+	border: 1px solid var(--input-border, color-mix(in oklch, var(--text-muted) 28%, transparent));
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--input-bg, color-mix(in oklch, currentColor 4%, transparent));
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+.tree-select-trigger:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 2px;
+}
+.tree-select-label {
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.tree-select-label[data-placeholder] {
+	color: var(--text-muted);
+}
+.tree-select-caret {
+	flex: none;
+	color: var(--text-muted);
+}
+.tree-select-panel:not(:popover-open) {
+	display: none;
+}
+.tree-select-panel {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	z-index: var(--z-dropdown, 1000);
+	flex-direction: column;
+	gap: 0.4rem;
+	max-block-size: 18rem;
+	padding: 0.45rem;
+	overflow: auto;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 22%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	box-shadow: var(--shadow-popup, 0 12px 36px color-mix(in oklch, #000 35%, transparent));
+}
+.tree-select-panel:popover-open {
+	display: flex;
+}
+.tree-select-query {
+	inline-size: 100%;
+	min-block-size: 2rem;
+	padding-inline: 0.6rem;
+	border: 1px solid var(--input-border, color-mix(in oklch, var(--text-muted) 28%, transparent));
+	border-radius: var(--radius-sm, 0.25rem);
+	background: var(--input-bg, transparent);
+	color: inherit;
+	font: inherit;
+}
+.tree-select-query:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 1px;
+}

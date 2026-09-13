@@ -1,0 +1,72 @@
+:host {
+	display: block;
+	inline-size: 100%;
+}
+.file-upload {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+}
+.file-upload[data-disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+.file-upload-input {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+.file-upload-zone {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.45rem;
+	min-block-size: 8rem;
+	padding: 1rem;
+	border: 1px dashed color-mix(in oklch, var(--text-muted) 40%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: color-mix(in oklch, var(--bg-panel, #111) 80%, transparent);
+	cursor: pointer;
+}
+.file-upload[data-over] .file-upload-zone {
+	border-color: var(--teal, #14b8a6);
+	background: color-mix(in oklch, var(--teal, #14b8a6) 12%, transparent);
+}
+.file-upload-icon {
+	opacity: 0.55;
+}
+.file-upload-drop {
+	font-size: var(--text-sm, 0.875rem);
+	color: var(--text-muted);
+	text-align: center;
+}
+.file-upload-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	margin: 0;
+	padding: 0;
+}
+.file-upload-list[hidden],
+.file-upload-empty[hidden],
+.file-upload-actions[hidden] {
+	display: none;
+}
+.file-upload-empty {
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+}
+.file-upload-actions {
+	display: flex;
+	justify-content: flex-end;
+}
+@media (prefers-reduced-motion: reduce) {
+	.file-upload-zone {
+		transition: none;
+	}
+}

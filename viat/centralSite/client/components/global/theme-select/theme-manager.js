@@ -10,10 +10,19 @@ import { globalState } from '../../core/state/globalState.js';
  *
  * Midnight is the canonical default. An unknown / stale id in localStorage
  * falls back to it rather than silently sticking with the last valid paint.
- * This module is the SINGLE owner of theme boot: the top-level
- * `setTheme(getTheme())` below applies the saved theme (link swap + dataset
- * attributes) at module load — no inline HTML script involved. The body is
- * empty until components mount, so the default sheet never paints content.
+ * Resolution of that fallback does NOT write `theme.mode` — only an explicit
+ * `setTheme(id)` (user pick / profile apply) persists. An unset key stays
+ * unset, so a later default change is still visible to first-visit users.
+ * Existing keys written by the old boot path cannot be distinguished from a
+ * real choice; there is no migration. A consumer blocking script that seeded
+ * `theme.mode` before this module loaded is no longer required.
+ * This module is the SINGLE owner of theme boot AND of the theme <link>
+ * element itself: the top-level `setTheme(getTheme(), { persist: false })`
+ * below creates the sheet if the page has none, then applies the resolved
+ * theme (link swap + dataset attributes) at module load — no inline HTML
+ * script and no hand-written <link> involved. A page only has to IMPORT this
+ * module. The body is empty until components mount, so the default sheet
+ * never paints content.
  */
 export const DEFAULT_THEME = 'midnight';
 export const THEMES = new Map();
@@ -67,11 +76,96 @@ registerTheme(
 		mode: 'light',
 	}
 );
-function activeThemeLink() {
-	return document.querySelector('link[rel="stylesheet"][href*="themes/"]');
+/*
+ * The managed sheet is tagged with `data-uwc-id="theme"`. The attribute is the
+ * contract — not the element's `id` (which a page may already be using for its
+ * own purposes) and emphatically not the href shape.
+ */
+const THEME_LINK_ID = 'theme';
+const THEME_LINK_SELECTOR = `link[data-uwc-id="${THEME_LINK_ID}"]`;
+/*
+ * Parsed theme sheets stay in <head> disabled. A later switch re-enables the
+ * cached link instead of tearing down and re-parsing the file — the lag on
+ * Forms/Charts is style recalc over hundreds of shadow roots, and a second
+ * parse+insert doubled it. Identity (`data-uwc-id`) still lives on exactly
+ * one link at a time; parked sheets keep their href and drop the id.
+ */
+const sheetByHref = new Map();
+function rememberSheet(link) {
+	const href = link?.href;
+	if (href) {
+		sheetByHref.set(href, link);
+	}
 }
-function themeHrefFor(currentHref, themeId) {
-	return currentHref.replace(/[^/]+\.css(\?.*)?$/, `${themeId}.css`);
+function cachedSheet(href) {
+	const link = sheetByHref.get(href);
+	if (link?.isConnected) {
+		return link;
+	}
+	return null;
+}
+function parkSheet(link) {
+	if (!link) {
+		return;
+	}
+	link.removeAttribute('data-uwc-id');
+	link.disabled = true;
+	rememberSheet(link);
+}
+function ownSheet(link) {
+	link.disabled = false;
+	link.dataset.uwcId = THEME_LINK_ID;
+	rememberSheet(link);
+}
+/*
+ * Theme hrefs resolve against THIS MODULE's url — never the page url and never
+ * an existing <link>. Pages sit at different depths (/, /preview/, /perf/,
+ * /shootout/), so a document-relative path resolves differently on each one;
+ * import.meta.url is the same everywhere. A registered theme's own `href`
+ * resolves by the same rule, so one path convention covers built-ins and
+ * runtime-registered themes alike (an absolute href is unaffected).
+ */
+function themeHref(theme) {
+	return new URL(theme.href ?? `../../../styles/themes/${theme.id}.css`, import.meta.url).href;
+}
+/*
+ * Find the managed sheet by its attribute, and CREATE it when absent — so
+ * theming never depends on the page shipping a hand-written theme <link>.
+ *
+ * The old approach selected `link[href*="themes/"]`, which failed in exactly
+ * the case that matters: with no such tag, swapToTheme found nothing, skipped
+ * the stylesheet entirely, and left the page on base tokens while still
+ * flipping the data-theme attributes — themed in name only. Matching on an
+ * href shape also meant any unrelated sheet living under a `themes/` path
+ * could be hijacked as the theme link.
+ */
+function ensureThemeLink() {
+	const owned = document.querySelector(THEME_LINK_SELECTOR);
+	if (owned) {
+		return owned;
+	}
+	const link = document.createElement('link');
+	link.rel = 'stylesheet';
+	link.dataset.uwcId = THEME_LINK_ID;
+	document.head.append(link);
+	return link;
+}
+/*
+ * First paint for a link this module just created: there is no old sheet to
+ * overlap with, so point it at the href and wait for it to land. Settles on
+ * load OR error so a missing theme file cannot strand boot forever.
+ */
+function loadStylesheet(link, href) {
+	return new Promise((resolve) => {
+		function settle() {
+			link.onload = null;
+			link.onerror = null;
+			resolve();
+		}
+		link.onload = settle;
+		link.onerror = settle;
+		link.href = href;
+	});
 }
 function applyThemeAttributes(theme) {
 	document.documentElement.dataset.theme = theme.id;
@@ -103,31 +197,86 @@ function applyThemeAttributes(theme) {
  * order, so the page never drops to the unstyled base for a frame (the white
  * flash on a first, uncached switch — mutating one link's href instead removes
  * the old rules before the new file has arrived). Settles on load OR error so a
- * missing theme file can't strand the page with the old sheet already gone. The
- * new link carries the old one's id so the next swap still finds it. */
+ * missing theme file can't strand the page with the old sheet already gone.
+ *
+ * Identity TRANSFERS to the incoming link rather than being duplicated onto it.
+ * Both moves happen in one synchronous step, so exactly one element carries
+ * data-uwc-id at every observable moment — never two, never zero. That matters
+ * because the attribute is the lookup key: the outgoing link is earlier in
+ * document order, so if both carried it, ensureThemeLink's querySelector would
+ * return the sheet that is about to be parked. */
+function settleSwap(oldLink, nextLink, accept) {
+	nextLink.onload = null;
+	nextLink.onerror = null;
+	ownSheet(nextLink);
+	if (oldLink !== nextLink) {
+		parkSheet(oldLink);
+	}
+	accept();
+}
 function swapStylesheet(oldLink, nextHref) {
-	return new Promise((resolve) => {
+	const cached = cachedSheet(nextHref);
+	if (cached && cached !== oldLink) {
+		oldLink.after(cached);
+		ownSheet(cached);
+		parkSheet(oldLink);
+		return Promise.resolve();
+	}
+	return new Promise((accept) => {
 		const nextLink = document.createElement('link');
 		nextLink.rel = 'stylesheet';
-		nextLink.id = oldLink.id;
 		nextLink.href = nextHref;
 		function settle() {
-			oldLink.remove();
-			resolve();
+			settleSwap(oldLink, nextLink, accept);
 		}
 		nextLink.onload = settle;
 		nextLink.onerror = settle;
+		oldLink.removeAttribute('data-uwc-id');
+		nextLink.dataset.uwcId = THEME_LINK_ID;
 		oldLink.after(nextLink);
 	});
 }
-async function swapToTheme(theme) {
-	const link = activeThemeLink();
-	if (link) {
-		const nextHref = new URL(theme.href ?? themeHrefFor(link.href, theme.id), document.baseURI).href;
-		if (nextHref !== link.href) {
-			await swapStylesheet(link, nextHref);
-		}
+/*
+ * Warm every LIVE component's per-theme sub-module before anything flips.
+ *
+ * The global token sheet was already load-before-swap, but component theme
+ * sheets were fetched only in reaction to `theme:change` — i.e. AFTER the
+ * attribute flip. That left a window painting the NEW tokens against the OLD
+ * component rules, which is the flash. Components enlist a promise on the event
+ * (the ExtendableEvent.waitUntil shape) so this can await all of them; their
+ * later adoption then resolves from the URL-keyed style cache in the same task.
+ *
+ * Failures are swallowed on purpose: a component that cannot preload must not
+ * strand the switch, it just adopts a frame late as it did before.
+ */
+async function preloadComponentThemes(theme) {
+	const pending = [];
+	emitDelegate('theme:preload', {
+		id: theme.id,
+		pending,
+	});
+	if (pending.length === 0) {
+		return;
 	}
+	await Promise.allSettled(pending);
+}
+async function swapToTheme(theme) {
+	const link = ensureThemeLink();
+	rememberSheet(link);
+	const nextHref = themeHref(theme);
+	/*
+	 * An empty href means this link was just created, so there is nothing to
+	 * cross-fade against — load it directly. Otherwise overlap the two sheets
+	 * so the page never drops to unstyled base for a frame.
+	 */
+	if (!link.href) {
+		await loadStylesheet(link, nextHref);
+	} else if (link.href !== nextHref) {
+		await swapStylesheet(link, nextHref);
+	}
+	/* Global tokens are live but still parked behind the old sheet's cascade —
+	   warm the component sheets BEFORE the attribute flip announces the change. */
+	await preloadComponentThemes(theme);
 	applyThemeAttributes(theme);
 }
 /*
@@ -138,17 +287,18 @@ async function swapToTheme(theme) {
  */
 let pendingSwap = Promise.resolve();
 /**
- * Switch the active theme without a flash and persist the choice. The new
- * sheet loads while the old stays applied, then the old is removed, so the
- * page never shows the unstyled base for a frame — even on a first (uncached)
- * switch. The `data-theme`/`-mode` attributes flip once the sheet is live, so
- * the flag and its colour vars agree.
+ * Switch the active theme without a flash. Persists `theme.mode` unless
+ * `{ persist: false }` — boot uses that so resolving the midnight fallback
+ * cannot masquerade as a user choice.
  * @param {string} id - The theme id to activate; an unknown id falls back to DEFAULT_THEME.
+ * @param {{ persist?: boolean }} [options] - `persist: false` applies without writing storage.
  * @returns {Promise<void>} Resolves once this switch is fully applied.
  */
-export function setTheme(id) {
+export function setTheme(id, options) {
 	const theme = THEMES.get(id) ?? THEMES.get(DEFAULT_THEME);
-	localStorage.setItem('theme.mode', theme.id);
+	if (options?.persist !== false) {
+		localStorage.setItem('theme.mode', theme.id);
+	}
 	function run() {
 		return swapToTheme(theme);
 	}
@@ -166,5 +316,7 @@ export function getTheme() {
 	}
 	return DEFAULT_THEME;
 }
-// Apply saved theme on load
-await setTheme(getTheme());
+// Apply the resolved theme on load without writing a fallback as a choice.
+await setTheme(getTheme(), {
+	persist: false,
+});

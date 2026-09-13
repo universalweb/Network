@@ -1,0 +1,116 @@
+/* Window chrome strip. Frost + hairline live here; placement (absolute overlay
+   vs in-flow) is the caller's job — ui-modal pins the host to the dialog top. */
+:host {
+	display: block;
+	box-sizing: border-box;
+	block-size: var(--modal-bar-h, 2.75rem);
+	user-select: none;
+	-webkit-user-select: none;
+	/*
+	 * THE HOST IS THE ONLY ELEMENT HERE THAT OWNS A CORNER.
+	 *
+	 * It has to be this one: the frost below is a backdrop-filter, and a square
+	 * blur over a rounded parent samples past the parent's curve and paints a
+	 * faded square into the corner. So fill, blur, hairline, radius AND the clip
+	 * all live together on this element — the surface-frame rule.
+	 *
+	 * The composed <ui-bar> below is layout only. It used to restate the radius
+	 * (--bar-radius + border-radius: inherit) and clip again, which made THREE
+	 * elements each compute the same corner independently. They agreed only by
+	 * convention, and the first disagreement is a corner sticking out.
+	 */
+	overflow: hidden;
+	background: color-mix(in oklab, var(--popup-bg) 72%, transparent);
+	backdrop-filter: var(--popup-glass-blur);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
+	border-block-end: 1px solid
+		color-mix(in oklab, var(--popup-border, var(--teal)) 26%, transparent);
+	box-shadow: var(--modal-bar-shadow, 0 6px 18px -8px rgba(0, 0, 0, 0.45));
+	/* Opposite: heading region grows, empty center does not steal space.
+	   Center: start/end grow equally so the title is optically centered. */
+	--bar-start-justify: flex-start;
+	--bar-end-justify: flex-end;
+}
+/*
+ * Cap drives the corner, in the SAME vocabulary ui-bar already uses: 'start'
+ * rounds the block-start edge, 'end' the block-end, and no cap is square. The
+ * radius used to sit unconditionally on :host, so a bar asking for cap:'end'
+ * or no cap at all still got top corners.
+ *
+ * The token is what a MAXIMIZED window zeroes, and what a parent uses to stay
+ * concentric — see ui-modal, which subtracts its own hairline.
+ */
+:host([data-cap='start']) {
+	border-start-start-radius: var(--window-title-bar-radius, var(--radius-lg, 0.75rem));
+	border-start-end-radius: var(--window-title-bar-radius, var(--radius-lg, 0.75rem));
+	border-end-start-radius: 0;
+	border-end-end-radius: 0;
+}
+:host([data-cap='end']) {
+	border-start-start-radius: 0;
+	border-start-end-radius: 0;
+	border-end-start-radius: var(--window-title-bar-radius, var(--radius-lg, 0.75rem));
+	border-end-end-radius: var(--window-title-bar-radius, var(--radius-lg, 0.75rem));
+}
+:host([data-place='opposite'][data-side='end']) {
+	--bar-start-flex: 1 1 auto;
+	--bar-center-flex: 0 0 auto;
+	--bar-end-flex: 0 1 auto;
+}
+:host([data-place='opposite'][data-side='start']) {
+	--bar-start-flex: 0 1 auto;
+	--bar-center-flex: 0 0 auto;
+	--bar-end-flex: 1 1 auto;
+}
+:host([data-place='center']) {
+	--bar-start-flex: 1 1 0;
+	--bar-center-flex: 0 1 auto;
+	--bar-end-flex: 1 1 0;
+}
+/*
+ * LAYOUT ONLY. No fill, no border, no radius, no clip — the host above owns
+ * every one of those. ui-bar is mounted with no `cap`, so its own corner rules
+ * never engage and it cannot draw a second, competing curve inside this one.
+ */
+.title-bar {
+	--bar-bg: transparent;
+	--bar-border: none;
+	--bar-padding: 0 var(--space-3);
+	--bar-gap: var(--space-1);
+	--bar-height: 100%;
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	background: transparent;
+	border: 0;
+}
+.title-bar-controls {
+	display: flex;
+	align-items: center;
+	gap: var(--bar-gap, var(--space-1));
+}
+.title-bar-heading {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	max-inline-size: 100%;
+	font-family: var(--font-display, inherit);
+	font-size: var(--panel-header-font-size, var(--text-sm));
+	font-weight: var(--weight-semibold);
+	letter-spacing: var(--panel-header-letter-spacing, 0.12em);
+	text-transform: var(--panel-header-text-transform, uppercase);
+	color: var(--panel-header-color, var(--text-muted, var(--popup-text)));
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.title-bar-heading[hidden] {
+	display: none !important;
+}
+:host([data-place='opposite'][data-side='end']) .title-bar-heading {
+	padding-inline-start: var(--space-2);
+	text-align: start;
+}
+:host([data-place='opposite'][data-side='start']) .title-bar-heading {
+	padding-inline-end: var(--space-2);
+	text-align: end;
+}

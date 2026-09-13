@@ -1,0 +1,97 @@
+:host {
+	display: block;
+	max-inline-size: 100%;
+}
+/*
+ * LAYOUT ONLY — no fill, no border, no padding. Those were the BUBBLE, and the
+ * bubble is now ui-text-message. Keeping them here would have meant every
+ * message painted a box around whatever it held, so an attachment or a chart
+ * arrived wrapped in chat chrome it never asked for.
+ *
+ * What the row owns: the avatar beside the content, and which edge the whole
+ * thing hangs from.
+ */
+.message {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--space-2);
+	max-inline-size: 100%;
+	min-inline-size: 0;
+}
+.message[data-align='end'] {
+	flex-direction: row-reverse;
+}
+.message-avatar {
+	flex: 0 0 auto;
+}
+.message-avatar[hidden] {
+	display: none;
+}
+/*
+ * The content column shrink-wraps rather than filling the row, so a short
+ * message stays short and the alignment is actually visible — a column at 100%
+ * would put every message flush against both edges whichever side it is on.
+ */
+.message-column {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-inline-size: 0;
+	max-inline-size: 100%;
+}
+.message[data-align='end'] .message-column {
+	align-items: flex-end;
+}
+/* A continued message keeps the avatar's WIDTH so the column stays aligned down
+   the run, without repeating the picture on every line. */
+.message[data-continued] .message-avatar {
+	visibility: hidden;
+}
+/* A system notice reads as an aside rather than a participant. */
+.message[data-author='system'] {
+	opacity: 0.88;
+}
+.message-head {
+	display: flex;
+	align-items: baseline;
+	gap: 0.75rem;
+	min-inline-size: 0;
+}
+.message[data-align='end'] .message-head {
+	flex-direction: row-reverse;
+}
+.message-head[hidden] {
+	display: none;
+}
+.message-author {
+	font-size: 0.68rem;
+	font-weight: var(--weight-semibold, 600);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+.message-time {
+	font-size: 0.65rem;
+	color: var(--text-muted);
+	font-variant-numeric: tabular-nums;
+}
+.message-time[hidden] {
+	display: none !important;
+}
+/*
+ * A message may hold SEVERAL things — a bubble and an attachment, a caption and
+ * a chart — so the body is a stack, not a single slot. The gap is what stops
+ * them reading as one object. Type and wrapping belong to whatever is inside;
+ * they used to live here because text was the only possible content.
+ */
+.message-body {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-2);
+	min-inline-size: 0;
+	max-inline-size: 100%;
+}
+.message[data-align='end'] .message-body {
+	align-items: flex-end;
+}

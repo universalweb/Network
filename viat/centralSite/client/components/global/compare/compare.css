@@ -1,0 +1,180 @@
+@property --compare-pos {
+	syntax: '<percentage>';
+	inherits: true;
+	initial-value: 50%;
+}
+@property --compare-opacity {
+	syntax: '<number>';
+	inherits: true;
+	initial-value: 0.5;
+}
+:host {
+	display: block;
+	inline-size: 100%;
+}
+.compare {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+	inline-size: 100%;
+}
+.compare[data-disabled] {
+	opacity: 0.6;
+	pointer-events: none;
+}
+.compare-stage {
+	position: relative;
+	overflow: hidden;
+	inline-size: 100%;
+	aspect-ratio: 16 / 10;
+	container-type: inline-size;
+	border: 1px solid var(--surface-border, var(--dark-divider, rgba(255, 255, 255, 0.08)));
+	border-radius: var(--radius-md);
+	background: var(--bg-panel);
+	touch-action: none;
+	user-select: none;
+	cursor: ew-resize;
+}
+.compare[data-orientation='vertical'] .compare-stage {
+	cursor: ns-resize;
+	aspect-ratio: 4 / 5;
+}
+.compare[data-variant='transparency'] .compare-stage {
+	cursor: default;
+	touch-action: auto;
+}
+.compare-layer {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+}
+.compare-before {
+	z-index: 0;
+}
+.compare-after {
+	z-index: 1;
+	clip-path: inset(0 0 0 var(--compare-pos, 50%));
+}
+.compare[data-orientation='vertical'] .compare-after {
+	clip-path: inset(var(--compare-pos, 50%) 0 0 0);
+}
+.compare[data-variant='transparency'] .compare-after {
+	clip-path: none;
+	opacity: var(--compare-opacity, 0.5);
+}
+.compare-layer > ::slotted(*),
+.compare-img {
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	object-fit: cover;
+	pointer-events: none;
+}
+.compare-handle {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: var(--compare-pos, 50%);
+	translate: -50% 0;
+	inline-size: 1.35rem;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: ew-resize;
+	z-index: 2;
+}
+.compare-handle[hidden] {
+	display: none;
+}
+.compare[data-orientation='vertical'] .compare-handle {
+	inset-inline: 0;
+	inset-block-start: var(--compare-pos, 50%);
+	inset-block-end: auto;
+	inline-size: auto;
+	block-size: 1.35rem;
+	translate: 0 -50%;
+	cursor: ns-resize;
+}
+.compare-handle:focus-visible {
+	outline: 2px solid var(--focus-ring-color);
+	outline-offset: 2px;
+}
+.compare-rail {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: 50%;
+	translate: -50% 0;
+	inline-size: 2px;
+	background: var(--text-main);
+	box-shadow: 0 0 0 1px color-mix(in oklab, var(--bg-panel) 70%, transparent);
+}
+.compare[data-orientation='vertical'] .compare-rail {
+	inset-inline: 0;
+	inset-block-start: 50%;
+	inset-block-end: auto;
+	inline-size: auto;
+	block-size: 2px;
+	translate: 0 -50%;
+}
+.compare-knob {
+	position: absolute;
+	inset-block-start: 50%;
+	inset-inline-start: 50%;
+	translate: -50% -50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.08rem;
+	inline-size: clamp(1.55rem, 8.5cqi, 2rem);
+	block-size: clamp(1.55rem, 8.5cqi, 2rem);
+	border-radius: 999px;
+	border: 2px solid var(--text-main);
+	background: var(--bg-panel);
+	color: var(--text-main);
+	box-shadow: var(--elev-2, 0 0 0 1px color-mix(in oklab, var(--text-main) 14%, transparent));
+	pointer-events: none;
+	--icon-size: 0.62rem;
+	line-height: 0;
+}
+.compare[data-orientation='vertical'] .compare-knob {
+	flex-direction: column;
+}
+.compare[data-dragging] .compare-knob {
+	background: var(--text-main);
+	color: var(--bg-panel);
+}
+.compare-slider {
+	display: flex;
+	align-items: center;
+	inline-size: 100%;
+	padding-block: 0.25rem;
+	padding-inline: 0.1rem;
+	touch-action: none;
+	cursor: default;
+}
+.compare-slider[hidden] {
+	display: none;
+}
+.compare-range {
+	inline-size: 100%;
+	min-block-size: 1.5rem;
+	cursor: pointer;
+	accent-color: var(--cyan, var(--focus-ring-color));
+}
+.compare-range:focus-visible {
+	outline: 2px solid var(--focus-ring-color);
+	outline-offset: 2px;
+}
+.compare-after,
+.compare-handle {
+	transition: clip-path 0.16s ease, opacity 0.16s ease, inset-inline-start 0.16s ease, inset-block-start 0.16s ease;
+}
+.compare[data-dragging] .compare-after,
+.compare[data-dragging] .compare-handle {
+	transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.compare-after,
+	.compare-handle {
+		transition: none;
+	}
+}

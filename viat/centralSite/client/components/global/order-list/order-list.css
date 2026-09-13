@@ -1,0 +1,102 @@
+:host {
+	display: block;
+}
+:host(ui-order-list.is-reordering) {
+	position: relative;
+	z-index: 4;
+	cursor: grabbing;
+	touch-action: none;
+}
+:host(ui-order-list.is-reordering) .order-list {
+	overflow: visible;
+}
+:host(ui-order-item.is-dragging) {
+	position: relative;
+	z-index: 2;
+	pointer-events: none;
+	will-change: transform;
+}
+:host(ui-order-item.is-dragging) .order-list-item {
+	background: var(--bg-panel, Canvas);
+	box-shadow:
+		0 0 0 1px color-mix(in oklab, var(--text-main) 12%, transparent),
+		0 0 0.75rem color-mix(in oklab, #000 35%, transparent),
+		0 0.5rem 1.25rem color-mix(in oklab, #000 48%, transparent);
+}
+:host(ui-order-item.is-dragging) .order-list-handle {
+	cursor: grabbing;
+}
+.order-list {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--bg-panel, transparent);
+	overflow: hidden;
+}
+.order-list-head {
+	padding: 0.45rem 0.7rem;
+	border-block-end: 1px solid color-mix(in oklch, var(--text-muted) 14%, transparent);
+	color: var(--text-muted);
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+.order-list-list {
+	display: flex;
+	flex-direction: column;
+	padding: 0.25rem;
+}
+.order-list-item {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.25rem 0.3rem;
+	border-radius: var(--radius-sm, 0.25rem);
+	user-select: none;
+	-webkit-user-select: none;
+}
+.order-list-item:hover {
+	background: color-mix(in oklch, currentColor 6%, transparent);
+}
+.order-list-item[aria-selected='true'] {
+	background: color-mix(in oklch, var(--teal, var(--cyan, currentColor)) 18%, transparent);
+}
+.order-list-item[data-disabled] {
+	opacity: 0.45;
+	pointer-events: none;
+}
+.order-list-label {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+}
+.order-list-handle,
+.order-list-btn {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: none;
+	color: var(--text-muted);
+	cursor: pointer;
+}
+.order-list-handle {
+	cursor: grab;
+	touch-action: none;
+}
+.order-list-handle:focus-visible,
+.order-list-btn:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 1px;
+}

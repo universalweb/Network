@@ -19,11 +19,11 @@
 	ancestors, force-expanding the path to reveal the hit; clearing it restores the
 	manual expand-set.
 	── STANDARD USAGE ───────────────────────────────────────────────────
-	  <ui-json-inspector .state.data=${payload} .state.expandDepth=${1}></ui-json-inspector>
+	  <ui-json-inspector .data=${payload} .state.expandDepth=${1}></ui-json-inspector>
 	─────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';
-import { UIJsonRow } from './json-row.js';
+import { UIJsonRow } from '../json-row/json-row.js';
 const STRING_PREVIEW_MAX = 60;
 const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 const MAX_DEPTH = 100;
@@ -292,17 +292,17 @@ export class UIJsonInspector extends WebComponent {
 		return this.state.filter === '';
 	}
 	render() {
-		this.html `
-			<div class="ji">
-				<div class="ji-toolbar">
-					<input #search class="ji-search" type="search" placeholder="Filter keys & values…" $value="filter" aria-label="Filter">
-					<button type="button" class="ji-btn ji-clear" ?hidden=${this.clearHidden} @click=${this.clearFilter}>Clear</button>
-					<button type="button" class="ji-btn" @click=${this.expandAll}>Expand all</button>
-					<button type="button" class="ji-btn" @click=${this.collapseAll}>Collapse all</button>
+		this.html`
+			<div class="json-inspector">
+				<div class="json-inspector-toolbar">
+					<input #search class="json-inspector-search" type="search" placeholder="Filter keys & values…" $value="filter" aria-label="Filter">
+					<button type="button" class="json-inspector-btn json-inspector-clear" ?hidden=${this.clearHidden} @click=${this.clearFilter}>Clear</button>
+					<button type="button" class="json-inspector-btn" @click=${this.expandAll}>Expand all</button>
+					<button type="button" class="json-inspector-btn" @click=${this.collapseAll}>Collapse all</button>
 				</div>
-				<div class="ji-tree" role="tree" @json-row:toggle=${this.handleToggle}>
+				<div class="json-inspector-tree" role="tree" @json-row:toggle=${this.handleToggle}>
 					${this.list('items', UIJsonRow, this.rowKey)}
-					<div class="ji-empty" ?hidden=${this.hasRows}>No matches</div>
+					<div class="json-inspector-empty" ?hidden=${this.hasRows}>No matches</div>
 				</div>
 			</div>
 		`;

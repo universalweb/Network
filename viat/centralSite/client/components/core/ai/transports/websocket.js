@@ -157,11 +157,8 @@ export class WebSocketTransport {
 		clearTimeout(this.reconnectTimer);
 		this.reconnectTimer = null;
 		this.stopHeartbeat();
-		try {
-			this.ws?.close();
-		} catch (error) {
-			defaultLogger.warn('ai-ws', 'close error', error);
-		}
+		// Argless close() has no throw path (spec) — no guard needed.
+		this.ws?.close();
 		this.ws = null;
 		this.onRequest = null;
 	}

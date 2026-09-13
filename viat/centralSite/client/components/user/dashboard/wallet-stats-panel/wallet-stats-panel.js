@@ -7,42 +7,45 @@ export class WalletStatsPanel extends Panel {
 		walletStatsPanel: './wallet-stats-panel.css',
 	};
 	static state = {
-		activity: '0',
 		classes: new Set(['wallet-stats-panel']),
 		panelId: 'ADDRESS',
-		received: '0',
-		sent: '0',
 		showDot: true,
 		heading: 'STATS',
 		items: [],
 	};
+	/*
+	 * Subscribes to the whole `account` object rather than to individual stat
+	 * keys: one fetch writes them together, so one observer re-derives every row
+	 * in a single pass instead of three observers firing three times for the same
+	 * update. Nothing is pushed in from outside — every mounted instance derives
+	 * its own rows, including instances that mount after the fetch.
+	 */
 	onConnect() {
 		this.delegateTo('click', '[data-copy]', this.handleRowCopy);
-		this.observe('received', this.syncRows);
-		this.observe('sent', this.syncRows);
-		this.observe('activity', this.syncRows);
+		this.observeGlobal('account', this.syncRows);
 		this.syncRows();
 	}
 	syncRows() {
+		const account = this.global.account;
 		this.state.items = [
 			{
 				id: 'rx',
 				key: 'TXs Received',
 				label: 'Transactions Received',
-				value: this.state.received,
+				value: account?.received ?? '0',
 				className: 'good',
 			},
 			{
 				id: 'tx',
 				key: 'TXs Sent',
 				label: 'Transactions Sent',
-				value: this.state.sent,
+				value: account?.sent ?? '0',
 			},
 			{
 				id: 'total',
 				key: 'Total TXs',
 				label: 'Total Transactions',
-				value: this.state.activity,
+				value: account?.activity ?? '0',
 			},
 		];
 	}

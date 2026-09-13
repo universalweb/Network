@@ -1,5 +1,5 @@
 /*
-	DESCRIPTION: ui-image-list — a responsive image/gallery grid (MUI "ImageList").
+	DESCRIPTION: ui-image-list — a responsive image/gallery grid.
 	CSS-grid layout from `items[]` via list('items', UIImageCell): each cell is its
 	own ui-image-cell child (a native <a> when it has an href, else a <button> that
 	emits image-cell:select). The list re-emits the child's select as its public
@@ -14,7 +14,7 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';
-import { UIImageCell } from './image-cell.js';
+import { UIImageCell } from '../image-cell/image-cell.js';
 export class UIImageList extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -52,9 +52,8 @@ export class UIImageList extends WebComponent {
 		return item.id ?? item.src ?? index;
 	}
 	render() {
-		const style = `grid-template-columns: repeat(${Number(this.state.columns) || 3}, 1fr); gap: ${this.state.gap}; --il-aspect: ${this.state.aspect};`;
 		this.html`
-			<div class="image-list" data-radius=${this.state.radius} style=${style} @image-cell:select=${this.handleSelect}>
+			<div class="image-list" data-radius=${this.state.radius} style=${`grid-template-columns: repeat(${Number(this.state.columns) || 3}, 1fr); gap: ${this.state.gap}; --image-cell-aspect: ${this.state.aspect};`} @image-cell:select=${this.handleSelect}>
 				${this.list('items', UIImageCell, this.itemKey)}
 				<slot></slot>
 			</div>

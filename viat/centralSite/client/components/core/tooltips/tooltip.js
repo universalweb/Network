@@ -1,11 +1,42 @@
 import './tooltip-service.js';
 import { WebComponent } from '../base.js';
+import { computeAnchor } from '../dom/anchor.js';
 import { classList } from '../template.js';
 const EDGE_MARGIN = 12;
 const GAP = 10;
 const SLIDE_MS = 240;
-function clamp(value, min, max) {
-	return Math.min(Math.max(value, min), max);
+const SIDES = new Set([
+	'top',
+	'bottom',
+	'left',
+	'right',
+]);
+/*
+ * Default request is always top-center (tooltip centers on its target). The
+ * engine flips, then searches the orthogonal axis when both vertical sides
+ * overflow (`fallbackAxis`). CSS keys data-placement off the resolved SIDE only.
+ *
+ * An explicit `side` is a request to STAY on that side. Flip stays on — a
+ * tooltip pinned off-screen is worse than a flipped one, and the flip only
+ * fires when the request genuinely does not fit. The orthogonal search is what
+ * gets dropped: it is the step that quietly turns a `left` request into `top`,
+ * which is the drift an enforced side exists to remove.
+ */
+export function placeTooltip(targetRect, floating, viewSize, side) {
+	const forced = SIDES.has(side);
+	const placed = computeAnchor(targetRect, floating, {
+		placement: `${forced ? side : 'top'}-center`,
+		offset: GAP,
+		padding: EDGE_MARGIN,
+		fallbackAxis: !forced,
+		viewportWidth: viewSize?.width,
+		viewportHeight: viewSize?.height,
+	});
+	return {
+		placement: placed.placement.split('-')[0],
+		x: placed.left,
+		y: placed.top,
+	};
 }
 export class UITooltip extends WebComponent {
 	static url = import.meta.url;
@@ -34,50 +65,6 @@ export class UITooltip extends WebComponent {
 	onDisconnect() {
 		this.isOpen = false;
 	}
-	calcPosition(targetRect, placement) {
-		const shellWidth = this.shellW;
-		const shellHeight = this.shellH;
-		let x;
-		let y;
-		if (placement === 'top') {
-			x = targetRect.left + ((targetRect.width - shellWidth) / 2);
-			y = targetRect.top - shellHeight - GAP;
-		} else if (placement === 'bottom') {
-			x = targetRect.left + ((targetRect.width - shellWidth) / 2);
-			y = targetRect.bottom + GAP;
-		} else if (placement === 'left') {
-			x = targetRect.left - shellWidth - GAP;
-			y = targetRect.top + ((targetRect.height - shellHeight) / 2);
-		} else {
-			x = targetRect.right + GAP;
-			y = targetRect.top + ((targetRect.height - shellHeight) / 2);
-		}
-		return {
-			x: clamp(x, EDGE_MARGIN, globalThis.innerWidth - shellWidth - EDGE_MARGIN),
-			y: clamp(y, EDGE_MARGIN, globalThis.innerHeight - shellHeight - EDGE_MARGIN),
-		};
-	}
-	pickPlacement(targetRect) {
-		const shellWidth = this.shellW;
-		const shellHeight = this.shellH;
-		const spaceTop = targetRect.top;
-		const spaceBottom = globalThis.innerHeight - targetRect.bottom;
-		const spaceLeft = targetRect.left;
-		const spaceRight = globalThis.innerWidth - targetRect.right;
-		if (spaceTop >= shellHeight + GAP + EDGE_MARGIN) {
-			return 'top';
-		}
-		if (spaceBottom >= shellHeight + GAP + EDGE_MARGIN) {
-			return 'bottom';
-		}
-		if (spaceRight >= shellWidth + GAP + EDGE_MARGIN) {
-			return 'right';
-		}
-		if (spaceLeft >= shellWidth + GAP + EDGE_MARGIN) {
-			return 'left';
-		}
-		return spaceBottom >= spaceTop ? 'bottom' : 'top';
-	}
 	measure() {
 		const rect = this.refs.shell.getBoundingClientRect();
 		this.shellW = rect.width;
@@ -85,6 +72,7 @@ export class UITooltip extends WebComponent {
 	}
 	show({
 		text,
+		side,
 		targetRect,
 	} = {}) {
 		const shell = this.refs.shell;
@@ -111,10 +99,12 @@ export class UITooltip extends WebComponent {
 		 */
 		this.refs.tip_text.textContent = text;
 		this.measure();
-		const placement = this.pickPlacement(targetRect);
 		const {
-			x, y,
-		} = this.calcPosition(targetRect, placement);
+			placement, x, y,
+		} = placeTooltip(targetRect, {
+			width: this.shellW,
+			height: this.shellH,
+		}, undefined, side);
 		if (this.state.placement !== placement) {
 			this.state.placement = placement;
 		}
@@ -153,7 +143,7 @@ export class UITooltip extends WebComponent {
 		shell.hidePopover();
 	}
 	render() {
-		this.html `
+		this.html`
 			<div #shell
 				class=${classList('tooltip-shell', () => {
 					return this.state.sliding && 'is-sliding';

@@ -1,16 +1,19 @@
 /*
-	Tones/padding/radius/elevation ride as data-* ATTRIBUTES on the inner `.sf`
-	div. An attribute selector cannot be matched by the global classless UTILITIES
-	in `uwc.util` (`.surface`, `.tone-*`, …) — so the component's styling is fully
-	self-owned WITHOUT the old `sf-` class-name workaround. (util's own
-	`[data-tone]` rules set only `--tone-fill`, which this component never reads,
-	so they don't conflict with the `background` set here.)
+	`.surface-frame` is THE frame: fill, border, radius, elevation and clipping all
+	live on ONE element. That is deliberate — when fill and radius sit on different
+	elements they agree only by convention, and the first child that paints its own
+	background with a different corner profile bleeds over the border.
+
+	Tones/padding/radius/elevation ride as data-* ATTRIBUTES. An attribute selector
+	cannot be matched by the global classless UTILITIES in `uwc.util` (`.surface`,
+	`.tone-*`, …), so the styling is self-owned without needing a cryptic class
+	prefix. (util's own `[data-tone]` rules set only `--tone-fill`, never read here.)
 */
 :host {
 	display: block;
 	box-sizing: border-box;
 }
-.sf {
+.surface-frame {
 	box-sizing: border-box;
 	color: inherit;
 	transition:
@@ -18,6 +21,20 @@
 		border-color 0.2s ease,
 		box-shadow 0.28s ease,
 		transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/*
+	A VISIBLE frame (any radius, or a border) must CLIP its content. Without this
+	a child that paints its own background — ui-window-title-bar paints frost with
+	square bottom corners — spills past the rounded border. Fill, border, radius
+	and clipping all belong to ONE element; split across two they agree only by
+	convention, and the first mismatch shows as a corner sticking out.
+	`clip`, not `hidden`: it creates no scroll container, so no scrollbars and no
+	scroll-anchoring side effects. Overlays that must escape use the native top
+	layer (popover), which ancestor clipping cannot affect.
+*/
+.surface-frame:not([data-radius='none']),
+.surface-frame[data-border] {
+	overflow: clip;
 }
 /* Tones — mapped to theme tokens (color-mix tints over the panel) so they read
    distinctly under every theme, never hard-coded colors. */
@@ -56,15 +73,10 @@
 /* Interactive */
 [data-interactive] { cursor: pointer; }
 [data-interactive]:hover {
-	transform: translateY(-1px);
 	box-shadow: var(--elev-hover, 0 8px 22px rgba(0, 0, 0, 0.32));
 }
-[data-interactive]:active {
-	transform: translateY(0);
-	transition-duration: 0.08s;
-}
 @media (prefers-reduced-motion: reduce) {
-	.sf,
+	.surface-frame,
 	[data-interactive]:hover,
 	[data-interactive]:active {
 		transform: none;

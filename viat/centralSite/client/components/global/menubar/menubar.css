@@ -33,6 +33,12 @@
 	outline: 2px solid var(--color-info, #3b82f6);
 	outline-offset: -2px;
 }
+/* Panes own inset; clip the slide. Rest transform stays none when open
+   (menu-surface.is-open) so .glass frost is not killed. */
+.menu-surface {
+	padding: 0;
+	overflow: hidden;
+}
 @media (prefers-reduced-motion: reduce) {
 	.menubar-trigger {
 		transition: none;

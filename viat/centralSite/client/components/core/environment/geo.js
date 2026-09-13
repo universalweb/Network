@@ -6,6 +6,15 @@
 import { emitDelegate } from '../dom/delegate.js';
 import { globalState } from '../state/globalState.js';
 let watchId = null;
+/*
+ * Single-flight request state: the getCurrentPosition callbacks are browser
+ * API callbacks with no context channel, so the pending resolvers + options
+ * ride module scope (like `watchId`) — named module handlers can then be
+ * passed to getCurrentPosition by reference, no per-call closure. Cleared in
+ * both handlers; a concurrent requestGeo() shares the in-flight promise.
+ */
+let pendingResolvers = null;
+let pendingOptions = null;
 function update(position) {
 	const value = {
 		latitude: position.coords.latitude,
@@ -32,6 +41,21 @@ function fail(error) {
 		},
 	});
 }
+function clearPendingGeo() {
+	const resolvers = pendingResolvers;
+	pendingResolvers = null;
+	pendingOptions = null;
+	return resolvers;
+}
+function onGeoFixed(position) {
+	update(position);
+	watchId = navigator.geolocation.watchPosition(update, fail, pendingOptions);
+	clearPendingGeo()?.resolve();
+}
+function onGeoDenied(error) {
+	fail(error);
+	clearPendingGeo()?.reject(error);
+}
 export function requestGeo(options = {}) {
 	if (!navigator.geolocation) {
 		return Promise.reject(new Error('Geolocation API not available'));
@@ -39,16 +63,14 @@ export function requestGeo(options = {}) {
 	if (watchId !== null) {
 		return Promise.resolve();
 	}
-	return new Promise((resolve, reject) => {
-		navigator.geolocation.getCurrentPosition((position) => {
-			update(position);
-			watchId = navigator.geolocation.watchPosition(update, fail, options);
-			resolve();
-		}, (error) => {
-			fail(error);
-			reject(error);
-		}, options);
-	});
+	// A request already in flight — share its promise instead of double-prompting.
+	if (pendingResolvers) {
+		return pendingResolvers.promise;
+	}
+	pendingResolvers = Promise.withResolvers();
+	pendingOptions = options;
+	navigator.geolocation.getCurrentPosition(onGeoFixed, onGeoDenied, options);
+	return pendingResolvers.promise;
 }
 export function stopGeo() {
 	if (watchId !== null) {

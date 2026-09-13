@@ -1,0 +1,129 @@
+:host {
+	display: block;
+}
+.media-lb {
+	flex-direction: column;
+	gap: 0.75rem;
+	inset: 0;
+	inline-size: 100vw;
+	block-size: 100dvh;
+	max-inline-size: none;
+	max-block-size: none;
+	margin: 0;
+	padding: 1.25rem;
+	border: 0;
+	background: color-mix(in oklch, #000 78%, transparent);
+	color: #fff;
+	opacity: 0;
+	transform: translate3d(0, 0.45rem, 0);
+	transition:
+		opacity 0.22s ease 0.16s,
+		transform 0.22s ease 0.16s,
+		overlay 0.42s ease allow-discrete,
+		display 0.42s ease allow-discrete;
+	--media-radius: var(--gallery-radius, var(--radius-md, 0.5rem));
+	--media-thumb-pad: 0.5rem;
+}
+.media-lb[data-radius='none'] {
+	--media-radius: 0;
+}
+.media-lb[data-radius='sm'] {
+	--media-radius: var(--radius-sm, 0.25rem);
+}
+.media-lb[data-radius='md'] {
+	--media-radius: var(--radius-md, 0.5rem);
+}
+.media-lb[data-radius='lg'] {
+	--media-radius: var(--radius-lg, 0.75rem);
+}
+/*
+ * @engram em:network/code/ui-gallery-host-overflow-and-closed-dialog-display
+ * Author `display` beats UA `dialog:not([open]){display:none}`.
+ * Flex only when open — a closed fullscreen dialog inflates the host.
+ */
+.media-lb[open] {
+	display: flex;
+	opacity: 1;
+	transform: none;
+	transition:
+		opacity 0.22s ease 0s,
+		transform 0.22s ease 0s,
+		overlay 0.42s ease allow-discrete,
+		display 0.42s ease allow-discrete;
+}
+@starting-style {
+	.media-lb[open] {
+		opacity: 0;
+		transform: translate3d(0, 0.45rem, 0);
+	}
+}
+.media-lb:not([data-thumbs]) > .media-thumbs {
+	display: none;
+}
+.media-lb > .media-thumbs {
+	flex: none;
+}
+.media-lb > .media-thumbs > ui-gallery-thumb {
+	flex: none;
+	inline-size: 4.5rem;
+}
+.media-lb::backdrop {
+	background: color-mix(in oklch, #000 72%, transparent);
+	opacity: 0;
+	transition:
+		opacity 0.22s ease,
+		overlay 0.42s ease allow-discrete,
+		display 0.42s ease allow-discrete;
+}
+.media-lb[open]::backdrop {
+	opacity: 1;
+}
+@starting-style {
+	.media-lb[open]::backdrop {
+		opacity: 0;
+	}
+}
+.media-lb-bar {
+	position: absolute;
+	inset-block-start: 0.75rem;
+	inset-inline: 0.75rem;
+	z-index: 2;
+	display: flex;
+	justify-content: flex-end;
+	user-select: none;
+}
+.media-lb-bar[hidden] {
+	display: none;
+}
+.media-lb > ui-media-stage {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	color: inherit;
+}
+/*
+ * Horizontal scrollport. overflow-x:auto computes overflow-y to auto too,
+ * so padding must cover scale/lift + ring or the active thumb clips.
+ */
+.media-thumbs {
+	display: flex;
+	gap: 0.5rem;
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding: var(--media-thumb-pad);
+	scroll-padding: var(--media-thumb-pad);
+	scrollbar-width: thin;
+	user-select: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.media-lb,
+	.media-lb[open],
+	.media-lb::backdrop,
+	.media-lb[open]::backdrop {
+		transform: none;
+		transition: none;
+	}
+	.media-lb[open],
+	.media-lb[open]::backdrop {
+		opacity: 1;
+	}
+}

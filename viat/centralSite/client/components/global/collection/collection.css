@@ -1,0 +1,314 @@
+/* `<paged-list>` chrome only — the table frame, meta bar, pager / LOAD MORE.
+   ROW styling comes from the host via `.importStyles` (injected through this
+   shadow), so the host's `.accounts-list-row`/`.ex-cell` grids style the head + rows here. */
+:host {
+	display: block;
+}
+:host(.is-reordering) {
+	position: relative;
+	z-index: 4;
+	cursor: grabbing;
+	touch-action: none;
+}
+	/* Load-more / end-of-results / loading tokens — override per theme or per
+	   consumer (`<ui-collection style="--uic-loadmore-fg: …">`). */
+	--uic-loadmore-fg: var(--teal, #14b8a6);
+	--uic-loadmore-bg: transparent;
+	--uic-loadmore-border: var(--dark-divider, rgba(255, 255, 255, 0.16));
+	--uic-loadmore-hover-fg: var(--dark-bg, #0b0f10);
+	--uic-loadmore-hover-bg: var(--teal, #14b8a6);
+	--uic-end-fg: var(--dark-text-dim, rgba(255, 255, 255, 0.4));
+	--uic-loading-fg: var(--teal, #14b8a6);
+	/* Default row checkbox side — inherited by ui-collection-item shadows. */
+	--uic-check-order: 0;
+	--uic-body-order: 1;
+}
+:host([data-checkbox-pos='end']) {
+	--uic-check-order: 2;
+	--uic-body-order: 1;
+}
+.collection-shell {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	font-family: var(--font-mono, monospace);
+	color: var(--dark-text-medium);
+}
+.collection-filters {
+	inline-size: 100%;
+	min-inline-size: 0;
+}
+/* Near-bottom trigger surface for the load engine's IntersectionObserver —
+   needs a real (if hairline) box to intersect; never visible content. */
+.collection-sentinel {
+	block-size: 1px;
+	margin-block: 0;
+}
+.collection-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	column-gap: var(--space-5);
+	row-gap: var(--space-3);
+	padding: var(--space-3) var(--space-5);
+	background: rgba(255, 255, 255, 0.015);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-radius: var(--radius-sm);
+}
+.collection-meta {
+	display: inline-flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	column-gap: var(--space-2);
+	row-gap: var(--space-1);
+	font-size: var(--text-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+}
+.collection-num {
+	color: var(--dark-text-medium);
+	font-variant-numeric: tabular-nums;
+}
+.collection-label {
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+}
+.collection-status:empty {
+	display: none;
+}
+.collection-status {
+	margin-inline-start: var(--space-2);
+	color: var(--teal);
+}
+.collection-controls {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2);
+}
+.collection-btn {
+	background: transparent;
+	color: var(--dark-text-medium);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.16));
+	padding: var(--space-2) var(--space-3);
+	font-family: var(--font-mono, monospace);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.collection-btn:hover:not(:disabled) {
+	border-color: var(--teal);
+	color: var(--teal);
+}
+.collection-btn:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+/*
+ * NO FILL AND NO BORDER, deliberately. This box is the collection's plumbing —
+ * it owns scroll bounds and the virtual window's scroll root, not a look. It
+ * used to paint a border and a 1% white wash, which put a panel around rows
+ * that already carry their own surface: a box inside a box, and a caller who
+ * wanted anything else had to override two properties to get back to nothing.
+ *
+ * ui-collection offers FEATURES (filtering, paging, load-more, virtual scroll,
+ * selection, reorder). What the rows look like, and how they are arranged,
+ * belongs to whoever supplies them.
+ */
+.collection-table {
+	display: flex;
+	flex-direction: column;
+	/* When tableMaxHeight is set the host paints max-block-size + overflow-y
+	   via the style binding; data-bounded marks that scroll lives here so
+	   virtual lists find this box as the scroll root (not the page). */
+	min-block-size: 0;
+}
+/*
+ * Sole-content wrapper for the virtual filter() list — padding cannot land on
+ * a parent shared with the head / empty / sentinel.
+ *
+ * LAYOUT IS THE CALLER'S. `layout` picks the arrangement and every one of them
+ * is driven by tokens the caller can set, so a grid can change its track size
+ * or a list its gap without a second stylesheet.
+ */
+.collection-rows {
+	display: flex;
+	flex-direction: column;
+	gap: var(--collection-gap, 0);
+	min-block-size: 0;
+}
+/*
+ * GRID — equal-height cells in responsive tracks. auto-fill (not auto-fit)
+ * keeps a lone card at its natural width instead of stretching it across the
+ * whole row, which is what makes a filtered-down result still look like a card.
+ */
+.collection-rows[data-layout='grid'] {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--collection-column, 16rem), 1fr));
+	gap: var(--collection-gap, var(--space-4));
+	align-content: start;
+}
+/*
+ * MASONRY — a GRID with dense packing, not CSS `columns`.
+ *
+ * Multicol was the obvious tool and it does not work here. `columns` fragments
+ * content down a bounded height; a collection's row box is unbounded (measured
+ * 6966px for the 233-item index), so there is no axis to fragment along and the
+ * browser correctly emits ONE tall column. Forcing column-count made no
+ * difference; giving the box a fixed height instantly produced seven columns,
+ * which is what identified the cause. A list that grows with its content can
+ * never satisfy that, so multicol is the wrong primitive for this component.
+ *
+ * `grid-auto-flow: dense` gives the visual result masonry is wanted for — items
+ * of different heights packing without leaving holes — while keeping reading
+ * order ACROSS rows, which is also the better answer for a list you can filter
+ * and search. A caller whose items have genuinely varied heights can span rows
+ * with --collection-row-span.
+ */
+.collection-rows[data-layout='masonry'] {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--collection-column, 16rem), 1fr));
+	grid-auto-rows: var(--collection-row, auto);
+	grid-auto-flow: row dense;
+	gap: var(--collection-gap, var(--space-4));
+	align-content: start;
+}
+.collection-rows[data-layout='masonry'] > * {
+	/* Items must not stretch to the tallest cell in their row — that is exactly
+	   the equal-height look masonry exists to avoid. */
+	align-self: start;
+	min-inline-size: 0;
+}
+.collection-table[data-bounded] {
+	/* style binding supplies max-block-size; keep overflow as a CSS fallback. */
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-gutter: stable;
+}
+.collection-empty {
+	padding: var(--space-7);
+	text-align: center;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+	font-size: var(--text-base);
+}
+.collection-empty[data-error] {
+	color: var(--color-danger);
+}
+/* Pager (paged style) + LOAD MORE (loadmore style). Each sets display:flex, which
+   beats the UA `[hidden]{display:none}` — so re-assert hidden explicitly. */
+.collection-pager {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-4);
+}
+.collection-page-label {
+	font-size: var(--text-2xs);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+}
+.collection-loadmore-bar {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-block-size: var(--space-6);
+}
+/* Collapse the foot during the initial load, when none of its three states is
+   showing (the empty/status area carries the message then). */
+.collection-loadmore-bar:not(:has(> :not([hidden]))) {
+	display: none;
+}
+/* LOAD MORE — its OWN themable treatment (not the generic .collection-btn); the arrow
+   bobs to read as "more below", and the button doubles as the manual fallback
+   in scroll ('both') mode. */
+.collection-loadmore {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	min-width: 14rem;
+	padding: var(--space-3) var(--space-5);
+	font-family: var(--font-mono, monospace);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--uic-loadmore-fg);
+	background: var(--uic-loadmore-bg);
+	border: 1px solid var(--uic-loadmore-border);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.collection-loadmore:hover {
+	color: var(--uic-loadmore-hover-fg);
+	background: var(--uic-loadmore-hover-bg);
+	border-color: var(--uic-loadmore-hover-bg);
+}
+.collection-loadmore-arrow {
+	animation: uic-bob 1.4s ease-in-out infinite;
+}
+/* End-of-results — short + distinct: uppercase text flanked by hairlines. */
+.collection-end {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-4);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--uic-end-fg);
+}
+.collection-end::before,
+.collection-end::after {
+	content: '';
+	inline-size: var(--space-5);
+	block-size: 1px;
+	background: currentColor;
+	opacity: 0.5;
+}
+/* Loading-more — spinner + label at the end of the list where rows append. */
+.collection-loading-more {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-3);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--uic-loading-fg);
+}
+.collection-spinner {
+	inline-size: 0.75rem;
+	block-size: 0.75rem;
+	border: 2px solid currentColor;
+	border-block-start-color: transparent;
+	border-radius: 50%;
+	animation: uic-spin 0.7s linear infinite;
+}
+@keyframes uic-bob {
+	0%, 100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(2px);
+	}
+}
+@keyframes uic-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+/* Author display:… beats the UA `[hidden]{display:none}` — re-assert hidden on
+   each foot state (and the pager / bar) explicitly. */
+.collection-pager[hidden],
+.collection-loadmore-bar[hidden],
+.collection-loadmore[hidden],
+.collection-loading-more[hidden],
+.collection-end[hidden] {
+	display: none;
+}

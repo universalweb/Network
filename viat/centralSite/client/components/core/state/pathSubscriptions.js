@@ -51,6 +51,7 @@
 import { Perf } from '../debug/perf.js';
 import { drainGlobalRenders, drainSpots } from '../lifecycle/scheduler.js';
 import {
+	isFunction,
 	isPromiseLike,
 	parsePath,
 	pathsOverlap,
@@ -62,6 +63,7 @@ import {
  * passed directly to `queueMicrotask`; no per-instance bind needed.
  */
 const SCHEDULED = new Set();
+const EMPTY_CHANGED = Object.freeze([]);
 let masterPending = false;
 /**
  * One node of a bus's segment-trie subscription index. A node carries a
@@ -128,15 +130,47 @@ function collectSubtreeOverlaps(node, changedPath, overlapsByPath) {
 		collectSubtreeOverlaps(child, changedPath, overlapsByPath);
 	}
 }
+// @engram em:network/code/ispromiselike-gates-catch-at-6-sites-2-were-live-crashes-use — the same class as hotkeys E3; the updateView-fed sites are safe and stay as they are
+/*
+ * Settle rather than `.catch`, for the same reason events/settle.js does:
+ * isPromiseLike only proves `.then` exists, so a bare thenable returned by a
+ * user handler has no `.catch` to call — that threw a TypeError mid-dispatch and
+ * took the rest of the flush's subscriptions with it. Awaiting normalizes any
+ * thenable. Invoked unawaited — a side-observer of a result nobody else holds.
+ */
+async function settleSubscriptionResult(result) {
+	try {
+		await result;
+	} catch (error) {
+		queueAsyncError(error);
+	}
+}
 function fireSubscription(subscription, value, changedPath) {
 	const handler = subscription.handler;
-	if (!handler) {
+	/*
+	 * Callable check, not a catch — null after a mid-dispatch unsubscribe
+	 * (the once-per-batch suppression), non-function only if a registration
+	 * slipped past subscribe's type gate. One branch either way.
+	 */
+	if (!isFunction(handler)) {
 		return;
 	}
 	const target = subscription.target;
+	// @engram em:network/code/bus-flush-containment-per-handler-is-the-correct-granularity — the contract decision + its fail-fast consequences
+	/*
+	 * Invoked BARE by contract (see subscribe): a handler must not throw — a
+	 * handler that can fail wraps its own risky logic and decides its own
+	 * recovery, where the context to handle it actually lives. The framework
+	 * adds no guard: a violating handler unwinds this flush loudly at its
+	 * origin (fail fast), with the documented cost that the remaining
+	 * subscribers and this bus's onFlush render kick are skipped for the
+	 * already-consumed batch. A returned promise IS settled below — the
+	 * framework holds the only reference, so an unobserved rejection would
+	 * otherwise crash the host as an unhandledrejection.
+	 */
 	const result = target ? handler.call(target, value, changedPath) : handler(value, changedPath);
 	if (isPromiseLike(result)) {
-		result.catch(queueAsyncError);
+		settleSubscriptionResult(result);
 	}
 }
 function masterFlush() {
@@ -150,6 +184,18 @@ function masterFlush() {
 	SCHEDULED.clear();
 	const instancesLength = instances.length;
 	for (let index = 0; index < instancesLength; index++) {
+		/*
+		 * No guard — deliberate. Every throw that can reach here is app code
+		 * breaking its contract: a bare subscriber handler, an app getter/Proxy
+		 * under the getValue walk, or an app render() body on renderView's sync
+		 * fast path (via onFlush → updateView). It must surface raw and early
+		 * at its origin, not be laundered through a catch that masks which code
+		 * broke. Framework code on this path does not throw (matchRenderDeps is
+		 * framework-only; the render pipeline wedges nothing on a raw throw).
+		 * Documented cost: the remaining buses and the drainSpots/
+		 * drainGlobalRenders tail are skipped for that microtask; their batches
+		 * redeliver on the next notify (fail fast over limp on).
+		 */
 		instances[index].flush();
 	}
 	/*
@@ -206,28 +252,31 @@ export class ComponentSubscriptionTracker {
 		}
 	}
 	clear() {
-		const all = [];
-		const buckets = [...this.byPath.values()];
-		const bucketsLength = buckets.length;
-		for (let bucketIndex = 0; bucketIndex < bucketsLength; bucketIndex += 1) {
-			const subs = [...buckets[bucketIndex]];
-			const subsLength = subs.length;
-			for (let subIndex = 0; subIndex < subsLength; subIndex += 1) {
-				all.push(subs[subIndex]);
+		/*
+		 * Subscription.unsubscribe removes from the BUS bucket only — it never
+		 * mutates this tracker. Iterate live Sets, then drop the map.
+		 */
+		for (const bucket of this.byPath.values()) {
+			for (const subscription of bucket) {
+				subscription.unsubscribe();
 			}
 		}
 		this.byPath.clear();
-		const allLength = all.length;
-		for (let index = 0; index < allLength; index += 1) {
-			all[index].unsubscribe();
-		}
 	}
 }
 /**
- * Bundle of subscriptions registered against a `ComponentSubscriptionTracker`.
- * Returned by multi-key `observe` / `observeGlobal` / `observeAsync` calls;
- * `.unsubscribe()` tears every member down and removes them from the tracker.
- * Prototype methods, zero per-call closure allocation.
+ * Bundle of subscriptions optionally registered against a
+ * `ComponentSubscriptionTracker`. Returned by multi-key `observe` /
+ * `observeGlobal` / `observeAsync` calls; `.unsubscribe()` tears every member
+ * down and removes them from the tracker. Prototype methods, zero per-call
+ * closure allocation.
+ *
+ * `tracker` is NULLABLE by design. Private-state observers are deliberately
+ * untracked (observePrivate owns no component-side registry — see its comment),
+ * so they used to hand in a freshly built tracker that was never `add()`ed to:
+ * a per-call allocation whose only use was an unconditional `delete` against an
+ * empty Map. Null instead of a decoy object, with the branch paid once per
+ * teardown rather than an allocation paid once per subscribe.
  */
 export class TrackedBundle {
 	constructor(tracker, subscriptions) {
@@ -238,6 +287,12 @@ export class TrackedBundle {
 		const tracker = this.tracker;
 		const subs = this.subscriptions;
 		const subsLength = subs.length;
+		if (tracker === null) {
+			for (let index = 0; index < subsLength; index += 1) {
+				subs[index].unsubscribe();
+			}
+			return;
+		}
 		for (let index = 0; index < subsLength; index += 1) {
 			subs[index].unsubscribe();
 			tracker.delete(subs[index]);
@@ -291,8 +346,14 @@ export class Subscription {
 	}
 }
 export class PathSubscriptions {
-	subs = new Map();
-	pending = new Set();
+	/*
+	 * Both collections mint LAZILY (null until first use) — a bus construct
+	 * allocates ZERO collections, so the per-component buses built on the
+	 * create path cost nothing until a real subscription (bucketFor mints
+	 * `subs`) or a write (notify mints `pending`) arrives.
+	 */
+	subs = null;
+	pending = null;
 	pendingAll = false;
 	flushScheduled = false;
 	/*
@@ -329,7 +390,32 @@ export class PathSubscriptions {
 	 * which has no render pipeline of its own — inherits without overriding.
 	 */
 	onFlush() {}
+	/**
+	 * Render-dep match hook — called by `flush()` BEFORE the bucket dispatch
+	 * and OUTSIDE its `subs` gate (a bus may carry render deps and zero
+	 * buckets). Base is a no-op; ComponentStateBus overrides it with the
+	 * Set-channel probe (see render.js subscribeRenderDeps).
+	 * @param {boolean} replaceAll - True on a notifyAll (state replacement) flush.
+	 * @param {string[]} changed - The batch's changed paths; empty when replaceAll.
+	 */
+	matchRenderDeps(replaceAll, changed) {}
+	/**
+	 * Register a handler for a path. CONTRACT: the handler owns its own
+	 * failure — a handler that can fail wraps its risky logic and decides its
+	 * recovery where the context lives; dispatch invokes it bare, so a throw
+	 * unwinds that flush loudly at its origin (fail fast, nothing laundered).
+	 * The type gate runs HERE — once, at registration — so a non-callable
+	 * handler breaks at the bug instead of dispatching as a silent no-op.
+	 * @param {string} path - The state path to observe.
+	 * @param {Function} handler - Called with (value, changedPath) per batch.
+	 * @param {object} [target] - Optional thisArg for a shared prototype method.
+	 * @param {boolean} [multiPath] - Deliver every overlapping changed path.
+	 * @returns {Subscription} The live subscription; call unsubscribe() to release.
+	 */
 	subscribe(path, handler, target, multiPath) {
+		if (!isFunction(handler)) {
+			throw new TypeError(`subscribe('${path}') requires a function handler, got ${typeof handler}`);
+		}
 		return new Subscription(this, path, handler, target, multiPath);
 	}
 	/**
@@ -338,6 +424,9 @@ export class PathSubscriptions {
 	 * `Subscription` constructor.
 	 */
 	bucketFor(path) {
+		if (this.subs === null) {
+			this.subs = new Map();
+		}
 		let bucket = this.subs.get(path);
 		if (!bucket) {
 			bucket = new Set();
@@ -382,6 +471,9 @@ export class PathSubscriptions {
 		if (this.pendingAll) {
 			return;
 		}
+		if (this.pending === null) {
+			this.pending = new Set();
+		}
 		this.pending.add(path);
 		this.scheduleFlush();
 	}
@@ -398,7 +490,9 @@ export class PathSubscriptions {
 			return;
 		}
 		this.pendingAll = true;
-		this.pending.clear();
+		if (this.pending !== null) {
+			this.pending.clear();
+		}
 		this.scheduleFlush();
 	}
 	scheduleFlush() {
@@ -417,9 +511,12 @@ export class PathSubscriptions {
 		this.flushScheduled = false;
 		const replaceAll = this.pendingAll;
 		this.pendingAll = false;
-		const changed = replaceAll ? null : [...this.pending];
-		this.pending.clear();
-		if (this.subs.size) {
+		const changed = replaceAll || this.pending === null ? EMPTY_CHANGED : [...this.pending];
+		if (this.pending !== null) {
+			this.pending.clear();
+		}
+		this.matchRenderDeps(replaceAll, changed);
+		if (this.subs !== null && this.subs.size) {
 			if (replaceAll) {
 				this.dispatchAll();
 			} else if (changed.length === 1) {

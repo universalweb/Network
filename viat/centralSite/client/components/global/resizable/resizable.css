@@ -1,0 +1,87 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: 8rem;
+	min-inline-size: 0;
+	box-sizing: border-box;
+}
+.resizable {
+	display: flex;
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: inherit;
+	min-inline-size: 0;
+}
+.resizable[data-orientation='vertical'] {
+	flex-direction: column;
+}
+.resizable-pane {
+	min-inline-size: 0;
+	min-block-size: 0;
+	overflow: auto;
+}
+.resizable-end {
+	flex: 1 1 auto;
+}
+.resizable-handle {
+	flex: 0 0 0.35rem;
+	flex-shrink: 0;
+	background: color-mix(in oklch, var(--text-muted) 18%, transparent);
+	cursor: col-resize;
+	touch-action: none;
+	position: relative;
+	z-index: 2;
+	transition: background 0.12s ease;
+	/* Expand the hit target past the painted rail without changing layout. */
+	isolation: isolate;
+	pointer-events: auto;
+}
+.resizable-handle::before {
+	content: '';
+	position: absolute;
+	inset-block: 0;
+	inset-inline: -0.4rem;
+	z-index: 1;
+}
+/* Collapsed pane: keep the handle painted and grow the hit target into the open pane. */
+.resizable[data-collapsed-start] .resizable-handle::before {
+	inset-inline-start: 0;
+	inset-inline-end: -0.7rem;
+}
+.resizable[data-collapsed-end] .resizable-handle::before {
+	inset-inline-end: 0;
+	inset-inline-start: -0.7rem;
+}
+.resizable[data-orientation='vertical'] .resizable-handle {
+	cursor: row-resize;
+	flex-basis: 0.35rem;
+}
+.resizable[data-orientation='vertical'] .resizable-handle::before {
+	inset-inline: 0;
+	inset-block: -0.4rem;
+}
+.resizable[data-orientation='vertical'][data-collapsed-start] .resizable-handle::before {
+	inset-block-start: 0;
+	inset-block-end: -0.7rem;
+	inset-inline: 0;
+}
+.resizable[data-orientation='vertical'][data-collapsed-end] .resizable-handle::before {
+	inset-block-end: 0;
+	inset-block-start: -0.7rem;
+	inset-inline: 0;
+}
+.resizable-handle:hover,
+.resizable-handle:focus-visible,
+:host([data-dragging]) .resizable-handle {
+	background: color-mix(in oklch, var(--cyan, oklch(0.72 0.12 200)) 55%, transparent);
+	outline: none;
+}
+.resizable-handle:focus-visible {
+	box-shadow: 0 0 0 2px color-mix(in oklch, var(--cyan, oklch(0.72 0.12 200)) 45%, transparent);
+}
+.resizable[data-disabled] .resizable-handle {
+	cursor: default;
+	pointer-events: none;
+	opacity: 0.4;
+}

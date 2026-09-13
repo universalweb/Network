@@ -2,7 +2,7 @@
 	position: fixed;
 	left: 0;
 	top: 0;
-	z-index: 10000;
+	z-index: var(--z-tooltip);
 	pointer-events: none;
 }
 
@@ -11,6 +11,15 @@
 	--tooltip-offset-y: 14px;
 	--tooltip-rot: 0deg;
 	--tooltip-glow: rgba(109, 74, 255, 0.22);
+	/* Own fill token, equal to the shared --popup-glass-alpha (0.75) but a
+	   flat black rather than the theme's --popup-glass-color. A tooltip is
+	   10px uppercase text floating over arbitrary page content, so a theme-
+	   tinted glass would read against whatever sits underneath. Named rather
+	   than inlined so the level stays tunable in one place.
+	   Like --popup-glass-alpha this is the FILL'S OPACITY, not its
+	   transparency: 0.75 is a 75% black tint over a 25% see-through surface.
+	   To make the tooltip MORE see-through, this number goes DOWN. */
+	--tooltip-glass-alpha: 0.75;
 	margin: 0;
 	padding: 7px 9px;
 	inset: auto;
@@ -18,9 +27,9 @@
 	max-width: min(260px, calc(100vw - 24px));
 	border: 1px solid var(--popup-border);
 	border-radius: var(--radius-lg);
-	background: var(--popup-glass-bg, var(--popup-bg));
-	backdrop-filter: var(--popup-glass-blur, blur(10px));
-	-webkit-backdrop-filter: var(--popup-glass-blur, blur(10px));
+	background: rgba(0, 0, 0, var(--tooltip-glass-alpha));
+	backdrop-filter: var(--popup-glass-blur);
+	-webkit-backdrop-filter: var(--popup-glass-blur);
 	box-shadow: var(--popup-shadow);
 	color: var(--popup-text);
 	font-size: 0.625rem;

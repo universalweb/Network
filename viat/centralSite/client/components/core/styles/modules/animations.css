@@ -22,6 +22,10 @@
 		--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 		--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 		--ease-spring-subtle: cubic-bezier(0.34, 1.3, 0.64, 1);
+		--hover-fill: color-mix(in oklch, var(--text-main) 6%, transparent);
+		--hover-fill-strong: color-mix(in oklch, var(--text-main) 9%, transparent);
+		--hover-scale: 1.04;
+		--press-scale: 0.96;
 	}
 	@keyframes uwc-fade-in {
 		from {
@@ -304,10 +308,56 @@
 	.anim-infinite {
 		animation-iteration-count: infinite;
 	}
+	/*
+	 * Global hover/active language for interactive chrome that is not a
+	 * data-variant button (those already animate in elements-buttons).
+	 * Token durations so reduced-motion can zero the whole UI at once.
+	 *
+	 * [data-interactive] is the house opt-in (chip, card, surface, rating,
+	 * segment-item already carry it as "this chrome is clickable"). It sits
+	 * in :where() BESIDE the :is() list, not inside it: :is() takes the
+	 * specificity of its most specific argument, so parking the hook inside
+	 * would stamp button:not([data-variant])'s (0,1,1) onto every opted-in
+	 * node — the collision that made meter-group's single-class transitions
+	 * silently lose. :where() is (0,0,0). uwc.util still beats
+	 * uwc.components by layer; a component that needs a different curve
+	 * keeps a two-class + !important list (meter-group).
+	 */
+	:is(
+		button:not([data-variant]),
+		[role='tab'],
+		[role='menuitem'],
+		[role='option'],
+		[role='switch'],
+		[role='radio'],
+		[role='checkbox'],
+		summary
+	),
+	:where([data-interactive]) {
+		transition:
+			background-color var(--dur-fast, 0.18s) var(--ease-out, ease),
+			color var(--dur-fast, 0.18s) var(--ease-out, ease),
+			border-color var(--dur-fast, 0.18s) var(--ease-out, ease),
+			box-shadow var(--dur-fast, 0.18s) var(--ease-out, ease),
+			opacity var(--dur-fast, 0.18s) var(--ease-out, ease),
+			filter var(--dur-fast, 0.18s) var(--ease-out, ease),
+			transform var(--dur-fast, 0.18s) var(--ease-out, ease);
+	}
 }
 /* Accessibility kill-switch — unlayered + !important so it wins decisively. */
 @media (prefers-reduced-motion: reduce) {
-	[class*='anim-'] {
+	:host,
+	:root {
+		--dur-instant: 0.001ms;
+		--dur-fast: 0.001ms;
+		--dur-base: 0.001ms;
+		--dur-slow: 0.001ms;
+		--dur-slower: 0.001ms;
+		--hover-scale: 1;
+		--press-scale: 1;
+	}
+	[class*='anim-'],
+	[data-animate] {
 		animation-duration: 0.001ms !important;
 		animation-iteration-count: 1 !important;
 	}

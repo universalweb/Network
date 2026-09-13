@@ -30,16 +30,7 @@ export function enableAi() {
  * works once the `webcomponent` package has been loaded anywhere in the app.
  */
 globalThis.WebComponent ??= WebComponent;
-export {
-	ClassList,
-	classList,
-	globalState,
-	liveChildren,
-	registerChild,
-	registry,
-	Store,
-	WebComponent,
-} from './base.js';
+export { WebComponent } from './base.js';
 export {
 	behaviorAttrNames,
 	getBehavior,
@@ -51,24 +42,59 @@ export {
 	defaultLogger,
 	IS_PRODUCTION,
 } from './debug/logger.js';
-export { computeAnchor } from './dom/anchor.js';
+export { getRenderWatchRecords } from './debug/renderWatch.js';
+export {
+	applyAnchor, computeAnchor, hideOverlay, positionOverlay, positionOverlayWhenReady, triggerBoxReady,
+} from './dom/anchor.js';
 export { flipMorph } from './dom/animation.js';
-export { allChildren } from './dom/children.js';
+export {
+	allChildren, allConnectedComponents, liveChildren, registerChild, trackComponent, unregisterChild, untrackComponent,
+} from './dom/children.js';
 export { DelegateEntry, emitDelegate } from './dom/delegate.js';
 export { setDocumentTitle, syncDocumentTitle } from './dom/documentTitle.js';
 export {
 	appendTo,
-	findComponent,
-	findComponents,
-	getComponent,
+	findChild,
+	findChildren,
+	getChild,
+	getChildren,
 	getComponentRoot,
-	getComponents,
-	getComponentsArray,
 	ifAssign,
 	prependTo,
 } from './dom/dom.js';
+export { DragReorder, indexFromSlotMids } from './dom/dragReorder.js';
+export {
+	captureRects, FLIP_EASE, FLIP_MS, playFlip,
+} from './dom/flip.js';
+export { FocusTrap } from './dom/focusTrap.js';
 export { setInert } from './dom/inert.js';
+export { armLazy, onLazyVisible, syncLazy } from './dom/lazyVisible.js';
+export {
+	ensureManualPopover,
+	hideSurfacePopover,
+	repromoteManualPopover,
+	showSurfacePopover,
+} from './dom/manualPopover.js';
+export { Parallax, parallax } from './dom/parallax.js';
+export { rafCoalesce, rafCoalesceCancel } from './dom/rafCoalesce.js';
 export { getRef, makeRefsProxy, registerRef } from './dom/refs.js';
+export { registry } from './dom/registry.js';
+export { ScrollDock } from './dom/scrollDock.js';
+export { lockScroll, unlockScroll } from './dom/scrollLock.js';
+export { findScrollableAncestor } from './dom/scrollRoot.js';
+export {
+	findComponent,
+	findComponentGlobal,
+	findComponents,
+	findComponentsGlobal,
+} from './dom/search.js';
+export {
+	applyViewLazy,
+	applyViewPaint,
+	observeAll,
+	observeInView,
+	unobserve as unobserveInView,
+} from './dom/viewPort.js';
 export {
 	browser,
 	deviceType,
@@ -101,19 +127,52 @@ export {
 	resolveTagUrl,
 	scanAndResolve,
 } from './resolver.js';
+export {
+	RouteLayer, Router, ROUTER_CONFIG, routerStore,
+} from './routing/router.js';
 export { bind, CONTENT_KIND } from './state/binding.js';
 export { CollectionEngine } from './state/collectionEngine.js';
+export { globalState, Store } from './state/globalState.js';
 export { assignState } from './state/state.js';
 export {
-	collection,
+	ClassList,
+	classList,
 	comp,
+	componentHTML,
+	componentPartial,
 	each,
 	filter,
 	html,
 	ifThen,
 	list,
+	Partial,
 	styles,
 } from './template.js';
+export {
+	clockInterval,
+	formatIsoDate,
+	formatTime,
+	pad2,
+	parseIsoDate,
+	parseTime,
+	todayIso,
+} from './time/format.js';
+export {
+	clampInterval,
+	clampToDay,
+	contains,
+	durationOf,
+	findConflicts,
+	MINUTES_PER_DAY,
+	overlaps,
+	snapTo,
+} from './time/interval.js';
+export {
+	expandAssignments,
+	expandOccurrences,
+	MAX_OCCURRENCES,
+	MAX_WINDOW_DAYS,
+} from './time/recurrence.js';
 export {
 	addInterval,
 	clearIntervals,
@@ -122,46 +181,4 @@ export {
 	setComponentTimeout,
 	stopInterval,
 } from './timers.js';
-export {
-	assign,
-	assignPromisePair,
-	cachedProxy,
-	callFn,
-	clearUnsubs,
-	createElementFromHTML,
-	eachArray,
-	eachNodeList,
-	eachObject,
-	fireResolver,
-	getOrInit,
-	getProto,
-	getValueAtPath,
-	hasOwn,
-	hasValue,
-	isArray,
-	isElement,
-	isEmpty,
-	isError,
-	isFunction,
-	isNull,
-	isObject,
-	isPlainObject,
-	isPromiseLike,
-	isShadowRoot,
-	isString,
-	isSymbol,
-	isTypeUndefined,
-	isUndefined,
-	joinPath,
-	keysOf,
-	noValue,
-	parsePath,
-	pathsOverlap,
-	plainEqual,
-	queueAsyncError,
-	resolveTarget,
-	runHook,
-	setValueAtPath,
-	smartClone,
-	syncSubsByDiff,
-} from './utilities.js';
+export * from './utilities.js';

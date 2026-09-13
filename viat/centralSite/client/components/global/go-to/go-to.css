@@ -1,0 +1,451 @@
+/* Host is layout-neutral; the inner `.go-to` owns positioning so `data-position`
+   can live on a normal element (a component can't `?attr` its own host). */
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: contents;
+}
+.go-to {
+	position: fixed;
+	/* Above page chrome, sibling to ui-fab. */
+	z-index: var(--z-fab);
+	/* Hidden until the scroll surface clears `threshold`. */
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	/*
+	 * NO opacity transition on this box. Its opacity is --go-to-edge-fade, which
+	 * the scroll handler rewrites EVERY frame — transitioning a continuously
+	 * driven value re-targets the transition ~60x a second, so it never
+	 * settles and the control visibly stutters. That was the jagged feel.
+	 * The continuous fade must track the scroll instantly; the DISCRETE
+	 * enter/exit animation lives on .go-to-btn, which nothing drives per-frame.
+	 */
+	transition: visibility 0s linear var(--go-to-exit, 0.32s);
+}
+.go-to[hidden],
+.go-to-dir[hidden] {
+	display: none !important;
+}
+.go-to[data-visible] {
+	opacity: var(--go-to-edge-fade, 1);
+	visibility: visible;
+	pointer-events: auto;
+	transition: visibility 0s;
+}
+.go-to[data-position='static'] {
+	position: static;
+	z-index: auto;
+	/* Inline demos always show — no enter animation gate. */
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transform: none;
+}
+/* Sit above the taller of the desktop status bar and the mobile dock. */
+.go-to[data-position='bottom-end'] {
+	inset-block-end: calc(max(var(--bottom-bar-clearance, 3rem), var(--dock-h, 0px)) + 0.75rem);
+	inset-inline-end: 1.5rem;
+}
+.go-to[data-position='bottom-start'] {
+	inset-block-end: calc(max(var(--bottom-bar-clearance, 3rem), var(--dock-h, 0px)) + 0.75rem);
+	inset-inline-start: 1.5rem;
+}
+.go-to[data-position='top-end'] {
+	inset-block-start: calc(var(--top-bar-clearance, 4rem) + 0.5rem);
+	inset-inline-end: 1.5rem;
+}
+.go-to[data-position='top-start'] {
+	inset-block-start: calc(var(--top-bar-clearance, 4rem) + 0.5rem);
+	inset-inline-start: 1.5rem;
+}
+/* Vertical middle of an inline edge. translate keeps the box centred on the 50% line. */
+.go-to[data-position='center-start'] {
+	inset-block-start: 50%;
+	inset-inline-start: 1.5rem;
+	translate: 0 -50%;
+}
+.go-to[data-position='center-end'] {
+	inset-block-start: 50%;
+	inset-inline-end: 1.5rem;
+	translate: 0 -50%;
+}
+/*
+ * Tab hugs the wall it squares. Circle keeps the 1.5rem inset; tab goes flush
+ * on the inline axis so the flat side actually touches that edge. Block-axis
+ * chrome (top bar / dock) stays cleared — covering it is not a wall hug.
+ */
+.go-to[data-shape='tab']:not(.go-to-pad)[data-position='center-start'],
+.go-to[data-shape='tab']:not(.go-to-pad)[data-position='bottom-start'],
+.go-to[data-shape='tab']:not(.go-to-pad)[data-position='top-start'] {
+	inset-inline-start: 0;
+}
+.go-to[data-shape='tab']:not(.go-to-pad)[data-position='center-end'],
+.go-to[data-shape='tab']:not(.go-to-pad)[data-position='bottom-end'],
+.go-to[data-shape='tab']:not(.go-to-pad)[data-position='top-end'] {
+	inset-inline-end: 0;
+}
+/*
+ * Split: each arrow sits on its own edge of the viewport when the
+ * caller has not parked it. Corner parks (bottom-end / top-start / …)
+ * are the default cluster seats — split may override those. static and
+ * center-* are explicit parks; split must not drag them to an axis
+ * midpoint. Selector-list :not keeps one (0,1,0) so stacking extra
+ * :not()s cannot bump specificity. Pad split (below) still scatters:
+ * cluster=false on a pad means each dir on its own edge. Static split
+ * uses a stretched pad so inline demos show the same idea.
+ */
+.go-to[data-cluster='false']:not([data-position='static'], [data-position='center-start'], [data-position='center-end']):not(.go-to-pad)[data-direction='top'] {
+	inset-block-start: calc(var(--top-bar-clearance, 4rem) + 0.5rem);
+	inset-block-end: auto;
+	inset-inline: 50% auto;
+	translate: -50% 0;
+}
+.go-to[data-cluster='false']:not([data-position='static'], [data-position='center-start'], [data-position='center-end']):not(.go-to-pad)[data-direction='bottom'] {
+	inset-block-start: auto;
+	inset-block-end: calc(max(var(--bottom-bar-clearance, 3rem), var(--dock-h, 0px)) + 0.75rem);
+	inset-inline: 50% auto;
+	translate: -50% 0;
+}
+.go-to[data-cluster='false']:not([data-position='static'], [data-position='center-start'], [data-position='center-end']):not(.go-to-pad)[data-direction='start'],
+.go-to[data-cluster='false']:not([data-position='static'], [data-position='center-start'], [data-position='center-end']):not(.go-to-pad)[data-direction='left'] {
+	inset-inline-start: 1.5rem;
+	inset-inline-end: auto;
+	inset-block: 50% auto;
+	translate: 0 -50%;
+}
+.go-to[data-cluster='false']:not([data-position='static'], [data-position='center-start'], [data-position='center-end']):not(.go-to-pad)[data-direction='end'],
+.go-to[data-cluster='false']:not([data-position='static'], [data-position='center-start'], [data-position='center-end']):not(.go-to-pad)[data-direction='right'] {
+	inset-inline-start: auto;
+	inset-inline-end: 1.5rem;
+	inset-block: 50% auto;
+	translate: 0 -50%;
+}
+.go-to-pad[data-cluster='false']:not([data-position='static']) {
+	display: contents;
+	inset: auto;
+	transform: none;
+	opacity: 1;
+	/*
+	 * contents + pointer-events:none drops descendant hits in Chromium.
+	 * Invisible dirs keep pointer-events:none + visibility:hidden so this
+	 * pad-level auto cannot resurrect a faded-out tooltip target.
+	 */
+	pointer-events: auto;
+}
+.go-to-pad[data-cluster='false']:not([data-position='static']) .go-to-dir {
+	position: fixed;
+	z-index: var(--z-fab);
+}
+.go-to-pad[data-cluster='false']:not([data-position='static']) .go-to-dir[data-direction='top'] {
+	inset-block-start: calc(var(--top-bar-clearance, 4rem) + 0.5rem);
+	inset-inline: 50% auto;
+	translate: -50% 0;
+	grid-column: auto;
+	grid-row: auto;
+}
+.go-to-pad[data-cluster='false']:not([data-position='static']) .go-to-dir[data-direction='bottom'] {
+	inset-block-end: calc(max(var(--bottom-bar-clearance, 3rem), var(--dock-h, 0px)) + 0.75rem);
+	inset-inline: 50% auto;
+	translate: -50% 0;
+	grid-column: auto;
+	grid-row: auto;
+}
+.go-to-pad[data-cluster='false']:not([data-position='static']) .go-to-dir[data-direction='start'] {
+	inset-inline-start: 1.5rem;
+	inset-block: 50% auto;
+	translate: 0 -50%;
+	grid-column: auto;
+	grid-row: auto;
+}
+.go-to-pad[data-cluster='false']:not([data-position='static']) .go-to-dir[data-direction='end'] {
+	inset-inline-end: 1.5rem;
+	inset-block: 50% auto;
+	translate: 0 -50%;
+	grid-column: auto;
+	grid-row: auto;
+}
+/* Disc via ui-button `.state.circle`; host radius matches elevation shadow. */
+/* Same arrow-up glyph; rotate via the button's piercing --ui-btn-icon-rotate.
+   .btn-icon already transitions transform — adaptive direction changes animate. */
+.go-to[data-morph] {
+	transition: --ui-btn-icon-rotate var(--dur-fast, 0.18s) var(--ease-out, ease);
+}
+.go-to[data-morph][data-direction='top'] {
+	--ui-btn-icon-rotate: 0deg;
+}
+.go-to[data-morph][data-direction='end'],
+.go-to[data-morph][data-direction='right'] {
+	--ui-btn-icon-rotate: 90deg;
+}
+.go-to[data-morph][data-direction='bottom'] {
+	--ui-btn-icon-rotate: 180deg;
+}
+.go-to[data-morph][data-direction='start'],
+.go-to[data-morph][data-direction='left'] {
+	--ui-btn-icon-rotate: 270deg;
+}
+.go-to-pad[data-morph] .go-to-dir[data-direction='top'] {
+	--ui-btn-icon-rotate: 0deg;
+}
+.go-to-pad[data-morph] .go-to-dir[data-direction='end'] {
+	--ui-btn-icon-rotate: 90deg;
+}
+.go-to-pad[data-morph] .go-to-dir[data-direction='bottom'] {
+	--ui-btn-icon-rotate: 180deg;
+}
+.go-to-pad[data-morph] .go-to-dir[data-direction='start'] {
+	--ui-btn-icon-rotate: 270deg;
+}
+.go-to-pad {
+	display: grid;
+	grid-template-columns: repeat(3, var(--hit-min, max(2.75rem, 44px)));
+	grid-template-rows: repeat(3, var(--hit-min, max(2.75rem, 44px)));
+	gap: 0.2rem;
+	place-items: center;
+}
+/*
+ * Static split still parks each arrow on its own edge of THIS box so
+ * inline demos show the option without fighting the page's floating pad.
+ */
+.go-to-pad[data-position='static'][data-cluster='false'][data-axes='all'] {
+	inline-size: 100%;
+	min-inline-size: 11rem;
+	block-size: 11rem;
+	grid-template-columns: var(--hit-min, max(2.75rem, 44px)) 1fr var(--hit-min, max(2.75rem, 44px));
+	grid-template-rows: var(--hit-min, max(2.75rem, 44px)) 1fr var(--hit-min, max(2.75rem, 44px));
+	gap: 0;
+}
+.go-to-pad[data-position='static'][data-cluster='false'][data-axes='block'] {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	block-size: 11rem;
+}
+.go-to-pad[data-position='static'][data-cluster='false'][data-axes='inline'] {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	inline-size: 100%;
+	min-inline-size: 11rem;
+}
+.go-to-pad[data-axes='block'] {
+	display: flex;
+	flex-direction: column;
+	grid-template-columns: none;
+	grid-template-rows: none;
+	gap: 0.35rem;
+}
+.go-to-pad[data-axes='inline'] {
+	display: flex;
+	flex-direction: row;
+	grid-template-columns: none;
+	grid-template-rows: none;
+	gap: 0.35rem;
+}
+.go-to-dir[data-direction='top'] {
+	grid-column: 2;
+	grid-row: 1;
+}
+.go-to-dir[data-direction='start'] {
+	grid-column: 1;
+	grid-row: 2;
+}
+.go-to-dir[data-direction='end'] {
+	grid-column: 3;
+	grid-row: 2;
+}
+.go-to-dir[data-direction='bottom'] {
+	grid-column: 2;
+	grid-row: 3;
+}
+/*
+ * --go-to-edge-fade is the SINGLE control's own active-direction fade, and .go-to
+ * paints it as opacity. The pad shares the .go-to class but has NO single active
+ * direction — each .go-to-dir carries its own --go-to-fade-<direction> — so it must
+ * opt out. Opacity multiplies through children: at the top of the page
+ * activeDirection is 'top', so --go-to-edge-fade is fadeTop (0), which drove the
+ * whole pad to 0 and took the bottom arrow with it even though its own fade
+ * was 1. The arrow still laid out at 46px and kept pointer-events, leaving an
+ * invisible but clickable ghost target.
+ */
+.go-to-pad[data-visible] {
+	opacity: 1;
+	pointer-events: none;
+}
+/* Same rule as .go-to: this box carries the per-direction continuous fade, so it
+   is never transitioned. .go-to-btn owns the enter/exit performance. */
+.go-to-dir {
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition: visibility 0s linear var(--go-to-exit, 0.32s);
+}
+.go-to-dir[data-visible] {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transition: visibility 0s;
+}
+.go-to-pad[data-cluster='false']:not([data-position='static']) .go-to-dir:not([data-visible]) {
+	visibility: hidden;
+	pointer-events: none;
+}
+.go-to-dir[data-direction='top'][data-visible] {
+	opacity: var(--go-to-fade-top, 1);
+}
+.go-to-dir[data-direction='bottom'][data-visible] {
+	opacity: var(--go-to-fade-bottom, 1);
+}
+.go-to-dir[data-direction='start'][data-visible],
+.go-to-dir[data-direction='left'][data-visible] {
+	opacity: var(--go-to-fade-start, 1);
+}
+.go-to-dir[data-direction='end'][data-visible],
+.go-to-dir[data-direction='right'][data-visible] {
+	opacity: var(--go-to-fade-end, 1);
+}
+.go-to-pad[data-position='static'] .go-to-dir {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transform: none;
+}
+/*
+ * The whole performance lives here, on the button — the one box in this control
+ * whose visual state is DISCRETE. Nothing rewrites it per scroll frame, so a
+ * transition on it actually completes instead of being re-targeted mid-flight.
+ *
+ * CONTAINER keeps opacity and scale (and composes with the `translate: -50%`
+ * that split mode uses for positioning). ROTATION is --ui-btn-icon-spin, which
+ * pierces into ui-button's icon and composes with --ui-btn-icon-rotate
+ * (direction). A tab is not radially symmetric — rotating the chrome would
+ * wheel the silhouette.
+ */
+.go-to-btn {
+	border-radius: 999px;
+	box-shadow: var(--elev-3, 0 14px 36px rgba(0, 0, 0, 0.38));
+	opacity: 0;
+	scale: 0.4;
+	--ui-btn-icon-spin: -150deg;
+	transition:
+		opacity var(--go-to-exit, 0.32s) ease,
+		scale var(--go-to-exit, 0.32s) cubic-bezier(0.5, 0, 0.75, 0),
+		--ui-btn-icon-spin var(--go-to-exit, 0.32s) cubic-bezier(0.5, 0, 0.75, 0),
+		box-shadow 0.16s ease;
+	will-change: opacity, scale;
+}
+/*
+ * Tab silhouette. --ui-btn-radius inherits across ui-button's shadow into the
+ * inner <button> (same mechanism as ui-button-group). Values are PHYSICAL
+ * 4-value shorthand (top-left top-right bottom-right bottom-left) because that
+ * is what the variable accepts; LTR assumption matches resolvedTooltipSide.
+ * Pad buttons stay discs — a d-pad of tabs is not a docked tab.
+ *
+ * Wall corners are 0; outer corners use --radius-xl. center-start flats the
+ * start (left) edge; center-end flats the end (right) edge; a corner flats
+ * both walls, leaving the inward corner rounded.
+ */
+.go-to[data-shape='tab']:not(.go-to-pad) > .go-to-btn {
+	--ui-btn-radius: var(--radius-xl, 1rem);
+	border-radius: var(--ui-btn-radius);
+}
+.go-to[data-shape='tab']:not(.go-to-pad)[data-position='center-start'] > .go-to-btn {
+	--ui-btn-radius: 0 var(--radius-xl, 1rem) var(--radius-xl, 1rem) 0;
+}
+.go-to[data-shape='tab']:not(.go-to-pad)[data-position='center-end'] > .go-to-btn {
+	--ui-btn-radius: var(--radius-xl, 1rem) 0 0 var(--radius-xl, 1rem);
+}
+.go-to[data-shape='tab']:not(.go-to-pad)[data-position='top-start'] > .go-to-btn {
+	--ui-btn-radius: 0 0 var(--radius-xl, 1rem) 0;
+}
+.go-to[data-shape='tab']:not(.go-to-pad)[data-position='top-end'] > .go-to-btn {
+	--ui-btn-radius: 0 0 0 var(--radius-xl, 1rem);
+}
+.go-to[data-shape='tab']:not(.go-to-pad)[data-position='bottom-start'] > .go-to-btn {
+	--ui-btn-radius: 0 var(--radius-xl, 1rem) 0 0;
+}
+.go-to[data-shape='tab']:not(.go-to-pad)[data-position='bottom-end'] > .go-to-btn {
+	--ui-btn-radius: var(--radius-xl, 1rem) 0 0 0;
+}
+/*
+ * Enter: the icon pre-rotation unwinds and the chrome scale overshoots, so
+ * the control settles rather than blinking in. Spin runs slightly longer
+ * than scale so the two land out of step — that stagger is what reads as
+ * weight instead of a canned pop.
+ */
+.go-to[data-visible] > .go-to-btn,
+.go-to-dir[data-visible] .go-to-btn,
+.go-to[data-position='static'] .go-to-btn {
+	opacity: 1;
+	scale: 1;
+	--ui-btn-icon-spin: 0deg;
+	transition:
+		opacity var(--go-to-enter-fade, 0.24s) ease,
+		scale var(--go-to-enter, 0.44s) var(--go-to-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+		--ui-btn-icon-spin var(--go-to-enter-spin, 0.56s) var(--go-to-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+		box-shadow 0.16s ease;
+}
+.go-to-btn:hover {
+	box-shadow: var(--elev-hover, 0 18px 42px rgba(0, 0, 0, 0.45));
+	scale: 1.09;
+}
+.go-to-btn:active {
+	scale: 0.92;
+	transition:
+		scale 0.09s ease-out,
+		box-shadow 0.16s ease;
+}
+/*
+ * The fidget spin. JS stamps data-spin on press and clears it on animationend,
+ * because :active ends on mouseup and would guillotine the spin mid-flight.
+ * Free-running on the element means every press replays it.
+ * Scale stays on the chrome; --ui-btn-icon-spin is the icon layer, so a
+ * direction of 180deg composes to 180→540 rather than snapping to 0→360.
+ */
+@keyframes go-to-fidget {
+	0% {
+		--ui-btn-icon-spin: 0deg;
+		scale: 0.92;
+	}
+	22% {
+		scale: 1.14;
+	}
+	100% {
+		--ui-btn-icon-spin: 360deg;
+		scale: 1;
+	}
+}
+.go-to-btn[data-spin] {
+	animation: go-to-fidget var(--go-to-spin, 0.66s) cubic-bezier(0.16, 0.84, 0.26, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+	/*
+	 * `.go-to-btn[data-spin]` is (0,2,0); a bare `.go-to-btn` here is (0,1,0) and
+	 * would LOSE to it, so the spin would still play with motion reduced.
+	 * The attribute selector has to be named explicitly to outrank it.
+	 */
+	.go-to,
+	.go-to-dir,
+	.go-to-btn,
+	.go-to-btn[data-spin],
+	.go-to-btn:hover,
+	.go-to-btn:active {
+		transform: none;
+		transition: none;
+		scale: 1;
+		rotate: 0deg;
+		--ui-btn-icon-spin: 0deg;
+		animation: none;
+	}
+	/*
+	 * The enter animation is what reveals the button, so with motion off it has
+	 * to be shown outright — otherwise it would sit at the hidden start state
+	 * forever. Hiding still works: the parent .go-to / .go-to-dir carries opacity 0
+	 * and visibility hidden, so the control stays invisible AND unhittable.
+	 */
+	.go-to-btn {
+		opacity: 1;
+	}
+}

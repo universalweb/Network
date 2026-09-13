@@ -18,7 +18,7 @@ export class UIPanel extends WebComponent {
 	 * shadow root. Every Panel subclass inherits this layer via the chain walk.
 	 */
 	static themes = [
-		'midnight', 'dark', 'marathon', 'hypr', 'gnosis',
+		'midnight', 'dark', 'marathon', 'hypr', 'gnosis', 'noir',
 	];
 	static state = {
 		// Reactive class set: subclasses seed it with their own identifier
@@ -43,7 +43,7 @@ export class UIPanel extends WebComponent {
 		return '';
 	}
 	renderDot() {
-		return this.state.showDot ? this.htmlElement`<div class="ph-dot"></div>` : '';
+		return this.state.showDot ? this.htmlElement`<div class="panel-header-dot"></div>` : '';
 	}
 	render() {
 		this.html`
@@ -51,7 +51,7 @@ export class UIPanel extends WebComponent {
 				<aside class=${classList('panel', this.state.classes)}>
 					<div class="panel-header">
 						<span>
-							<span class="ph-id">${this.state.panelId}</span> // ${this.state.heading}
+							<span class="panel-header-id">${this.state.panelId}</span> // ${this.state.heading}
 						</span>
 						${this.renderDot}
 					</div>

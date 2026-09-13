@@ -219,21 +219,10 @@ export class WebRTCTransport {
 	}
 	stop() {
 		this.alive = false;
-		try {
-			this.channel?.close();
-		} catch (error) {
-			defaultLogger.warn('ai-rtc', 'channel close error', error);
-		}
-		try {
-			this.pc?.close();
-		} catch (error) {
-			defaultLogger.warn('ai-rtc', 'pc close error', error);
-		}
-		try {
-			this.signal?.close();
-		} catch (error) {
-			defaultLogger.warn('ai-rtc', 'signal close error', error);
-		}
+		// Argless close() on channel/pc/socket has no throw path (spec) — no guards.
+		this.channel?.close();
+		this.pc?.close();
+		this.signal?.close();
 		this.channel = null;
 		this.pc = null;
 		this.signal = null;

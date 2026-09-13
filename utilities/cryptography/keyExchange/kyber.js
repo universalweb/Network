@@ -1,17 +1,17 @@
+import { findItem } from '@universalweb/utilitylib';
+import pqclean from 'pqclean';
+import {
+	extendedAuthHeaderRPC, extendedSynchronizationHeaderRPC, headerExtendedSynchronizationRPC, introHeaderRPC,
+} from '#udsp/rpc/headerRPC';
 import {
 	clearBuffer,
 	int32,
 	int64,
 	random32ByteBuffer,
 } from '#utilities/cryptography/utils';
-import {
-	extendedAuthHeaderRPC, extendedSynchronizationHeaderRPC, headerExtendedSynchronizationRPC, introHeaderRPC,
-} from '#udsp/rpc/headerRPC';
-import { KeyExchange } from './keyExchange.js';
-import { findItem } from '@universalweb/utilitylib';
-import pqclean from 'pqclean';
 // import runBench from '#utilities/benchmark';
 import shake256 from '../hash/shake.js';
+import { KeyExchange } from './keyExchange.js';
 // Define the ML-KEM-768 algorithm
 // Generate a key pair (public and private keys)
 const seedSize = int64;

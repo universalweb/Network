@@ -1,0 +1,88 @@
+:host {
+	display: block;
+}
+.poll-option {
+	position: relative;
+	display: block;
+	inline-size: 100%;
+	padding: 0;
+	border: 1px solid var(--dark-divider);
+	border-radius: var(--radius-sm);
+	background: var(--bg-dark);
+	color: var(--text-main);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+	overflow: hidden;
+	transition: border-color var(--dur-fast) var(--ease-out, ease);
+}
+.poll-option:hover,
+.poll-option[data-selected] {
+	border-color: var(--teal);
+}
+.poll-option[data-revealed] {
+	cursor: default;
+}
+/* The tally bar lives behind the content; its width tracks `percentage`, so the
+   lock-time write springs it open from zero. */
+.poll-option-bar {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: 0;
+	inline-size: 0;
+	background: color-mix(in oklab, var(--teal) 18%, transparent);
+	pointer-events: none;
+	transition: inline-size var(--dur-slow) var(--ease-spring);
+}
+.poll-option[data-selected] .poll-option-bar {
+	background: color-mix(in oklab, var(--teal) 30%, transparent);
+}
+.poll-option-face {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-3);
+}
+.poll-option-mark {
+	flex: none;
+	inline-size: 1rem;
+	block-size: 1rem;
+	border: 2px solid var(--text-muted);
+	/* circle (radio) vs square (checkbox) — inherited from the parent .poll. */
+	border-radius: var(--poll-indicator-radius, 50%);
+	transition:
+		border-color var(--dur-fast) var(--ease-out, ease),
+		background var(--dur-fast) var(--ease-out, ease);
+}
+.poll-option[data-selected] .poll-option-mark {
+	border-color: var(--teal);
+	background: radial-gradient(circle at center, var(--teal) 0 45%, transparent 47%);
+}
+.poll-option-text {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+}
+.poll-option-label {
+	font-size: var(--text-sm);
+	font-weight: var(--weight-medium);
+}
+.poll-option-desc {
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+}
+.poll-option-pct {
+	flex: none;
+	font-size: var(--text-sm);
+	font-weight: var(--weight-semibold);
+	color: var(--teal);
+	font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: reduce) {
+	.poll-option-bar {
+		transition: none;
+	}
+}

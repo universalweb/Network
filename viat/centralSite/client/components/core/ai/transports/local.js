@@ -1,4 +1,4 @@
-import { isFunction } from '../../utilities.js';
+import { isFunction, queueAsyncError } from '../../utilities.js';
 let counter = 0;
 function makeId() {
 	counter += 1;
@@ -62,9 +62,7 @@ export class LocalTransport {
 			try {
 				handler(message);
 			} catch (error) {
-				queueMicrotask(() => {
-					throw error;
-				});
+				queueAsyncError(error);
 			}
 		}
 	}

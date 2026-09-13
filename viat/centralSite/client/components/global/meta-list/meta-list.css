@@ -1,0 +1,31 @@
+:host {
+	display: block;
+}
+.meta-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 0.5rem;
+	align-items: center;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: 0.6875rem;
+	font-family: var(--font-mono, ui-monospace, monospace);
+	color: var(--text-muted, oklch(0.7 0 0));
+}
+.meta-list-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+.meta-list-sep-icon {
+	color: var(--text-muted, oklch(0.7 0 0));
+	opacity: 0.7;
+}
+.meta-list-sep-char {
+	color: var(--text-muted, oklch(0.7 0 0));
+	opacity: 0.55;
+}
+.meta-list-label {
+	color: inherit;
+}

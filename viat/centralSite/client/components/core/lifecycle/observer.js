@@ -1,5 +1,4 @@
-import { fireResolver, isTypeUndefined } from '../utilities.js';
-import { LIFECYCLE_PROMISE } from './lifecycle.js';
+import { isTypeUndefined } from '../utilities.js';
 const componentRegistry = new WeakMap();
 let sharedObserver = null;
 function checkManualVisibility(element) {
@@ -19,7 +18,7 @@ export function handleObserverCallback(entry) {
 	this.isVisible = visibleNow;
 	if (visibleNow && !this.visibleFired) {
 		this.visibleFired = true;
-		fireResolver(this.lifecycle, LIFECYCLE_PROMISE.VISIBLE);
+		this.lifecycle.fireVisible();
 		this.onVisible?.();
 	}
 }
@@ -69,8 +68,9 @@ export function uninstallObserver() {
 	if (!this.intersectObserved) {
 		return;
 	}
+	// intersectObserved ⇒ sharedObserver was installed (non-null by construction).
 	const observer = sharedObserver;
 	componentRegistry.delete(this);
 	this.intersectObserved = false;
-	observer?.unobserve(this);
+	observer.unobserve(this);
 }

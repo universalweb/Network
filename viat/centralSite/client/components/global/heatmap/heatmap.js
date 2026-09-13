@@ -3,9 +3,10 @@
 	  • matrix   — a 2D number grid (or {x,y,value} points), optional row/col labels
 	  • calendar — a GitHub-style day grid from [{date, value}] (weeks × weekdays)
 	Activity density, tx-per-day, correlation matrices.
-	ONE GRID, ONE LIST. Labels AND cells are light `html` rows in a SINGLE CSS grid,
+	ONE GRID, ONE LIST. Labels AND cells are light rows in a SINGLE CSS grid,
 	each placed by explicit `grid-column/grid-row` — so the two modes share the whole
 	render core and matrix/calendar differ only in how a cell gets its (col,row).
+	Cells with framework tooltip= use this.partial; plain labels use html.
 	COLOUR is continuous with NO JS colour math: a cell is
 	`color-mix(in oklab, var(--heat-color) INTENSITY%, var(--heat-track))`, INTENSITY
 	the value normalised over the domain (floored for a present-but-low value so it
@@ -19,6 +20,8 @@
 	── STANDARD USAGE ───────────────────────────────────────────────────
 	  <ui-heatmap .state.mode=${'calendar'} .state.data=${[{ date: '2026-01-03', value: 5 }]}></ui-heatmap>
 	  <ui-heatmap .state.data=${[[1, 4, 9], [2, 0, 7]]} .state.rowLabels=${['A', 'B']}></ui-heatmap>
+	  Events: heatmap:select · heatmap:hover  { value, col, row, dateKey, index }
+	  showTip (default true) → framework tooltip=; selectHighlight (default true) outlines the last click.
 	─────────────────────────────────────────────────────────────────────
 */
 import { html, WebComponent } from 'webcomponent';
@@ -148,6 +151,11 @@ export class UIHeatmap extends WebComponent {
 		end: null,
 		showLegend: true,
 		showValues: false,
+		/* Framework tooltip= on cells. Off → no tip attr. */
+		showTip: true,
+		/* Outline the last heatmap:select cell. */
+		selectHighlight: true,
+		selectedIndex: -1,
 		items: [],
 		templateStyle: '',
 		legendMin: 0,
@@ -155,6 +163,7 @@ export class UIHeatmap extends WebComponent {
 		hasData: false,
 	};
 	cellMap = new Map();
+	hoverIndex = -1;
 	formatTooltip = null;
 	onConnect() {
 		this.rebuild();
@@ -168,6 +177,7 @@ export class UIHeatmap extends WebComponent {
 			'start',
 			'end',
 			'showValues',
+			'showTip',
 		], this.rebuild);
 	}
 	domainOf(values) {
@@ -231,17 +241,18 @@ export class UIHeatmap extends WebComponent {
 		const cellIndex = this.cellMap.size;
 		const empty = !isFiniteNumber(options.value);
 		const text = this.state.showValues && !empty ? String(options.value) : '';
+		const tip = this.state.showTip === false ? '' : options.tooltip;
 		const item = {
 			key: `c${cellIndex}`,
 			kind: 'cell',
 			cellIndex,
 			value: options.value,
-			tooltip: options.tooltip,
+			tooltip: tip,
 			col: options.col,
 			row: options.row,
 			dateKey: options.dateKey ?? null,
 			text,
-			cls: empty ? 'hm-cell is-empty' : 'hm-cell',
+			cls: empty ? 'heatmap-cell is-empty' : 'heatmap-cell',
 			style: this.cellStyle(options.gridColumn, options.gridRow, options.intensity),
 		};
 		this.cellMap.set(cellIndex, item);
@@ -279,7 +290,7 @@ export class UIHeatmap extends WebComponent {
 		const items = [];
 		this.pushMatrixLabels(items, layout);
 		this.pushMatrixCells(items, grid, domain, layout);
-		const template = `grid-template-columns:${layout.hasRowLabels ? ' auto' : ''} repeat(${layout.colCount}, var(--hm-cell));grid-template-rows:${layout.hasColLabels ? ' auto' : ''} repeat(${layout.rowCount}, var(--hm-cell));`;
+		const template = `grid-template-columns:${layout.hasRowLabels ? ' auto' : ''} repeat(${layout.colCount}, var(--heatmap-cell));grid-template-rows:${layout.hasColLabels ? ' auto' : ''} repeat(${layout.rowCount}, var(--heatmap-cell));`;
 		this.commit(items, template, domain, layout.rowCount > 0 && layout.colCount > 0);
 	}
 	pushMatrixLabels(items, layout) {
@@ -288,7 +299,7 @@ export class UIHeatmap extends WebComponent {
 				key: 'corner',
 				kind: 'corner',
 				text: '',
-				cls: 'hm-corner',
+				cls: 'heatmap-corner',
 				style: 'grid-column:1;grid-row:1;',
 			});
 		}
@@ -298,7 +309,7 @@ export class UIHeatmap extends WebComponent {
 					key: `cl${col}`,
 					kind: 'collabel',
 					text: String(layout.colLabels[col] ?? ''),
-					cls: 'hm-label hm-col-label',
+					cls: 'heatmap-label heatmap-col-label',
 					style: `grid-column:${col + 1 + layout.colOffset};grid-row:1;`,
 				});
 			}
@@ -309,7 +320,7 @@ export class UIHeatmap extends WebComponent {
 					key: `rl${row}`,
 					kind: 'rowlabel',
 					text: String(layout.rowLabels[row] ?? ''),
-					cls: 'hm-label hm-row-label',
+					cls: 'heatmap-label heatmap-row-label',
 					style: `grid-column:1;grid-row:${row + 1 + layout.rowOffset};`,
 				});
 			}
@@ -375,7 +386,7 @@ export class UIHeatmap extends WebComponent {
 			key: `mo${column}`,
 			kind: 'monthlabel',
 			text: MONTH_LABELS[month],
-			cls: 'hm-label hm-month-label',
+			cls: 'heatmap-label heatmap-month-label',
 			style: `grid-column:${column + 2};grid-row:1;`,
 		});
 	}
@@ -404,7 +415,7 @@ export class UIHeatmap extends WebComponent {
 				key: `wd${row}`,
 				kind: 'weekdaylabel',
 				text: WEEKDAY_LABELS[(row + weekStart) % 7],
-				cls: 'hm-label hm-weekday-label',
+				cls: 'heatmap-label heatmap-weekday-label',
 				style: `grid-column:1;grid-row:${row + 2};`,
 			});
 		}
@@ -430,7 +441,7 @@ export class UIHeatmap extends WebComponent {
 		this.pushWeekdayLabels(items, weekStart);
 		const totalSpan = range.end - gridStart;
 		const weeks = Math.floor(totalSpan / WEEK_MS);
-		const template = `grid-template-columns: auto repeat(${weeks + 1}, var(--hm-cell));grid-template-rows: auto repeat(7, var(--hm-cell));`;
+		const template = `grid-template-columns: auto repeat(${weeks + 1}, var(--heatmap-cell));grid-template-rows: auto repeat(7, var(--heatmap-cell));`;
 		this.commit(items, template, domain, sums.size > 0 || Number.isFinite(range.explicitStart));
 	}
 	commit(items, template, domain, hasData) {
@@ -440,72 +451,89 @@ export class UIHeatmap extends WebComponent {
 		this.state.hasData = hasData;
 		this.state.items = items;
 	}
-	handlePointerMove(domEvent) {
+	cellFromEvent(domEvent) {
 		const target = domEvent.target;
-		if (!(target instanceof Element) || !target.classList.contains('hm-cell')) {
-			this.hideTip();
-			return;
+		if (!target?.classList?.contains('heatmap-cell')) {
+			return null;
 		}
-		const item = this.cellMap.get(Number(target.dataset.index));
-		if (!item) {
-			this.hideTip();
-			return;
-		}
-		const tip = this.refs.tip;
-		const wrapRect = this.refs.grid.getBoundingClientRect();
-		const cellRect = target.getBoundingClientRect();
-		const centerX = cellRect.left - wrapRect.left + (cellRect.width / 2);
-		const topY = cellRect.top - wrapRect.top;
-		tip.textContent = item.tooltip;
-		tip.style.insetInlineStart = `${centerX}px`;
-		tip.style.insetBlockStart = `${topY}px`;
-		tip.dataset.show = 'true';
+		return this.cellMap.get(Number(target.dataset.index)) ?? null;
 	}
-	hideTip() {
-		const tip = this.refs.tip;
-		if (tip) {
-			tip.dataset.show = 'false';
-		}
-	}
-	handleClick(domEvent) {
-		const target = domEvent.target;
-		if (!(target instanceof Element) || !target.classList.contains('hm-cell')) {
-			return;
-		}
-		const item = this.cellMap.get(Number(target.dataset.index));
-		if (!item) {
-			return;
-		}
-		this.emit('heatmap:select', {
+	cellPayload(item) {
+		return {
 			value: item.value,
 			col: item.col,
 			row: item.row,
 			dateKey: item.dateKey,
-		});
+			index: item.cellIndex,
+		};
 	}
-	itemKey(item) {
-		return item.key;
+	handlePointerOver(domEvent) {
+		const item = this.cellFromEvent(domEvent);
+		if (!item) {
+			return;
+		}
+		if (this.hoverIndex === item.cellIndex) {
+			return;
+		}
+		this.hoverIndex = item.cellIndex;
+		this.emit('heatmap:hover', this.cellPayload(item));
+	}
+	handlePointerLeave() {
+		this.hoverIndex = -1;
+	}
+	handleClick(domEvent) {
+		const item = this.cellFromEvent(domEvent);
+		if (!item) {
+			return;
+		}
+		if (this.state.selectHighlight !== false) {
+			if (this.state.selectedIndex === item.cellIndex) {
+				this.state.selectedIndex = -1;
+			} else {
+				this.state.selectedIndex = item.cellIndex;
+			}
+		}
+		this.emit('heatmap:select', this.cellPayload(item));
 	}
 	cellRow(item) {
 		if (item.kind === 'cell') {
-			return html `<div class=${item.cls} data-index=${item.cellIndex} style=${item.style}><span class="hm-val">${item.text}</span></div>`;
+			// tooltip= is a behavior — componentPartial only (not free html / componentHTML).
+			return this.partial`<div class=${item.cls} data-index=${item.cellIndex} data-active=${this.state.selectHighlight !== false && item.cellIndex === this.state.selectedIndex ? 'true' : 'false'} style=${item.style} tooltip=${item.tooltip}><span class="heatmap-val">${item.text}</span></div>`;
 		}
-		return html `<div class=${item.cls} style=${item.style}>${item.text}</div>`;
+		return html`<div class=${item.cls} style=${item.style}>${item.text}</div>`;
+	}
+	/*
+	 * each() so selectedIndex re-paints data-active. list() only re-diffs on
+	 * the items path; light rows have no assignState child to receive a stamp.
+	 * Key closes over selectedIndex (keyFn is unbound — cannot use this.state).
+	 * Selection flip remounts only previous + next selected cells.
+	 */
+	cellsLive() {
+		const selectedIndex = this.state.selectedIndex;
+		const highlight = this.state.selectHighlight !== false;
+		if (selectedIndex < -1) {
+			return this.each([], this.cellRow);
+		}
+		return this.each(this.state.items, this.cellRow, (item) => {
+			if (item.kind === 'cell' && highlight && item.cellIndex === selectedIndex) {
+				return `sel:${item.key}`;
+			}
+			return item.key;
+		});
 	}
 	render() {
-		this.html `
-			<div class="hm" data-mode=${this.state.mode}>
-				<div class="hm-scroll">
-					<div #grid class="hm-grid" style=${this.state.templateStyle}
-						@pointermove=${this.handlePointerMove} @pointerleave=${this.hideTip} @click=${this.handleClick}>
-						${this.list('items', this.cellRow, this.itemKey)}
-						<div #tip class="hm-tip" data-show="false" role="status"></div>
+		this.html`
+			<div class="heatmap" data-mode=${this.state.mode}>
+				<div class="heatmap-scroll">
+					<div #grid class="heatmap-grid" style=${this.state.templateStyle}
+						@pointerover=${this.handlePointerOver} @pointerleave=${this.handlePointerLeave} @click=${this.handleClick}>
+						${this.cellsLive}
 					</div>
 				</div>
-				<div class="hm-legend" ?hidden=${this.legendHidden}>
-					<span class="hm-legend-min">${this.state.legendMin}</span>
-					<span class="hm-legend-ramp"></span>
-					<span class="hm-legend-max">${this.state.legendMax}</span>
+				<div class="heatmap-legend" ?hidden=${this.legendHidden}>
+					<span class="heatmap-legend-min">${this.state.legendMin}</span>
+					<span class="heatmap-legend-ramp"></span>
+					<span class="heatmap-legend-max">${this.state.legendMax}</span>
 				</div>
 			</div>
 		`;

@@ -3,6 +3,21 @@
 	user-select: none;
 	-webkit-user-select: none;
 	display: block;
+	/* Glyph size. Consumers scale from outside the shadow via this custom
+	   property — a hardcoded inner px is unfixable (no ::part, no hatch). */
+	--radio-size: 1.25rem;
+	/* Physical tap floor (finger size), not type size. 2.75rem is 44px only
+	   at a 16px root; html is clamp(14px, 1.3vw, 18px) so bare rem undershoots.
+	   max() floors at 44px and still grows with user font scaling. The painted
+	   disc may stay smaller — padding on `.radio` counts. Override `--radio-hit`
+	   independently of `--radio-size`. */
+	--radio-hit: var(--hit-min, max(2.75rem, 44px));
+}
+:host([data-size='sm']) {
+	--radio-size: 1.1rem;
+}
+:host([data-size='lg']) {
+	--radio-size: 1.55rem;
 }
 .radio-group {
 	border: 0;
@@ -11,12 +26,12 @@
 	min-inline-size: 0;
 	display: flex;
 	flex-direction: column;
-	gap: 0.6rem;
+	gap: 0.35rem;
 }
 .radio-group[data-orientation='horizontal'] {
 	flex-direction: row;
 	flex-wrap: wrap;
-	gap: 1.25rem;
+	gap: 0.35rem 0.75rem;
 }
 .radio-legend {
 	padding: 0;
@@ -36,8 +51,12 @@
 	   had. Anchoring here keeps the input local to its row. */
 	position: relative;
 	display: flex;
-	align-items: flex-start;
-	gap: 0.55rem;
+	align-items: center;
+	gap: 0.65rem;
+	min-block-size: var(--radio-hit);
+	min-inline-size: var(--radio-hit);
+	padding-block: 0.35rem;
+	padding-inline: 0.2rem 0.55rem;
 	cursor: pointer;
 	color: var(--text-primary, currentColor);
 }
@@ -48,7 +67,7 @@
 .radio input[type='radio'] {
 	position: absolute;
 	/* Pin to the row's top-start corner so the 1px control never falls back to its
-	   static flow position (see the position:relative note on .radio). */
+	   static flow position (see the position:relative note on `.radio`). */
 	inset-block-start: 0;
 	inset-inline-start: 0;
 	inline-size: 1px;
@@ -64,23 +83,32 @@
 	white-space: nowrap;
 }
 .radio-control {
+	position: relative;
 	flex: 0 0 auto;
-	inline-size: 1.05em;
-	block-size: 1.05em;
-	margin-block-start: 0.1em;
+	inline-size: var(--radio-size);
+	block-size: var(--radio-size);
 	border: 2px solid var(--surface-border, rgba(255, 255, 255, 0.35));
 	border-radius: 50%;
 	background: transparent;
-	transition:
-		border-color 0.15s ease,
-		box-shadow 0.15s ease;
+	transition: border-color 0.15s ease;
+}
+.radio-control::after {
+	content: '';
+	position: absolute;
+	inset: 22%;
+	border-radius: 50%;
+	background: var(--tone-fill, var(--color-info, #3b82f6));
+	transform: scale(0);
+	transition: transform 0.15s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
 .radio input:checked + .radio-control {
-	border-color: var(--color-info, #3b82f6);
-	box-shadow: inset 0 0 0 0.28em var(--color-info, #3b82f6);
+	border-color: var(--tone-fill, var(--color-info, #3b82f6));
+}
+.radio input:checked + .radio-control::after {
+	transform: scale(1);
 }
 .radio input:focus-visible + .radio-control {
-	outline: 2px solid var(--color-info, #3b82f6);
+	outline: 2px solid var(--tone-fill, var(--color-info, #3b82f6));
 	outline-offset: 2px;
 }
 .radio-text {
@@ -98,7 +126,8 @@
 	color: var(--text-muted, rgba(255, 255, 255, 0.55));
 }
 @media (prefers-reduced-motion: reduce) {
-	.radio-control {
+	.radio-control,
+	.radio-control::after {
 		transition: none;
 	}
 }

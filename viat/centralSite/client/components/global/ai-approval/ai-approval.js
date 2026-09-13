@@ -65,22 +65,22 @@ export class UIAiApproval extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
-			<section class="apv" data-decided=${this.state.decided || 'pending'}>
-				<header class="apv-head">
-					<ui-icon class="apv-icon" .state.name=${'circle-alert'} .state.size=${'sm'}></ui-icon>
-					<span class="apv-title">Approval required</span>
-					<code class="apv-name">${this.state.name}</code>
+		this.html`
+			<section class="ai-approval" data-decided=${this.state.decided || 'pending'}>
+				<header class="ai-approval-head">
+					<ui-icon class="ai-approval-icon" .state.name=${'circle-alert'} .state.size=${'sm'}></ui-icon>
+					<span class="ai-approval-title">Approval required</span>
+					<code class="ai-approval-name">${this.state.name}</code>
 				</header>
-				<p class="apv-summary" ?hidden=${!this.state.summary}>${this.state.summary}</p>
-				<div class="apv-args" ?hidden=${!this.hasArgs}>
+				<p class="ai-approval-summary" ?hidden=${!this.state.summary}>${this.state.summary}</p>
+				<div class="ai-approval-args" ?hidden=${!this.hasArgs}>
 					<ui-json-inspector #argsview .state.expandDepth=${1} .state.rootLabel=${'args'}></ui-json-inspector>
 				</div>
-				<footer class="apv-actions" ?hidden=${this.state.decided}>
+				<footer class="ai-approval-actions" ?hidden=${this.state.decided}>
 					<button type="button" data-variant="solid" data-tone="success" data-size="sm" @click=${this.handleApprove}>Approve</button>
 					<button type="button" data-variant="ghost" data-tone="danger" data-size="sm" @click=${this.handleReject}>Reject</button>
 				</footer>
-				<div class="apv-outcome" data-decided=${this.state.decided} ?hidden=${!this.state.decided}>
+				<div class="ai-approval-outcome" data-decided=${this.state.decided} ?hidden=${!this.state.decided}>
 					<ui-icon .state.name=${this.outcomeIcon} .state.size=${'xs'}></ui-icon>
 					<span>${this.outcomeLabel}</span>
 				</div>

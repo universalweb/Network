@@ -1,0 +1,51 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	min-inline-size: 0;
+	--event-track-height: 2.35rem;
+	--event-track-gap: 0.3rem;
+	--resource-fill: var(--tone-fill, var(--cyan));
+}
+.schedule-lane {
+	display: grid;
+	grid-template-columns: var(--schedule-board-rail, 9rem) minmax(0, 1fr);
+	align-items: stretch;
+	inline-size: 100%;
+	min-inline-size: 0;
+	border-block-end: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
+	--resource-fill: var(--tone-fill);
+}
+.schedule-lane-rail {
+	display: flex;
+	align-items: center;
+	padding-inline: 0.7rem;
+	font-size: var(--text-sm, 0.875rem);
+	font-weight: var(--weight-semibold, 600);
+	color: var(--text-main);
+	background: color-mix(in oklch, var(--resource-fill) 10%, transparent);
+	border-inline-end: 1px solid color-mix(in oklch, var(--text-muted) 16%, transparent);
+	min-inline-size: 0;
+}
+.schedule-lane-canvas {
+	position: relative;
+	min-inline-size: 0;
+	min-block-size: calc(var(--lane-tracks, 1) * (var(--event-track-height) + var(--event-track-gap)) + 0.35rem);
+	padding-block: 0.2rem;
+	background-image: repeating-linear-gradient(
+		to right,
+		transparent 0,
+		transparent calc((var(--schedule-board-step, 60) / var(--schedule-board-span, 1440) * 100%) - 1px),
+		color-mix(in oklch, var(--text-muted) 20%, transparent) calc((var(--schedule-board-step, 60) / var(--schedule-board-span, 1440) * 100%) - 1px),
+		color-mix(in oklch, var(--text-muted) 20%, transparent) calc(var(--schedule-board-step, 60) / var(--schedule-board-span, 1440) * 100%)
+	);
+}
+.schedule-lane-canvas ui-scheduler-event {
+	position: absolute;
+	inset-inline-start: calc((var(--event-start, 0) - var(--schedule-board-start, 0)) / var(--schedule-board-span, 1440) * 100%);
+	inline-size: max(1.75rem, calc((var(--event-end, 0) - var(--event-start, 0)) / var(--schedule-board-span, 1440) * 100%));
+	inset-block-start: calc(var(--event-track, 0) * (var(--event-track-height) + var(--event-track-gap)) + 0.2rem);
+	block-size: var(--event-track-height);
+	min-inline-size: 0;
+	padding-inline: 0.12rem;
+	box-sizing: border-box;
+}

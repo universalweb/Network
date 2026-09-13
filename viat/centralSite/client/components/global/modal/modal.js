@@ -1,12 +1,14 @@
-import '../icon/icon.js';
 import '../close-button/close-button.js';
-import { classList, WebComponent } from '../../core/index.js';
+import '../icon/icon.js';
+import '../window-title-bar/window-title-bar.js';
+import { classList, WebComponent } from 'webcomponent';
 import { lockBackgroundScroll, unlockBackgroundScroll } from '../scroll-lock.js';
 // Base z-index for the first modal. Each subsequent modal that opens
 // receives `baseZ + (stack depth)` so newer modals always paint above
 // older ones — both for native top-layer browsers (where it acts as a
 // belt-and-suspenders) and for any popover/tooltip layered above.
-const MODAL_BASE_Z = 1000;
+// Matches --z-modal from the structural z-index scale (variables.css).
+const MODAL_BASE_Z = 1300;
 export class UIModal extends WebComponent {
 	// Shared stack of currently-open UIModal instances. Older first, top of
 	// stack last. Used to compute z-index on open and to identify the
@@ -52,10 +54,17 @@ export class UIModal extends WebComponent {
 		// 'right' = Windows-style (min, max, close left→right, anchored right).
 		// 'left'  = macOS-style (close, min, max left→right, anchored left).
 		controlsSide: 'right',
+		// 'solid' (default) paints the opaque --popup-bg; 'glass' takes the house
+		// `.glass` utility instead — the same opt-in ui-slideout uses for its panel.
+		// A palette or a transient overlay wants the page legible behind it; a
+		// content or form modal does not, so this stays off by default.
+		skin: 'solid',
 		// Optional window-bar title (native-OS-window style). Empty string = no
 		// title shown; the bar still appears whenever any control flag is set.
-		// Opt-in per modal — existing modals keep their in-body heading untouched.
 		heading: '',
+		// Heading placement on the window-title-bar: 'opposite' the buttons
+		// (default, leftover space) or 'center' (optically centered).
+		headingPlace: 'opposite',
 		// Optional continuation callback. Fires once when the modal closes
 		// (any path — button, Escape, backdrop, programmatic). Receives
 		// `{ returnValue, source }`. Self-clears after firing so the same
@@ -67,6 +76,35 @@ export class UIModal extends WebComponent {
 		// Seed the host window-state attribute so it always reflects 'normal'
 		// until a control toggles it — mirrors the dock's data-orientation seed.
 		this.dataset.window = 'normal';
+		this.observe('open', this.syncOpen);
+		this.syncOpen();
+	}
+	// @engram em:network/code/ui-modal-host-data-open-must-track-native-dialog-open — leftover showModal inert-locks the page if the host hides
+	syncOpenAttr() {
+		const dialogOpen = this.refs.dialog?.open === true;
+		this.toggleAttribute('data-open', this.state.open === true || dialogOpen);
+	}
+	/*
+	 * `state.open` drives the native dialog. Host CSS hides `:not([data-open])`;
+	 * a leftover showModal() dialog still inert-locks the page. Keep data-open
+	 * set while either the flag or the native dialog is open so the host box
+	 * cannot vanish under a live top-layer dialog.
+	 */
+	syncOpen() {
+		this.syncOpenAttr();
+		const dialog = this.refs.dialog;
+		if (!dialog) {
+			return;
+		}
+		if (this.state.open === true) {
+			if (!dialog.open) {
+				this.open();
+			}
+			return;
+		}
+		if (dialog.open) {
+			this.close();
+		}
 	}
 	handleDialogClick(domEvent) {
 		// Backdrop-close is part of the base modal contract — every modal
@@ -111,17 +149,19 @@ export class UIModal extends WebComponent {
 			}
 		}
 		dialog.style.zIndex = String(topZ + 1);
+		this.toggleAttribute('data-open', true);
 		if (this.state.modal) {
 			dialog.showModal();
 		} else {
 			dialog.show();
 		}
+		this.state.open = true;
+		this.syncOpenAttr();
 		stack.push(this);
 		if (this.state.modal) {
 			lockBackgroundScroll();
 		}
 		this.applyAutoFocus(dialog);
-		this.state.open = true;
 		this.emit('modal:open');
 	}
 	applyAutoFocus(dialog) {
@@ -166,6 +206,7 @@ export class UIModal extends WebComponent {
 	}
 	handleClose(domEvent) {
 		this.state.open = false;
+		this.syncOpenAttr();
 		// Reset window-state on close so the next open() starts at the default
 		// size, not whatever the user left it at.
 		this.dataset.window = 'normal';
@@ -222,6 +263,16 @@ export class UIModal extends WebComponent {
 	controlsSideClass() {
 		return this.state.controlsSide === 'left' ? 'controls-left' : 'controls-right';
 	}
+	/*
+	 * The house `.glass` utility rather than a private fill, so every glass
+	 * surface in the app moves together when --popup-glass-alpha changes. It
+	 * lives in uwc.util, the LAST cascade layer, which is why modal.css declares
+	 * its own background under `:not(.glass)` — an unconditional declaration
+	 * there could only ever lose to the utility anyway.
+	 */
+	skinClass() {
+		return this.state.skin === 'glass' ? 'glass' : '';
+	}
 	// Window bar (reserved space + frosted background + body top-padding) only
 	// exists when there's something to put in it — a control or a title. A
 	// control-less, title-less modal stays a plain content box with no phantom bar.
@@ -239,19 +290,21 @@ export class UIModal extends WebComponent {
 		// so flipping a flag at runtime cleanly toggles whether the button
 		// is part of the active layout. The flags default to false so a
 		// caller that doesn't opt in gets no controls at all.
-		this.html `
-			<dialog #dialog class=${classList('modal', this.controlsSideClass, this.barClass)} tabindex="-1" @click=${this.handleDialogClick} @cancel=${this.handleCancel} @close=${this.handleClose}>
-				<div class="modal-controls">
-					<div class="modal-title">${this.state.heading}</div>
-					<button type="button" class="mc-btn mc-min" aria-label="Minimize" ?hidden=${this.state.showMinimize !== true} @click=${this.handleToggleMinimize}>
-						<ui-icon class="mc-icon" .state.name=${'minus'} .state.size=${'sm'}></ui-icon>
+		this.html`
+			<dialog #dialog class=${classList('modal', this.controlsSideClass, this.barClass, this.skinClass)} tabindex="-1" @click=${this.handleDialogClick} @cancel=${this.handleCancel} @close=${this.handleClose}>
+				<ui-window-title-bar
+					.state.heading=${this.state.heading}
+					.state.side=${this.state.controlsSide === 'left' ? 'start' : 'end'}
+					.state.place=${this.state.headingPlace === 'center' ? 'center' : 'opposite'}>
+					<button type="button" class="modal-btn modal-min" aria-label="Minimize" ?hidden=${this.state.showMinimize !== true} @click=${this.handleToggleMinimize}>
+						<ui-icon class="modal-icon" .state.name=${'minus'} .state.size=${'sm'}></ui-icon>
 					</button>
-					<button type="button" class="mc-btn mc-max" aria-label="Toggle size" ?hidden=${this.state.showMaximize !== true} @click=${this.handleToggleMaximize}>
-						<ui-icon class="mc-icon mc-icon-grow" .state.name=${'maximize-2'} .state.size=${'sm'}></ui-icon>
-						<ui-icon class="mc-icon mc-icon-shrink" .state.name=${'minimize-2'} .state.size=${'sm'}></ui-icon>
+					<button type="button" class="modal-btn modal-max" aria-label="Toggle size" ?hidden=${this.state.showMaximize !== true} @click=${this.handleToggleMaximize}>
+						<ui-icon class="modal-icon modal-icon-grow" .state.name=${'maximize-2'} .state.size=${'sm'}></ui-icon>
+						<ui-icon class="modal-icon modal-icon-shrink" .state.name=${'minimize-2'} .state.size=${'sm'}></ui-icon>
 					</button>
-					<ui-close-button class="mc-close" ?hidden=${this.state.showClose !== true} @close-button:click=${this.handleCloseClick}></ui-close-button>
-				</div>
+					<ui-close-button class="modal-close" ?hidden=${this.state.showClose !== true} @close-button:click=${this.handleCloseClick}></ui-close-button>
+				</ui-window-title-bar>
 				<div class="modal-body"><slot></slot></div>
 			</dialog>
 		`;

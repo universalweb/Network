@@ -4,7 +4,7 @@
 	marks, a value bubble, and a vertical orientation. The track is the pointer
 	surface AND the positioning context; thumbs are real focusable role="slider"
 	buttons (full keyboard: arrows / Page / Home / End), positioned by CSS custom
-	props the render publishes (--val for single, --lo/--hi for range).
+	props the render publishes (--slider-val for single, --slider-lo/--slider-hi for range).
 	── WHY DIRECT POINTER CAPTURE (not dragSnap / dragTrack) ─────────────
 	  Both gesture engines are DETENT engines — dragSnap is binary (open/closed),
 	  dragTrack commits a single ±1 step. A slider needs CONTINUOUS absolute
@@ -32,6 +32,39 @@ import { html, WebComponent } from 'webcomponent';
 // step over a huge range would stamp thousands of dots; pass an explicit marks
 // array when that many are genuinely wanted.
 const MAX_AUTO_MARKS = 51;
+const DRAG_START_PX = 4;
+const SLIDER_PROP_STYLE_ID = 'ui-slider-props';
+const SLIDER_PROP_CSS = `@property --slider-val {
+	syntax: "<percentage>";
+	inherits: true;
+	initial-value: 0%;
+}
+@property --slider-lo {
+	syntax: "<percentage>";
+	inherits: true;
+	initial-value: 0%;
+}
+@property --slider-hi {
+	syntax: "<percentage>";
+	inherits: true;
+	initial-value: 100%;
+}`;
+/*
+ * `@property` inside a shadow-adopted sheet is ignored. Register the same
+ * rules on the document so --slider-val/lo/hi interpolate. Idempotent: the
+ * style node is keyed, so HMR / a second import does not duplicate it.
+ */
+function ensureSliderProperties() {
+	const doc = globalThis.document;
+	if (!doc?.head || doc.getElementById(SLIDER_PROP_STYLE_ID)) {
+		return;
+	}
+	const style = doc.createElement('style');
+	style.id = SLIDER_PROP_STYLE_ID;
+	style.textContent = SLIDER_PROP_CSS;
+	doc.head.append(style);
+}
+ensureSliderProperties();
 export class UISlider extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -69,6 +102,8 @@ export class UISlider extends WebComponent {
 	activeThumb = null;
 	activePointerId = null;
 	dragRect = null;
+	pointerStartX = 0;
+	pointerStartY = 0;
 	// `.value=` / `.low=` / `.high=` reach state through these explicit setters (a bare
 	// dotted prop no longer auto-routes), which coerce the incoming value to a Number.
 	// Templates use the `.state.value=` channel; these serve DOM-property / attr writes.
@@ -285,15 +320,24 @@ export class UISlider extends WebComponent {
 		const which = this.state.range ? this.nearestThumb(value) : 'value';
 		this.activeThumb = which;
 		this.activePointerId = domEvent.pointerId;
-		this.state.dragging = true;
+		this.pointerStartX = domEvent.clientX;
+		this.pointerStartY = domEvent.clientY;
+		this.state.dragging = false;
 		track.setPointerCapture(domEvent.pointerId);
-		// Jump the latched thumb to the press (click-to-position), then focus it.
 		this.applyThumb(which, value);
 		this.focusActive();
 	}
 	handlePointerMove(domEvent) {
 		if (this.activeThumb === null || domEvent.pointerId !== this.activePointerId) {
 			return;
+		}
+		if (this.state.dragging !== true) {
+			const deltaX = domEvent.clientX - this.pointerStartX;
+			const deltaY = domEvent.clientY - this.pointerStartY;
+			if ((deltaX * deltaX) + (deltaY * deltaY) < (DRAG_START_PX * DRAG_START_PX)) {
+				return;
+			}
+			this.state.dragging = true;
 		}
 		this.applyThumb(this.activeThumb, this.valueFromPointer(domEvent));
 	}
@@ -370,9 +414,9 @@ export class UISlider extends WebComponent {
 	// reactive computed spot; re-runs when value/low/high change.
 	trackVars() {
 		if (this.state.range) {
-			return `--lo:${this.toPercent(this.state.low)}%;--hi:${this.toPercent(this.state.high)}%`;
+			return `--slider-lo:${this.toPercent(this.state.low)}%;--slider-hi:${this.toPercent(this.state.high)}%`;
 		}
-		return `--val:${this.toPercent(this.state.value)}%`;
+		return `--slider-val:${this.toPercent(this.state.value)}%`;
 	}
 	thumbAria(which) {
 		const base = this.state.label || 'Value';
@@ -425,40 +469,40 @@ export class UISlider extends WebComponent {
 	markNode(mark) {
 		const pos = this.toPercent(mark.value);
 		if (mark.label != null) {
-			return html `<span class="sl-mark" style=${`--pos:${pos}%`}><span class="sl-mark-label">${mark.label}</span></span>`;
+			return html`<span class="slider-mark" style=${`--pos:${pos}%`}><span class="slider-mark-label">${mark.label}</span></span>`;
 		}
-		return html `<span class="sl-mark" style=${`--pos:${pos}%`}></span>`;
+		return html`<span class="slider-mark" style=${`--pos:${pos}%`}></span>`;
 	}
 	render() {
-		this.html `
-			<div class="sl" data-orientation=${this.state.orientation}
+		this.html`
+			<div class="slider" data-orientation=${this.state.orientation}
 				?data-range=${this.state.range} ?data-disabled=${this.state.disabled}
 				?data-dragging=${this.state.dragging} data-label=${this.state.showLabel}>
-				<div #track class="sl-track" style=${this.trackVars}
+				<div #track class="slider-track" style=${this.trackVars}
 					@pointerdown=${this.handlePointerDown}
 					@pointermove=${this.handlePointerMove}
 					@pointerup=${this.handlePointerUp}
 					@pointercancel=${this.handlePointerUp}>
-					<span class="sl-rail"></span>
-					<span class="sl-fill"></span>
+					<span class="slider-rail"></span>
+					<span class="slider-fill"></span>
 					${this.list('markItems', this.markNode, this.markKey)}
-					<button #thumbmain class="sl-thumb" type="button"
+					<button #thumbmain class="slider-thumb" type="button"
 						data-thumb=${this.mainKey} role="slider"
 						aria-orientation=${this.state.orientation}
 						tabindex=${this.thumbTabindex} ?disabled=${this.state.disabled}
 						aria-label=${this.mainAria} aria-valuemin=${this.mainMin}
 						aria-valuemax=${this.mainMax} aria-valuenow=${this.mainNow}
 						aria-valuetext=${this.mainText} @keydown=${this.handleKeydown}>
-						<span class="sl-bubble">${this.mainText}</span>
+						<span class="slider-bubble">${this.mainText}</span>
 					</button>
-					<button #thumbhigh class="sl-thumb sl-thumb-high" type="button"
+					<button #thumbhigh class="slider-thumb slider-thumb-high" type="button"
 						data-thumb="high" role="slider" ?hidden=${this.hideHigh}
 						aria-orientation=${this.state.orientation}
 						tabindex=${this.thumbTabindex} ?disabled=${this.state.disabled}
 						aria-label=${this.highAria} aria-valuemin=${this.highMin}
 						aria-valuemax=${this.highMax} aria-valuenow=${this.state.high}
 						aria-valuetext=${this.highText} @keydown=${this.handleKeydown}>
-						<span class="sl-bubble">${this.highText}</span>
+						<span class="slider-bubble">${this.highText}</span>
 					</button>
 				</div>
 			</div>

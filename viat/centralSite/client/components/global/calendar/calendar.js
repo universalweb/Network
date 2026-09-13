@@ -14,7 +14,7 @@
 	  <ui-calendar @calendar:change=${this.handlePick}></ui-calendar>
 	─────────────────────────────────────────────────────────────────────
 */
-import { html, WebComponent } from 'webcomponent';
+import { formatIsoDate, html, WebComponent } from 'webcomponent';
 const MONTH_NAMES = [
 	'January',
 	'February',
@@ -33,12 +33,6 @@ const WEEKDAY_SHORT = [
 	'Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa',
 ];
 const TONE_TOKEN = /^[\w-]+$/;
-function pad2(value) {
-	return String(value).padStart(2, '0');
-}
-function isoOf(year, month, day) {
-	return `${year}-${pad2(month + 1)}-${pad2(day)}`;
-}
 function daysInMonth(year, month) {
 	return new Date(year, month + 1, 0).getDate();
 }
@@ -53,7 +47,7 @@ function orderedWeekdays(weekStart) {
 	return labels;
 }
 function pushCell(cells, year, month, day, inMonth, todayIso) {
-	const iso = isoOf(year, month, day);
+	const iso = formatIsoDate(year, month, day);
 	cells.push({
 		id: iso,
 		day,
@@ -173,8 +167,7 @@ export class UICalendar extends WebComponent {
 		this.syncGrid();
 	}
 	todayIso() {
-		const now = new Date();
-		return isoOf(now.getFullYear(), now.getMonth(), now.getDate());
+		return formatIsoDate(new Date());
 	}
 	monthTitle() {
 		return `${MONTH_NAMES[this.state.viewMonth] || ''} ${this.state.viewYear}`;
@@ -243,7 +236,7 @@ export class UICalendar extends WebComponent {
 		});
 	}
 	handleGridClick(domEvent) {
-		const button = domEvent.target.closest('button.cal-cell');
+		const button = domEvent.target.closest('button.calendar-cell');
 		const iso = button?.dataset?.iso;
 		if (!iso) {
 			return;
@@ -287,14 +280,14 @@ export class UICalendar extends WebComponent {
 		});
 	}
 	weekdayRow(item) {
-		return html`<span class="cal-wd">${item.label}</span>`;
+		return html`<span class="calendar-wd">${item.label}</span>`;
 	}
 	weekdayKey(item) {
 		return item.id;
 	}
 	/* Light day row — plain values only (no nested html`` / chip arrays). */
 	dayRow(cell) {
-		return html`<button type="button" class="cal-cell"
+		return html`<button type="button" class="calendar-cell"
 			data-iso=${cell.inMonth ? cell.iso : false}
 			?data-out=${!cell.inMonth}
 			?data-today=${cell.isToday}
@@ -304,11 +297,11 @@ export class UICalendar extends WebComponent {
 			?data-in-range=${cell.isInRange}
 			?disabled=${!cell.inMonth}
 			aria-label=${cell.iso}>
-			<span class="cal-num">${cell.day}</span>
-			<span class="cal-chips" ?hidden=${!cell.hasChips}>
-				<span class="cal-chip" data-tone=${cell.chip0Tone} ?hidden=${!cell.chip0}>${cell.chip0}</span>
-				<span class="cal-chip" data-tone=${cell.chip1Tone} ?hidden=${!cell.chip1}>${cell.chip1}</span>
-				<span class="cal-chip" data-tone=${cell.chip2Tone} ?hidden=${!cell.chip2}>${cell.chip2}</span>
+			<span class="calendar-num">${cell.day}</span>
+			<span class="calendar-chips" ?hidden=${!cell.hasChips}>
+				<span class="calendar-chip" data-tone=${cell.chip0Tone} ?hidden=${!cell.chip0}>${cell.chip0}</span>
+				<span class="calendar-chip" data-tone=${cell.chip1Tone} ?hidden=${!cell.chip1}>${cell.chip1}</span>
+				<span class="calendar-chip" data-tone=${cell.chip2Tone} ?hidden=${!cell.chip2}>${cell.chip2}</span>
 			</span>
 		</button>`;
 	}
@@ -317,19 +310,19 @@ export class UICalendar extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="cal" data-density=${this.state.density} data-mode=${this.state.selectMode} ?data-events=${this.state.showEvents}>
-				<div class="cal-head">
-					<button class="cal-nav" type="button" tooltip="Previous month" aria-label="Previous month" @click=${this.handlePrev}>
+			<div class="calendar" data-density=${this.state.density} data-mode=${this.state.selectMode} ?data-events=${this.state.showEvents}>
+				<div class="calendar-head">
+					<button class="calendar-nav" type="button" tooltip="Previous month" aria-label="Previous month" @click=${this.handlePrev}>
 						<ui-icon .state.name=${'chevron-left'} .state.size=${'sm'}></ui-icon>
 					</button>
-					<span class="cal-title">${this.monthTitle}</span>
-					<button class="cal-nav" type="button" tooltip="Next month" aria-label="Next month" @click=${this.handleNext}>
+					<span class="calendar-title">${this.monthTitle}</span>
+					<button class="calendar-nav" type="button" tooltip="Next month" aria-label="Next month" @click=${this.handleNext}>
 						<ui-icon .state.name=${'chevron-right'} .state.size=${'sm'}></ui-icon>
 					</button>
-					<button class="cal-today" type="button" @click=${this.handleToday}>Today</button>
+					<button class="calendar-today" type="button" @click=${this.handleToday}>Today</button>
 				</div>
-				<div class="cal-weekdays">${this.list('weekdays', this.weekdayRow, this.weekdayKey)}</div>
-				<div class="cal-grid" @click=${this.handleGridClick}>${this.list('days', this.dayRow, this.dayKey)}</div>
+				<div class="calendar-weekdays">${this.list('weekdays', this.weekdayRow, this.weekdayKey)}</div>
+				<div class="calendar-grid" @click=${this.handleGridClick}>${this.list('days', this.dayRow, this.dayKey)}</div>
 			</div>
 		`;
 	}

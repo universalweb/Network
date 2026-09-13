@@ -1,0 +1,115 @@
+:host {
+	display: block;
+	container-type: inline-size;
+	container-name: fieldset;
+}
+.fieldset {
+	margin: 0;
+	min-inline-size: 0;
+	padding-block: 0 0.85rem;
+	padding-inline: 1rem;
+	border: var(--border-width, 1px) solid var(--popup-border, var(--surface-border, var(--dark-divider)));
+	border-radius: var(--radius-lg, 0.875rem);
+	background: var(--bg-panel);
+}
+.fieldset-legend {
+	display: inline-flex;
+	float: none;
+	inline-size: auto;
+	max-inline-size: calc(100% - 1.5rem);
+	padding-inline: 0.4rem;
+	margin: 0;
+	margin-inline-start: 0.35rem;
+}
+.fieldset-trigger,
+.fieldset-static {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2, 0.4rem);
+	margin: 0;
+	padding-block: 0.15rem;
+	padding-inline: 0.15rem;
+	border: 0;
+	border-radius: var(--radius-sm, 0.3rem);
+	background: var(--bg-panel);
+	color: var(--panel-header-color, var(--text-muted));
+	font-family: var(--font-display, inherit);
+	font-size: var(--panel-header-font-size, var(--text-xs, 0.6875rem));
+	font-weight: var(--weight-semibold, 600);
+	letter-spacing: var(--panel-header-letter-spacing, 0.12em);
+	line-height: var(--leading-tight, 1.2);
+	text-align: start;
+	text-transform: var(--panel-header-text-transform, uppercase);
+}
+.fieldset-label {
+	min-inline-size: 0;
+	text-wrap: pretty;
+}
+.fieldset-trigger {
+	cursor: pointer;
+	transition:
+		color var(--dur-fast, 0.16s) var(--ease-out, ease),
+		background var(--dur-fast, 0.16s) var(--ease-out, ease);
+}
+.fieldset-trigger:hover {
+	color: var(--text-main);
+}
+.fieldset-trigger:focus {
+	outline: none;
+}
+.fieldset-trigger:focus-visible {
+	outline: var(--border-width-thick, 2px) solid var(--focus-ring-color, var(--teal));
+	outline-offset: 2px;
+}
+.fieldset-trigger[hidden],
+.fieldset-static[hidden] {
+	display: none !important;
+}
+.fieldset[data-disabled] .fieldset-trigger {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+.fieldset-chevron {
+	flex: 0 0 auto;
+	display: grid;
+	place-items: center;
+	color: var(--text-muted);
+	transition:
+		rotate var(--dur-fast, 0.18s) var(--ease-out, ease),
+		color var(--dur-fast, 0.16s) var(--ease-out, ease);
+}
+.fieldset-trigger:hover .fieldset-chevron {
+	color: var(--text-main);
+}
+.fieldset[data-open] .fieldset-chevron {
+	rotate: 180deg;
+}
+.fieldset[data-icon-swap] .fieldset-chevron,
+.fieldset[data-icon-swap][data-open] .fieldset-chevron {
+	rotate: none;
+}
+.fieldset-body {
+	display: grid;
+	grid-template-rows: 0fr;
+	overflow: hidden;
+	transition: grid-template-rows var(--dur-base, 0.3s) var(--ease-out, ease);
+}
+.fieldset[data-open] .fieldset-body,
+.fieldset:not([data-toggleable]) .fieldset-body {
+	grid-template-rows: 1fr;
+}
+.fieldset-inner {
+	min-block-size: 0;
+	overflow: hidden;
+	padding-block-start: 0.35rem;
+	color: var(--text-main);
+	line-height: var(--leading-loose, 1.6);
+	background: transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+	.fieldset-trigger,
+	.fieldset-chevron,
+	.fieldset-body {
+		transition: none;
+	}
+}

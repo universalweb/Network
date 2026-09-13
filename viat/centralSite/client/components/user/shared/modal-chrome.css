@@ -6,6 +6,12 @@
  * modal. NOT registered in the framework manifest: it loads only into modals
  * that import it, instead of into every shadow root. */
 
+ui-modal {
+	/* App shells own inset via .modal-shell — do not stack the core dialog pad. */
+	--modal-body-padding-inline: 0;
+	--modal-body-padding-block-end: 0;
+	--modal-body-padding-block-start: 0;
+}
 .modal-shell {
 	display: flex;
 	flex-direction: column;

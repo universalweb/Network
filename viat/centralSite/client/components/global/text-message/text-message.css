@@ -1,0 +1,71 @@
+:host {
+	display: block;
+	min-inline-size: 0;
+}
+/*
+ * The bubble owns fill, radius and padding together — the surface-frame rule.
+ * It deliberately does NOT set its own alignment: which side of the row it sits
+ * on is ui-message's decision, and a bubble that positioned itself could not be
+ * reused inside anything else.
+ */
+.text-message {
+	display: inline-block;
+	max-inline-size: min(48ch, 100%);
+	min-inline-size: 0;
+	padding: var(--text-message-padding, var(--space-3) var(--space-4));
+	border-radius: var(--text-message-radius, var(--radius-lg, 0.75rem));
+	background: var(--text-message-bg, color-mix(in oklch, var(--text-muted) 12%, transparent));
+	color: var(--text-message-color, var(--text-main));
+	font-size: var(--text-sm);
+	line-height: var(--leading-relaxed, 1.55);
+	/* Long URLs and unbroken tokens must not force the row wider than the
+	   viewport; a chat log is the classic place they arrive. */
+	overflow-wrap: anywhere;
+	white-space: pre-wrap;
+}
+/*
+ * The TAIL is a squared corner on the speaking side, not a drawn triangle: one
+ * radius override instead of a pseudo-element that has to be re-coloured every
+ * time the tone changes.
+ */
+.text-message[data-side='start'][data-tail] {
+	border-end-start-radius: var(--text-message-tail-radius, var(--radius-xs, 0.25rem));
+}
+.text-message[data-side='end'][data-tail] {
+	border-end-end-radius: var(--text-message-tail-radius, var(--radius-xs, 0.25rem));
+}
+/* Your own messages read as the accent surface. */
+.text-message[data-side='end'] {
+	--text-message-bg: color-mix(in oklch, var(--cyan) 22%, transparent);
+}
+/*
+ * Tones tint the fill rather than replacing the text colour: a bubble is a
+ * SURFACE, and re-colouring the words on a tinted ground is what breaks
+ * contrast. Each stays a mix with the page so it works on light and dark.
+ */
+.text-message[data-tone='accent'] {
+	--text-message-bg: color-mix(in oklch, var(--cyan) 18%, transparent);
+}
+.text-message[data-tone='success'] {
+	--text-message-bg: color-mix(in oklch, var(--color-success) 18%, transparent);
+}
+.text-message[data-tone='warning'] {
+	--text-message-bg: color-mix(in oklch, var(--color-warning) 18%, transparent);
+}
+.text-message[data-tone='danger'] {
+	--text-message-bg: color-mix(in oklch, var(--color-danger) 18%, transparent);
+}
+.text-message[data-tone='info'] {
+	--text-message-bg: color-mix(in oklch, var(--color-info) 18%, transparent);
+}
+.text-message[data-tone='neutral'] {
+	--text-message-bg: color-mix(in oklch, var(--text-muted) 10%, transparent);
+}
+.text-message[data-size='sm'] {
+	--text-message-padding: var(--space-2) var(--space-3);
+	font-size: var(--text-xs);
+}
+.text-message[data-size='lg'] {
+	--text-message-padding: var(--space-4) var(--space-5);
+	font-size: var(--text-md);
+}

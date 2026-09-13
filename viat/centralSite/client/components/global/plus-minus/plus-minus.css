@@ -1,0 +1,40 @@
+:host {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	line-height: 0;
+	color: inherit;
+	--icon-color-hover: currentColor;
+	--icon-color-active: currentColor;
+}
+.plus-minus {
+	display: grid;
+	grid-template: 1fr / 1fr;
+	place-items: center;
+	line-height: 0;
+}
+.plus-minus-h,
+.plus-minus-v {
+	grid-area: 1 / 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+.plus-minus-v {
+	transform: rotate(var(--ui-plus-minus-turn, 90deg));
+	transform-origin: 50% 50%;
+	transition: transform 0.5s cubic-bezier(0.45, 0, 0.55, 1);
+}
+:host(:hover),
+:host([data-minus]) {
+	--ui-plus-minus-turn: 0deg;
+}
+@media (prefers-reduced-motion: reduce) {
+	.plus-minus-v {
+		transition: none;
+	}
+}

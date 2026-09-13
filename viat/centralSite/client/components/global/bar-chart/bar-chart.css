@@ -1,0 +1,64 @@
+:host {
+	container-type: inline-size;
+	display: block;
+	inline-size: 100%;
+	min-block-size: 12rem;
+	color: var(--text-main);
+}
+
+.bar-chart {
+	--bar-chart-series: var(--cyan, oklch(0.72 0.14 210));
+}
+
+/* Stacked partial mini-SVGs (same cell) — grid under bars under ticks. */
+.bar-chart-svg-stack {
+	display: grid;
+	inline-size: 100%;
+	aspect-ratio: 400 / 220;
+	min-block-size: 11rem;
+	position: relative;
+}
+
+.bar-chart-svg-stack > .bar-chart-layer {
+	grid-area: 1 / 1;
+	inline-size: 100%;
+	block-size: 100%;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.bar-chart-layer .bar-chart-bar {
+	pointer-events: auto;
+}
+
+.bar-chart-grid {
+	stroke: color-mix(in oklab, var(--border-color, currentColor) 35%, transparent);
+	stroke-width: 1;
+	vector-effect: non-scaling-stroke;
+}
+
+.bar-chart-bar {
+	fill: var(--bar-chart-series);
+}
+
+.bar-chart-tick {
+	fill: var(--text-muted, var(--text-main));
+	font-size: 10px;
+}
+
+.bar-chart-legend {
+	display: block;
+	min-inline-size: 0;
+}
+
+.bar-chart-empty {
+	display: grid;
+	place-items: center;
+	min-block-size: 11rem;
+	color: var(--text-muted, var(--text-main));
+	font-size: var(--text-sm, 0.875rem);
+}
+
+.bar-chart-empty[hidden] {
+	display: none !important;
+}

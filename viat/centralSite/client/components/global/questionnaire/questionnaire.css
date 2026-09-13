@@ -1,0 +1,112 @@
+:host {
+	display: block;
+	inline-size: 100%;
+}
+.questionnaire {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	padding: 1.1rem 1.15rem 1.2rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
+	border-radius: var(--radius-lg, 0.75rem);
+	background: var(--bg-panel);
+	box-shadow: none;
+	color: var(--text-main);
+}
+.questionnaire-head {
+	font-size: var(--text-base, 1rem);
+	font-weight: var(--weight-semibold, 600);
+	line-height: 1.35;
+	letter-spacing: var(--panel-header-letter-spacing, 0.04em);
+	text-transform: var(--panel-header-text-transform, uppercase);
+	color: var(--text-main);
+}
+.questionnaire-desc {
+	font-size: var(--text-sm, 0.875rem);
+	line-height: 1.45;
+	color: var(--text-muted);
+	margin-block-start: -0.35rem;
+}
+.questionnaire-head[hidden],
+.questionnaire-desc[hidden],
+.questionnaire-multi[hidden],
+.questionnaire-pager[hidden],
+.questionnaire ui-progress[hidden] {
+	display: none !important;
+}
+.questionnaire ui-progress {
+	display: block;
+	inline-size: 100%;
+}
+/* Stepper + choice groups breathe inside the card. */
+.questionnaire ui-stepper,
+.questionnaire ui-radio-group {
+	display: block;
+	inline-size: 100%;
+}
+.questionnaire-multi {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+}
+.questionnaire-multi ui-checkbox {
+	display: block;
+	inline-size: 100%;
+}
+.questionnaire-pager {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 0.5rem;
+	padding-block-start: 0.25rem;
+	border-block-start: 1px solid color-mix(in oklch, var(--text-muted) 12%, transparent);
+	margin-block-start: 0.15rem;
+}
+.questionnaire-btn {
+	margin: 0;
+	padding: 0.45rem 0.95rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 28%, transparent);
+	border-radius: var(--radius-sm, 0.35rem);
+	background: transparent;
+	color: var(--text-main);
+	font: inherit;
+	font-size: var(--text-sm, 0.875rem);
+	font-weight: var(--weight-medium, 500);
+	cursor: pointer;
+	transition:
+		background 0.15s ease,
+		border-color 0.15s ease,
+		color 0.15s ease,
+		transform 0.12s ease;
+}
+.questionnaire-btn:hover:not(:disabled) {
+	background: color-mix(in oklch, var(--text-muted) 10%, transparent);
+}
+.questionnaire-btn:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+.questionnaire-next {
+	border-color: color-mix(in oklch, var(--cyan, var(--teal)) 55%, transparent);
+	background: color-mix(in oklch, var(--cyan, var(--teal)) 16%, transparent);
+	color: var(--cyan, var(--teal));
+}
+.questionnaire-next:hover:not(:disabled) {
+	background: color-mix(in oklch, var(--cyan, var(--teal)) 28%, transparent);
+	border-color: var(--cyan, var(--teal));
+}
+.questionnaire-btn:active:not(:disabled) {
+	transform: translateY(1px);
+}
+.questionnaire-btn:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal));
+	outline-offset: 2px;
+}
+.questionnaire[data-variant='step'] {
+	gap: 0.85rem;
+}
+@media (prefers-reduced-motion: reduce) {
+	.questionnaire-btn {
+		transition: none;
+	}
+}

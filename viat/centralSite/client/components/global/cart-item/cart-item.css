@@ -1,0 +1,35 @@
+:host {
+	display: block;
+	container-type: inline-size;
+	container-name: cart-item;
+}
+.cart-item {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto auto;
+	align-items: center;
+	gap: 0.75rem;
+	padding-block: 0.625rem;
+	border-block-end: 1px solid var(--border-light-color, oklch(1 0 0 / 0.08));
+}
+@container cart-item (max-width: 22rem) {
+	.cart-item {
+		grid-template-columns: auto 1fr;
+	}
+	.cart-item-copy {
+		grid-column: 1 / -1;
+	}
+}
+.cart-item-copy {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	min-inline-size: 0;
+}
+.cart-item-label {
+	font-size: var(--text-sm, 0.875rem);
+	font-weight: 550;
+	color: var(--text-main, oklch(0.95 0 0));
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

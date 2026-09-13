@@ -4,20 +4,28 @@
 .td-shell {
 	display: flex;
 	flex-direction: column;
-	padding: 8.75rem var(--space-4) var(--space-12) var(--space-4);
+	/* Shared page pad — chrome clearance is on .shell-scroll, not here. */
+	padding-block: var(--page-pad-block-start) var(--page-pad-block-end);
+	padding-inline: var(--page-pad-inline);
 	gap: var(--space-5);
 	box-sizing: border-box;
 	color: var(--dark-text-medium);
 	font-family: var(--font-mono, monospace);
 }
-.td-shell > *,
-.td-shell .td-grid,
-.td-shell .td-empty {
+.td-shell > * {
 	width: 100%;
 	max-width: 45rem;
 	margin-inline-start: auto;
 	margin-inline-end: auto;
 	box-sizing: border-box;
+}
+/* Status + grid host stay mounted; toggle via ?hidden so list() spots never tear down. */
+.td-shell > [hidden] {
+	display: none;
+}
+/* Outer host takes the page width rules; inner .td-grid keeps the field layout. */
+.td-grid-host {
+	display: block;
 }
 .td-header {
 	display: flex;
@@ -69,6 +77,8 @@
 	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.05));
 	border-radius: var(--radius-sm);
 	background: rgba(255, 255, 255, 0.01);
+	width: 100%;
+	box-sizing: border-box;
 }
 .td-field {
 	display: flex;

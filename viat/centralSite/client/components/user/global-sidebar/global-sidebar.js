@@ -3,8 +3,8 @@ import '../../global/sidebar/sidebar.js';
 import { WebComponent } from 'webcomponent';
 // `<global-sidebar>` — the Viat right-hand drawer. A thin composition over the
 // built-in `<ui-sidebar>`: it sets `side: 'right'` and slots the network-stats
-// panel. The drawer machinery — responsive modes, backdrop, close button and
-// the swipe gesture — all live in `<ui-sidebar>`.
+// panel. Drawer machinery (modes via data-vw × data-mode; default flyout
+// docks on desktop and overlays on xs/sm) lives in `<ui-sidebar>`.
 export class GlobalSidebar extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -20,7 +20,7 @@ export class GlobalSidebar extends WebComponent {
 		},
 	};
 	render() {
-		this.html `
+		this.html`
 			<ui-sidebar .state=${this.state.sidebar}>
 				<network-stats></network-stats>
 			</ui-sidebar>

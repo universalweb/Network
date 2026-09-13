@@ -7,13 +7,13 @@ import {
 	returnValue,
 	untilFalseArray,
 } from '@universalweb/utilitylib';
-import { decode, encode, encodeStrict } from '#utilities/serialize';
-import { hash256, hash512 } from '../hash/shake.js';
 import {
 	randomBuffer,
 	toBase64,
 	toHex,
 } from '#utilities/cryptography/utils';
+import { decode, encode, encodeStrict } from '#utilities/serialize';
+import { hash256, hash512 } from '../hash/shake.js';
 import dilithiumAPI from './dilithium87.js';
 import ed25519Utils from './ed25519.js';
 import signatureScheme from './signatureScheme.js';

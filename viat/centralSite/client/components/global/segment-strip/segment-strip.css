@@ -1,0 +1,95 @@
+:host {
+	display: block;
+	min-inline-size: 0;
+	container-type: inline-size;
+	container-name: segment-strip;
+}
+
+.segment-strip {
+	--segment-flex: 1 1 0;
+	--segment-gap: var(--space-4);
+	--segment-padding: var(--space-4) var(--space-5);
+	--segment-icon-size: var(--space-9);
+	--segment-icon-radius: var(--radius-lg);
+	--segment-item-radius: var(--radius-lg);
+	--segment-label-size: 0.88rem;
+	--segment-value-size: 1.35rem;
+	--segment-description-size: 0.88rem;
+	--segment-divider-inset: var(--space-3);
+	--segment-divider-block-start: var(--segment-divider-inset);
+	--segment-divider-block-end: var(--segment-divider-inset);
+	--segment-divider-inline-start: auto;
+	--segment-divider-inline-end: 0;
+	--segment-divider-inline-size: 1px;
+	--segment-divider-block-size: auto;
+	--segment-divider: color-mix(in oklab, var(--text-muted) 22%, transparent);
+	box-sizing: border-box;
+	/*
+	 * Axis is local flex, not ui-stack. A container query flips row→column
+	 * and remaps divider insets; ui-stack's data-dir lives in its own
+	 * shadow and cannot follow @container. Cells touch (gap: 0) with a
+	 * hairline overlay — a stack gap would replace that.
+	 */
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	flex-wrap: nowrap;
+	gap: 0;
+	min-inline-size: 0;
+	padding: var(--space-5);
+	border-radius: var(--radius-xl);
+	background: var(--bg-panel);
+	border: 1px solid color-mix(in oklab, var(--text-muted) 22%, transparent);
+	box-shadow: none;
+	color: var(--text-main, inherit);
+}
+
+/* Size scale — drives child custom properties via inheritance */
+.segment-strip[data-size='sm'] {
+	--segment-padding: var(--space-3) var(--space-4);
+	--segment-gap: var(--space-3);
+	--segment-icon-size: var(--space-8);
+	--segment-icon-radius: var(--radius-lg);
+	--segment-item-radius: var(--radius-lg);
+	--segment-label-size: 0.75rem;
+	--segment-value-size: 1.1rem;
+	--segment-description-size: 0.78rem;
+	padding: var(--space-4);
+}
+
+.segment-strip[data-size='lg'] {
+	--segment-padding: var(--space-5) var(--space-6);
+	--segment-gap: var(--space-5);
+	--segment-icon-size: var(--space-10);
+	--segment-icon-radius: var(--radius-lg);
+	--segment-label-size: 0.95rem;
+	--segment-value-size: 1.55rem;
+	--segment-description-size: 0.95rem;
+	padding: var(--space-6);
+}
+
+/* Content-sized segments instead of equal columns */
+.segment-strip:not([data-equal]) {
+	--segment-flex: 0 1 auto;
+	justify-content: center;
+}
+
+/* Kill inter-cell dividers (children read --segment-divider) */
+.segment-strip[data-flat] {
+	--segment-divider: none;
+}
+
+/* Stack + horizontal rules when the host is narrow */
+@container segment-strip (max-width: 36rem) {
+	.segment-strip {
+		flex-direction: column;
+		--segment-flex: 1 1 auto;
+		--segment-divider-block-start: auto;
+		--segment-divider-block-end: 0;
+		--segment-divider-inline-start: var(--space-4);
+		--segment-divider-inline-end: var(--space-4);
+		--segment-divider-inline-size: auto;
+		--segment-divider-block-size: 1px;
+		padding: var(--space-5);
+	}
+}

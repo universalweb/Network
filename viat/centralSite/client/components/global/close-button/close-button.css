@@ -3,53 +3,173 @@
 	user-select: none;
 	-webkit-user-select: none;
 	display: inline-flex;
+	/* Painted disc. Hit floor is `--close-hit` (defaults to `--hit-min`). */
+	--close-size: 2rem;
 }
-.cb {
+
+/*
+ * The disc lives on `.close-button-face` at `--close-size`; the TAP TARGET is `--close-hit`
+ * (≥44px) and is painted by `.close-button::before` rather than by the button's own box.
+ *
+ * WHY: the floor used to be `min-inline-size` on `.close-button` itself, so every close
+ * button OCCUPIED 44px of layout no matter how small its disc was. In a dense
+ * header — ui-tracker's detail pane pairs it with a 0.65rem swatch and ~12px
+ * title — that made the button roughly 3.6x the height of the text beside it,
+ * and `data-size='sm'` could not help because the floor outranked it. A centred
+ * overlay keeps the full 44px touch area while the button lays out at its disc
+ * size, so density and accessibility stop fighting. The hit area is never
+ * shrunk, only lifted out of flow.
+ *
+ * `::part(close)` + inheriting `--close-hit` / `--close-size` are the consumer
+ * hatches (shadow encapsulation otherwise blocks overrides).
+ */
+.close-button {
+	display: inline-grid;
+	place-items: center;
+	aspect-ratio: 1;
+	padding: 0;
+	inline-size: auto;
+	block-size: auto;
+	margin: 0;
+	background: transparent;
+	border: 0;
+	border-radius: 999px;
+	color: var(--text-muted, oklch(0.7 0 0 / 0.7));
+	cursor: pointer;
+	line-height: 0;
+	position: relative;
+	isolation: isolate;
+	overflow: visible;
+	-webkit-tap-highlight-color: transparent;
+	transition: color 0.2s ease;
+}
+/* The tap target. Centred on the disc, extends past it, costs no layout. */
+.close-button::before {
+	content: '';
+	position: absolute;
+	inset-inline-start: 50%;
+	inset-block-start: 50%;
+	translate: -50% -50%;
+	inline-size: var(--close-hit, var(--hit-min, max(2.75rem, 44px)));
+	block-size: var(--close-hit, var(--hit-min, max(2.75rem, 44px)));
+	border-radius: 999px;
+}
+.close-button-face {
+	position: relative;
+	display: grid;
+	place-items: center;
+	/* content-box so `--close-size` 2rem + 1px border matches the previous
+	   30px painted disc (min 2rem + transparent border). */
+	box-sizing: content-box;
+	inline-size: var(--close-size);
+	block-size: var(--close-size);
+	border-radius: 999px;
+	border: 1px solid transparent;
+	background: color-mix(in oklab, var(--text-main) 8%, transparent);
+	overflow: hidden;
+	isolation: isolate;
+	transition: background 0.2s ease;
+}
+.close-button-face::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: currentColor;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1);
+}
+.close-button-face::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: radial-gradient(circle at center, currentColor 0%, transparent 68%);
+	opacity: 0;
+	pointer-events: none;
+	transform: scale(0.35);
+	transition:
+		transform 0s linear 0.28s,
+		opacity 0.28s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/*
+ * Size steps. `sm` was 1.8rem against a 2rem default — a 10% delta nobody could
+ * see, which is why it read as "not working". The scale now moves in real
+ * increments; the tap target is unaffected at every step.
+ */
+.close-button[data-size='xs'] {
+	--close-size: 1.15rem;
+}
+.close-button[data-size='sm'] {
+	--close-size: 1.5rem;
+}
+.close-button[data-size='lg'] {
+	--close-size: 2.5rem;
+}
+
+.close-button-icon {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 1.875rem;
-	height: 1.875rem;
-	background: transparent;
-	border: 1px solid transparent;
-	border-radius: var(--radius-md);
-	color: var(--text-muted, rgba(255, 255, 255, 0.4));
-	cursor: pointer;
-	padding: 0;
-	transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.cb-icon {
 	transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
 }
-.cb:hover {
+
+.close-button:hover {
 	color: var(--text-main);
-	border-color: var(--dark-divider, rgba(255, 255, 255, 0.18));
-	background: rgba(255, 255, 255, 0.04);
 }
-.cb:hover .cb-icon {
-	transform: rotate(90deg) scale(1.05);
+.close-button:hover .close-button-face {
+	background: color-mix(in oklab, var(--text-main) 10%, transparent);
+}
+
+.close-button:hover .close-button-icon {
+	transform: rotate(90deg);
 	color: var(--color-danger);
 }
-.cb:active {
-	transform: scale(0.92);
+
+.close-button:hover .close-button-face::after {
+	opacity: 0.08;
 }
-.cb:active .cb-icon {
-	transform: rotate(180deg) scale(0.9);
+.close-button:active .close-button-face::after {
+	opacity: 0.1;
+	transition-duration: 0.08s;
+}
+.close-button:active .close-button-face::before {
+	opacity: 0.16;
+	transform: scale(2.4);
+	transition:
+		transform 0.32s cubic-bezier(0.2, 0, 0, 1),
+		opacity 0.08s linear;
+}
+
+.close-button:active .close-button-icon {
+	transform: rotate(180deg);
 	transition-duration: 0.12s;
 }
-.cb:focus-visible {
-	outline: none;
-	border-color: var(--cyan);
-	box-shadow: 0 0 0 2px color-mix(in oklab, var(--cyan) 25%, transparent);
+
+.close-button:focus-visible {
+	outline: 1px solid var(--focus-ring-color, var(--teal));
+	outline-offset: 2px;
 }
+.close-button:focus-visible .close-button-face {
+	background: color-mix(in oklab, var(--cyan) 16%, transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
-	.cb,
-	.cb-icon {
-		transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+	.close-button,
+	.close-button-face,
+	.close-button-icon,
+	.close-button-face::before,
+	.close-button-face::after {
+		transition: none;
 	}
-	.cb:hover .cb-icon,
-	.cb:active,
-	.cb:active .cb-icon {
+	.close-button-face::before {
+		transform: none;
+		opacity: 0;
+	}
+	.close-button:hover .close-button-icon,
+	.close-button:active .close-button-icon {
 		transform: none;
 	}
 }

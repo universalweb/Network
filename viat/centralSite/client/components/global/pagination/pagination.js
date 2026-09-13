@@ -1,6 +1,6 @@
 /*
 	DESCRIPTION: ui-pagination — numbered page navigation with first/prev/next/last
-	and ellipsis truncation (paged-list only has prev/next). Slots rebuild into
+	and ellipsis truncation (ui-collection only has prev/next). Slots rebuild into
 	`state.items` and render via `list('items', this.slotRow)` (light html — no
 	`^html` string builder). Controlled: clicking clamps and emits; the consumer
 	owns `page`.
@@ -102,9 +102,9 @@ export class UIPagination extends WebComponent {
 			});
 		};
 		if (this.state.showEdges) {
-			pushNav('pg-first', '«', 1, page <= 1, 'First page');
+			pushNav('pagination-first', '«', 1, page <= 1, 'First page');
 		}
-		pushNav('pg-prev', '‹', page - 1, page <= 1, 'Previous page');
+		pushNav('pagination-prev', '‹', page - 1, page <= 1, 'Previous page');
 		const pageSlots = this.pages(page, total);
 		const pageSlotCount = pageSlots.length;
 		for (let index = 0; index < pageSlotCount; index += 1) {
@@ -124,20 +124,20 @@ export class UIPagination extends WebComponent {
 				});
 			}
 		}
-		pushNav('pg-next', '›', page + 1, page >= total, 'Next page');
+		pushNav('pagination-next', '›', page + 1, page >= total, 'Next page');
 		if (this.state.showEdges) {
-			pushNav('pg-last', '»', total, page >= total, 'Last page');
+			pushNav('pagination-last', '»', total, page >= total, 'Last page');
 		}
 		this.state.items = slots;
 	}
 	slotRow(item) {
 		if (item.kind === 'gap') {
-			return html`<span class="pg-gap" aria-hidden="true">…</span>`;
+			return html`<span class="pagination-gap" aria-hidden="true">…</span>`;
 		}
 		if (item.kind === 'nav') {
-			return html`<button type="button" class=${`pg-nav ${item.cls}`} data-page=${item.page} ?disabled=${item.disabled} aria-label=${item.label}>${item.glyph}</button>`;
+			return html`<button type="button" class=${`pagination-nav ${item.cls}`} part="nav" data-page=${item.page} ?disabled=${item.disabled} aria-label=${item.label}>${item.glyph}</button>`;
 		}
-		return html`<button type="button" class="pg-page" data-page=${item.page} ?data-active=${item.active} aria-current=${item.active ? 'page' : false}>${item.page}</button>`;
+		return html`<button type="button" class="pagination-page" part="page" data-page=${item.page} ?data-active=${item.active} aria-current=${item.active ? 'page' : false}>${item.page}</button>`;
 	}
 	slotKey(item) {
 		return item.id;

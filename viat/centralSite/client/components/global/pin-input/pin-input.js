@@ -1,6 +1,6 @@
 /*
-	DESCRIPTION: ui-pin-input — a segmented PIN / OTP entry (MUI "OTP", Radix
-	"PinInput"): N single-character boxes with auto-advance, backspace-to-previous,
+	DESCRIPTION: ui-pin-input — a segmented PIN / OTP entry: N single-character boxes
+	with auto-advance, backspace-to-previous,
 	arrow nav, paste/SMS-autofill distribution, and an optional numeric filter +
 	masking. Use case: wallet unlock / one-time codes.
 	ARCHITECTURE: boxes are light `list('boxes', this.boxRow)` <input>s in ONE
@@ -247,11 +247,7 @@ export class UIPinInput extends WebComponent {
 	/* Light html row — never interpolates value (uncontrolled). Attrs seed once;
 	   masked/type/disabled updates use syncBoxAttrs. */
 	boxRow(item) {
-		const index = item.id;
-		const inputType = this.state.masked ? 'password' : 'text';
-		const inputMode = this.state.type === 'numeric' ? 'numeric' : 'text';
-		const autoComplete = index === 0 ? 'one-time-code' : 'off';
-		return html`<input class="pin-box" data-index=${index} type=${inputType} inputmode=${inputMode} maxlength="1" aria-label=${`Digit ${index + 1}`} autocomplete=${autoComplete} ?disabled=${this.state.disabled}>`;
+		return html`<input class="pin-box" data-index=${item.id} type=${this.state.masked ? 'password' : 'text'} inputmode=${this.state.type === 'numeric' ? 'numeric' : 'text'} maxlength="1" aria-label=${`Digit ${item.id + 1}`} autocomplete=${item.id === 0 ? 'one-time-code' : 'off'} ?disabled=${this.state.disabled}>`;
 	}
 	boxKey(item) {
 		return item.id;

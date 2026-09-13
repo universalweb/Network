@@ -4,22 +4,24 @@
 :host {
 	display: block;
 }
-.al-shell {
+.accounts-list-shell {
 	display: flex;
 	flex-direction: column;
-	padding: 8.75rem var(--space-4) var(--space-12) var(--space-4);
+	/* Shared page pad — chrome clearance is on .shell-scroll, not here. */
+	padding-block: var(--page-pad-block-start) var(--page-pad-block-end);
+	padding-inline: var(--page-pad-inline);
 	gap: var(--space-5);
 	box-sizing: border-box;
 	color: var(--dark-text-medium);
 	font-family: var(--font-mono, monospace);
 }
-.al-shell > * {
+.accounts-list-shell > * {
 	width: 100%;
 	max-width: var(--center-max-width, 1100px);
 	margin-inline-start: auto;
 	margin-inline-end: auto;
 }
-.al-title-header {
+.accounts-list-title-header {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -31,16 +33,16 @@
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	border-radius: var(--radius-sm);
 }
-.al-title-block {
+.accounts-list-title-block {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-3);
 	color: var(--teal);
 }
-.al-title-icon {
+.accounts-list-title-icon {
 	color: var(--teal);
 }
-.al-title {
+.accounts-list-title {
 	font-size: var(--text-md);
 	letter-spacing: 0.12em;
 	text-transform: uppercase;

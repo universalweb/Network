@@ -15,12 +15,9 @@
 	line-height: 1;
 	padding: 0.3em 0.7em;
 	white-space: nowrap;
-	transform-origin: center;
 	transition:
 		background 0.16s ease,
-		border-color 0.16s ease,
-		transform 0.12s ease;
-	will-change: transform;
+		border-color 0.16s ease;
 }
 /* Sizes */
 .chip[data-size='sm'] { font-size: var(--text-2xs, 0.7rem); padding: 0.24em 0.6em; gap: 0.32em; }
@@ -28,8 +25,6 @@
 .chip[data-size='lg'] { font-size: var(--text-md, 0.95rem); padding: 0.38em 0.9em; }
 /* ── Interactivity ───────────────────────────────────────────────────────── */
 .chip[data-interactive] { cursor: pointer; }
-.chip[data-interactive]:hover { transform: translateY(-1px); }
-.chip[data-interactive]:active { transform: translateY(0); }
 .chip:focus-visible {
 	outline: 2px solid var(--color-info, #3b82f6);
 	outline-offset: 2px;
@@ -54,6 +49,21 @@
 .chip[data-selected][data-interactive] {
 	background: color-mix(in oklab, currentColor 22%, transparent);
 	border-color: currentColor;
+}
+/* Selected + interactive — leading check (independent of removable). */
+.chip-check {
+	display: none;
+	align-items: center;
+	inline-size: 1em;
+	block-size: 1em;
+	flex: 0 0 auto;
+}
+.chip[data-selected][data-interactive] .chip-check {
+	display: inline-flex;
+}
+.chip-check ui-icon {
+	inline-size: 1em;
+	block-size: 1em;
 }
 /* ── Leading slot (avatar/icon) ──────────────────────────────────────────── */
 .chip-leading {

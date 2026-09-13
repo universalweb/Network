@@ -1,7 +1,8 @@
 /*
  * Global configuration. MUST be the first import of every page entry
- * (index.js, preview.js) — core/debug/logger.js reads globalThis.CONFIG at
- * module init, so this has to execute before any core module loads.
+ * (directly, or via a page-local *Config.js that imports this file) —
+ * core/debug/logger.js reads globalThis.CONFIG at module init, so this
+ * has to execute before any core module loads.
  */
 globalThis.CONFIG = {
 	production: false,

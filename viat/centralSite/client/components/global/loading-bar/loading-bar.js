@@ -1,46 +1,43 @@
-import { WebComponent } from '../../core/index.js';
-function clampPercent(value) {
-	if (typeof value !== 'number' || Number.isNaN(value)) {
-		return 0;
-	}
-	if (value < 0) {
-		return 0;
-	}
-	if (value > 100) {
-		return 100;
-	}
-	return value;
-}
+/*
+	DESCRIPTION: ui-loading-bar — unknown-percent activity.
+	Composes <ui-progress> in indeterminate mode. Default is the segmented
+	fill-wave (same cells as progress). A continuous sweep is available via
+	segmentShape: 'none'. This is NOT a determinate progress bar.
+	── USAGE ────────────────────────────────────────────────────────────
+	  <ui-loading-bar .state.label=${'Working'}></ui-loading-bar>
+	  <ui-loading-bar .state.segmentShape=${'none'} .state.variant=${'liquid'}></ui-loading-bar>
+*/
+import '../progress/progress.js';
+import { WebComponent } from 'webcomponent';
 export class UILoadingBar extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
 		loadingBar: './loading-bar.css',
 	};
 	static state = {
-		indeterminate: false,
 		label: '',
-		showValue: false,
-		value: 0,
+		indeterminate: true,
+		tone: 'accent',
+		size: 'md',
+		variant: 'solid',
+		segmentShape: 'round',
+		segments: 16,
+		trackFit: 'fill',
 	};
-	/* Single clamped source for the fill width, aria-valuenow, and the readout. */
-	get percent() {
-		return clampPercent(this.state.value);
-	}
 	render() {
-		this.html `
-			<div
-				class="bar"
-				?data-indeterminate=${this.state.indeterminate}
-				role="progressbar"
-				aria-label=${this.state.label}
-				aria-valuenow=${this.percent}
-				aria-valuemin="0"
-				aria-valuemax="100">
-				<div class="bar-track">
-					<div class="bar-fill" style=${`width:${this.percent}%`}></div>
-				</div>
-				${this.state.showValue ? this.htmlElement `<span class="bar-value">${`${Math.round(this.percent)}%`}</span>` : ''}
-			</div>
+		this.html`
+			<ui-progress
+				.state.indeterminate=${true}
+				.state.showValue=${false}
+				.state.animated=${true}
+				.state.label=${this.state.label}
+				.state.tone=${this.state.tone || 'accent'}
+				.state.size=${this.state.size || 'md'}
+				.state.variant=${this.state.variant || 'solid'}
+				.state.segmentShape=${this.state.segmentShape || 'round'}
+				.state.segments=${this.state.segments}
+				.state.trackFit=${this.state.trackFit || 'fill'}
+				aria-label=${this.state.label || 'Loading'}></ui-progress>
 		`;
 	}
 }

@@ -1,6 +1,6 @@
 import { collectClassChain } from '../attrs/staticConfig.js';
 import {
-	eachArray, hasOwn, isArray, isCSSStyleSheet, isString,
+	eachArray, getProto, hasOwn, isArray, isCSSStyleSheet, isString, queueAsyncError,
 } from '../utilities.js';
 import { loadSheet } from './css-loader.js';
 import { applyHeadStyles, mergeStyleEntries } from './headStyles.js';
@@ -17,22 +17,88 @@ const COMPONENT_LAYER = 'uwc.components';
 export function layerComponentSheet(cssText) {
 	return `@layer ${COMPONENT_LAYER} {\n${cssText}\n}`;
 }
+/*
+ * Structural test: the framework base is the one class in a component chain
+ * that extends HTMLElement directly. The old name-string fallback
+ * (`owner.name === 'WebComponent'`) broke under minification and matched any
+ * stranger class that happened to share the name.
+ */
 function sheetIsFrameworkOwned(owner) {
-	return owner === globalThis.WebComponent || (owner && owner.name === 'WebComponent');
+	return owner != null && getProto(owner) === HTMLElement;
 }
-function reLayer(sheet) {
-	if (!isCSSStyleSheet(sheet)) {
-		return sheet;
-	}
+function serializeSheetRules(sheet) {
 	const rules = sheet.cssRules;
 	let cssText = '';
 	const rulesLength = rules.length;
 	for (let ruleIndex = 0; ruleIndex < rulesLength; ruleIndex++) {
 		cssText += `${rules[ruleIndex].cssText}\n`;
 	}
+	return cssText;
+}
+function reLayer(sheet) {
+	if (!isCSSStyleSheet(sheet)) {
+		return sheet;
+	}
 	const layered = new CSSStyleSheet();
-	layered.replaceSync(layerComponentSheet(cssText));
+	layered.replaceSync(layerComponentSheet(serializeSheetRules(sheet)));
 	return layered;
+}
+/*
+ * Warm-adoption run merging. adoptedStyleSheets attach cost scales with ARRAY
+ * LENGTH per shadow root, and the ~11 framework module sheets head every
+ * class's compiled array — so every instance paid a 12-sheet attach. Each run
+ * of CONSECUTIVE framework-owned sheets collapses into one constructed sheet:
+ * rules concatenate in the exact order the separate sheets cascaded (list
+ * order × rule order = total order), so specificity and @layer
+ * first-declaration precedence are untouched. Runs cache by member identity —
+ * every class shares ONE merged sheet object, keeping the browser's
+ * shared-contents optimization across all roots. compiledStyles (the per-key
+ * Map) stays unmerged: addStyle/removeStyle fork it and drop back to
+ * individual-sheet adoption, and constructed sheets cannot carry @import, so
+ * cssRules serialization is lossless.
+ */
+// @engram em:network/concept/warm-adoption-sheet-merge-consecutive-framework-sheets-colla — consecutive-run merge preserves cascade order; per-key map stays unmerged for the fork path
+const sheetIdRegistry = new WeakMap();
+const mergedRunCache = new Map();
+let sheetIdCounter = 0;
+function sheetIdFor(sheet) {
+	let sheetId = sheetIdRegistry.get(sheet);
+	if (sheetId === undefined) {
+		sheetIdCounter += 1;
+		sheetId = sheetIdCounter;
+		sheetIdRegistry.set(sheet, sheetId);
+	}
+	return sheetId;
+}
+function mergedSheetForRun(runSheets) {
+	const runLength = runSheets.length;
+	let runKey = '';
+	for (let runIndex = 0; runIndex < runLength; runIndex++) {
+		runKey += `${sheetIdFor(runSheets[runIndex])}|`;
+	}
+	let merged = mergedRunCache.get(runKey);
+	if (merged === undefined) {
+		let cssText = '';
+		for (let runIndex = 0; runIndex < runLength; runIndex++) {
+			cssText += serializeSheetRules(runSheets[runIndex]);
+		}
+		merged = new CSSStyleSheet();
+		merged.replaceSync(cssText);
+		mergedRunCache.set(runKey, merged);
+	}
+	return merged;
+}
+function flushFrameworkRun(runSheets, adoption) {
+	const runLength = runSheets.length;
+	if (runLength === 0) {
+		return;
+	}
+	if (runLength === 1) {
+		adoption.push(runSheets[0]);
+	} else {
+		adoption.push(mergedSheetForRun(runSheets));
+	}
+	runSheets.length = 0;
 }
 export function styleSheet(source, metaUrl) {
 	if (isArray(source)) {
@@ -43,18 +109,22 @@ export function styleSheet(source, metaUrl) {
 		}
 		return Promise.all(sheetTasks);
 	}
-	const key = metaUrl ? new URL(source, metaUrl).toString() : source;
-	if (sheetCache.has(key)) {
-		return sheetCache.get(key);
-	}
+	/*
+	 * metaUrl path: delegate straight to css-loader, the single robust fetch
+	 * cache (in-flight dedup + evict-on-failure retry). A local promise cache
+	 * here used to double the caching AND poison permanently on a fetch reject.
+	 * The inline (no-metaUrl) path stays synchronous and is cached below, keyed
+	 * by CSS text — no fetch, no rejection, safe to hold forever.
+	 */
 	if (metaUrl) {
-		const sheetPromise = loadSheet(key);
-		sheetCache.set(key, sheetPromise);
-		return sheetPromise;
+		return loadSheet(new URL(source, metaUrl).toString());
+	}
+	if (sheetCache.has(source)) {
+		return sheetCache.get(source);
 	}
 	const sheet = new CSSStyleSheet();
 	sheet.replaceSync(source);
-	sheetCache.set(key, sheet);
+	sheetCache.set(source, sheet);
 	return sheet;
 }
 /*
@@ -86,6 +156,7 @@ export async function compileStyles(ComponentClass) {
 			ordered.push({
 				key,
 				sheet: value,
+				frameworkOwned: sheetIsFrameworkOwned(owner),
 			});
 			continue;
 		}
@@ -95,19 +166,30 @@ export async function compileStyles(ComponentClass) {
 		const slot = {
 			key,
 			sheet: null,
+			frameworkOwned: sheetIsFrameworkOwned(owner),
 		};
 		ordered.push(slot);
 		tasks.push(fillSheetSlot(slot, value, owner));
 	}
 	await Promise.all(tasks);
 	const map = new Map();
+	const adoption = [];
+	const runSheets = [];
 	const orderedLength = ordered.length;
 	for (let slotIndex = 0; slotIndex < orderedLength; slotIndex++) {
-		map.set(ordered[slotIndex].key, ordered[slotIndex].sheet);
+		const slot = ordered[slotIndex];
+		map.set(slot.key, slot.sheet);
+		if (slot.frameworkOwned && isCSSStyleSheet(slot.sheet)) {
+			runSheets.push(slot.sheet);
+			continue;
+		}
+		flushFrameworkRun(runSheets, adoption);
+		adoption.push(slot.sheet);
 	}
+	flushFrameworkRun(runSheets, adoption);
 	return {
 		map,
-		array: Object.freeze([...map.values()]),
+		array: Object.freeze(adoption),
 	};
 }
 /*
@@ -163,14 +245,8 @@ function buildScopedSheet(sheet, tagSelector) {
 	if (!isCSSStyleSheet(sheet)) {
 		return null;
 	}
-	const rules = sheet.cssRules;
-	let cssText = '';
-	const rulesLength = rules.length;
-	for (let ruleIndex = 0; ruleIndex < rulesLength; ruleIndex++) {
-		cssText += `${rules[ruleIndex].cssText}\n`;
-	}
 	const scoped = new CSSStyleSheet();
-	scoped.replaceSync(`@layer ${COMPONENT_LAYER} {\n@scope (${tagSelector}) {\n${scopeHostSelectors(cssText)}\n}\n}`);
+	scoped.replaceSync(`@layer ${COMPONENT_LAYER} {\n@scope (${tagSelector}) {\n${scopeHostSelectors(serializeSheetRules(sheet))}\n}\n}`);
 	return scoped;
 }
 function injectLightStyles(ComponentClass, styleMap, tagSelector) {
@@ -210,7 +286,16 @@ function injectLightStyles(ComponentClass, styleMap, tagSelector) {
 		document.adoptedStyleSheets = [...document.adoptedStyleSheets, ...scoped];
 	}
 }
-export async function applyStyles() {
+/*
+ * Deliberately NOT an async function. An async applyStyles returns a promise
+ * even when every branch completes synchronously, which made handleConnect's
+ * isPromiseLike guard dead code — every instance paid the await's microtask
+ * hops. The warm per-class path (instances 2..N: compiled sheets already on
+ * the class) now returns undefined, so the guard actually skips; only the one
+ * cold compile per class routes through the async tail, and runHook's
+ * containment covers both shapes (sync throw and async rejection alike).
+ */
+export function applyStyles() {
 	const ComponentClass = this.constructor;
 	/*
 	 * Unscoped light DOM (useShadow=false + scopeStyles=false): emit normal
@@ -221,7 +306,7 @@ export async function applyStyles() {
 	 */
 	if (!this.shadowRoot && ComponentClass.scopeStyles === false) {
 		applyHeadStyles(ComponentClass);
-		return;
+		return undefined;
 	}
 	if (this.styleMap) {
 		if (this.shadowRoot) {
@@ -229,18 +314,29 @@ export async function applyStyles() {
 		} else {
 			injectLightStyles(ComponentClass, this.styleMap, this.localName);
 		}
-		return;
+		return undefined;
 	}
+	if (hasOwn(ComponentClass, 'compiledStylesArray')) {
+		if (this.shadowRoot) {
+			this.shadowRoot.adoptedStyleSheets = ComponentClass.compiledStylesArray;
+		} else {
+			injectLightStyles(ComponentClass, ComponentClass.compiledStyles, this.localName);
+		}
+		return undefined;
+	}
+	return applyStylesCold(this, ComponentClass);
+}
+async function applyStylesCold(component, ComponentClass) {
 	const result = await ensureCompiledStyles(ComponentClass);
-	if (!this.shadowRoot) {
-		injectLightStyles(ComponentClass, result.map, this.localName);
+	if (!component.shadowRoot) {
+		injectLightStyles(ComponentClass, result.map, component.localName);
 		return;
 	}
 	/*
 	 * addStyle/importStyles may have forked a styleMap during the await above; if
 	 * so it holds the live sheet set and supersedes the freshly compiled defaults.
 	 */
-	this.shadowRoot.adoptedStyleSheets = this.styleMap ? [...this.styleMap.values()] : result.array;
+	component.shadowRoot.adoptedStyleSheets = component.styleMap ? [...component.styleMap.values()] : result.array;
 }
 export function forkStyleMap() {
 	if (this.styleMap) {
@@ -304,7 +400,12 @@ export function importStyles(source) {
 	const list = isArray(source) ? source : [source];
 	const listLength = list.length;
 	for (let index = 0; index < listLength; index++) {
-		this.addStyle(`imported-${index}`, list[index]);
+		/*
+		 * Write-only setter — the declarative `.importStyles=` push can't return a
+		 * promise, so route addStyle's rejection (a bad value / mis-declared path)
+		 * to the async-error sink instead of leaking an unhandledrejection.
+		 */
+		this.addStyle(`imported-${index}`, list[index]).catch(queueAsyncError);
 	}
 }
 export function hasStyle(key) {

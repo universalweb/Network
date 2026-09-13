@@ -1,0 +1,41 @@
+:host {
+	display: block;
+	min-block-size: 0;
+}
+.scroll-area {
+	position: relative;
+	min-block-size: 0;
+	border-radius: inherit;
+}
+.scroll-area-viewport {
+	block-size: 100%;
+	/* max-block-size is set INLINE by viewportStyle(). It is not an inherited
+	   property, so it cannot be handed down from `.scroll-area`. */
+	overflow: auto;
+	overscroll-behavior: contain;
+	scrollbar-gutter: stable;
+	scrollbar-width: thin;
+	scrollbar-color: color-mix(in oklch, var(--text-muted) 45%, transparent) transparent;
+}
+.scroll-area[data-orientation='vertical'] .scroll-area-viewport {
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+.scroll-area[data-orientation='horizontal'] .scroll-area-viewport {
+	overflow-x: auto;
+	overflow-y: hidden;
+}
+.scroll-area[data-orientation='both'] .scroll-area-viewport {
+	overflow: auto;
+}
+.scroll-area-viewport::-webkit-scrollbar {
+	inline-size: 0.45rem;
+	block-size: 0.45rem;
+}
+.scroll-area-viewport::-webkit-scrollbar-thumb {
+	background: color-mix(in oklch, var(--text-muted) 40%, transparent);
+	border-radius: 999px;
+}
+.scroll-area-viewport::-webkit-scrollbar-track {
+	background: transparent;
+}

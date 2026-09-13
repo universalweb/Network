@@ -30,7 +30,7 @@
 	<hr style="margin: 25px auto; width: 75%" />
 </div>
 <h4 class="mono">AGENT USAGE</h4>
-CLAUDE & AGENTS files are included by default review usage rules for AI work in agent/AGENT_USAGE_RULES.md
+CLAUDE & AGENTS files are included by default review usage rules for AI work in AGENTS.md and CLAUDE.MD
 Web is fine other code must be done by a human and reviewed by AI before submitting any PR.
 <hr />
 <h4 class="mono">BROAD CODE OBJECTIVES</h4>

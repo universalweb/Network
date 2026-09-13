@@ -1,0 +1,53 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	container-type: inline-size;
+}
+.scheduler {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+.scheduler-toolbar {
+	display: flex;
+	justify-content: flex-end;
+}
+.scheduler-month {
+	min-inline-size: 0;
+}
+.scheduler-month[hidden],
+.scheduler-week[hidden],
+.scheduler-day[hidden] {
+	display: none !important;
+}
+.scheduler-week {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: 0.4rem;
+}
+.scheduler-day {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+	padding: 0.65rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 16%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: color-mix(in oklch, var(--bg-panel) 78%, transparent);
+}
+.scheduler-day-head {
+	font-size: var(--text-sm, 0.875rem);
+	font-weight: var(--weight-semibold, 600);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+.scheduler-day-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+@container (max-width: 40rem) {
+	.scheduler-week {
+		grid-template-columns: 1fr;
+	}
+}

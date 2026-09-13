@@ -15,12 +15,12 @@
 	background: transparent;
 }
 /* The single scroll surface: a fixed full-viewport box UNDER the chrome bars
-   (z-index 40). Its scrollbar runs full-height behind both bars; the block-axis
+   (--z-dock). Its scrollbar runs full-height behind both bars; the block-axis
    padding keeps content clear of them so nothing is trapped underneath. */
 .shell-scroll {
 	position: fixed;
 	inset: 0;
-	z-index: 1;
+	z-index: var(--z-base);
 	overflow-y: auto;
 	overflow-x: hidden;
 	/* Always reserve the vertical scrollbar's gutter. This is the app's ONLY
@@ -35,6 +35,7 @@
 	overscroll-behavior: contain;
 	padding-block-start: var(--top-bar-clearance);
 	padding-block-end: var(--bottom-bar-clearance);
+	transition: padding-inline-end 0.22s ease;
 }
 .shell-body {
 	display: grid;
@@ -43,9 +44,9 @@
 	position: relative;
 	min-block-size: 100%;
 }
-/* The sidebar is a fixed-position flyout in every mode — it overlays the page
-   and never reserves a column or displaces dashboard content, so the third
-   track stays 0. See ui-sidebar#mode. */
+/* The sidebar host is fixed, so the third grid track stays 0. Desktop flyout
+   (default) pushes content via padding-inline-end on this scroll surface when
+   open; overlay modes (xs/sm, coverup, full) do not reflow. See ui-sidebar#mode. */
 .shell-body > * {
 	min-width: 0;
 	min-height: 0;
@@ -61,13 +62,16 @@
 	flex: 1;
 	min-height: 0;
 }
-.shell-page:not(.is-page-wallet) > app-dashboard,
-.shell-page:not(.is-page-wallet) > mobile-dashboard,
-.shell-page:not(.is-page-swap) > swap-page,
-.shell-page:not(.is-page-explorer) > explorer-page,
-.shell-page:not(.is-page-accounts) > accounts-list-page,
-.shell-page:not(.is-page-account) > account-detail-page,
-.shell-page:not(.is-page-transaction) > transaction-detail-page {
+/* Active-page visibility keyed on the host's data-route-view attribute, set by
+   AppShell.reflectRouteView from the router store's activeView. Same page->view
+   mapping as before; detail routes (account/transaction) carry their own view. */
+:host(:not([data-route-view="wallet"])) .shell-page > app-dashboard,
+:host(:not([data-route-view="wallet"])) .shell-page > mobile-dashboard,
+:host(:not([data-route-view="swap"])) .shell-page > swap-page,
+:host(:not([data-route-view="explorer"])) .shell-page > explorer-page,
+:host(:not([data-route-view="accounts"])) .shell-page > accounts-list-page,
+:host(:not([data-route-view="account"])) .shell-page > account-detail-page,
+:host(:not([data-route-view="transaction"])) .shell-page > transaction-detail-page {
 	display: none;
 }
 /* Viewport-scoped dashboard swap. Both <app-dashboard> and
@@ -84,10 +88,18 @@
 :host([data-vw="sm"]) app-dashboard {
 	display: none;
 }
+:host([data-sidebar-open][data-sidebar-mode='flyout']:not([data-vw='xs']):not([data-vw='sm'])) .shell-scroll {
+	padding-inline-end: calc(var(--sidebar-rail-width) + var(--space-6, 1.5rem));
+}
+@media (prefers-reduced-motion: reduce) {
+	.shell-scroll {
+		transition: none;
+	}
+}
 /* Mobile (xs/sm < 768px): the page fills the shell as a single cell; the dock
    is a fixed bottom overlay (global-dock.css) floating above it, and the
-   bottom-bar is suppressed. The sidebar is left alone: it runs in
-   `mode-coverup` here and floats as its own drawer. */
+   bottom-bar is suppressed. The sidebar overlays as a full-viewport drawer
+   and does not reflow the page. */
 :host([data-vw="xs"]) .shell-body,
 :host([data-vw="sm"]) .shell-body {
 	grid-template-columns: minmax(0, 1fr);
@@ -107,7 +119,7 @@
 }
 /* Bottom bar is permanently suppressed on mobile — the dock takes its
    vertical slot. The sidebar is intentionally NOT hidden here: its own
-   mode-coverup CSS keeps the shell translated off-screen until the user
+   overlay CSS keeps the shell translated off-screen until the user
    opens it, and hiding it outright would kill the swipe-open gesture. */
 :host([data-vw="xs"]) global-bottom-bar,
 :host([data-vw="sm"]) global-bottom-bar {

@@ -1,9 +1,6 @@
 :host {
 	display: block;
 }
-:host([hidden]) {
-	display: none;
-}
 .divider {
 	--divider-color: var(--surface-border, var(--dark-divider, rgba(255, 255, 255, 0.12)));
 	color: var(--text-muted, rgba(255, 255, 255, 0.55));

@@ -1,0 +1,42 @@
+/*
+ * Pane chrome. Link rows live in ui-nav-link. Width follows content with a
+ * menu-like min so short lists do not collapse under the viewport seed size.
+ * Slide/opacity from host data-active + --slide-offset (PaneTrack).
+ */
+:host {
+	display: block;
+	box-sizing: border-box;
+	/* Content-sized — small floor so empty panes don't collapse; no 11rem clamp. */
+	inline-size: max-content;
+	min-inline-size: 8rem;
+	max-inline-size: min(42rem, calc(100vw - 2rem));
+}
+.nav-pane-inner {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	padding: 0.3rem;
+	box-sizing: border-box;
+	min-inline-size: 8rem;
+}
+.nav-links {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-inline-size: 100%;
+}
+.nav-links[hidden] {
+	display: none;
+}
+/*
+ * Slot wrapper must not add padding (empty-slot bottom pad bug). Pane-inner
+ * owns the only inset; an unassigned <slot> has zero box size.
+ */
+.nav-slot {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	min-inline-size: 0;
+	padding: 0;
+}
+

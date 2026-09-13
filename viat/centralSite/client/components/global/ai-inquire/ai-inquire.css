@@ -5,7 +5,7 @@
 [hidden] {
 	display: none !important;
 }
-.inq {
+.ai-inquire {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-2);
@@ -15,41 +15,41 @@
 	padding-block: var(--space-3);
 	padding-inline: var(--space-3);
 }
-.inq-head {
+.ai-inquire-head {
 	display: flex;
 	align-items: center;
 	gap: var(--space-2);
 }
-.inq-icon {
+.ai-inquire-icon {
 	flex: none;
 	color: var(--cyan, currentColor);
 }
-.inq-q {
+.ai-inquire-q {
 	font-size: var(--text-sm);
 	line-height: 1.45;
 	color: var(--text-main);
 }
-.inq-choice {
+.ai-inquire-choice {
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--space-2);
 }
-.inq-text {
+.ai-inquire-text {
 	display: flex;
 	gap: var(--space-2);
 }
-.inq-input {
+.ai-inquire-input {
 	flex: 1 1 auto;
 	min-inline-size: 0;
 }
-.inq-answer {
+.ai-inquire-answer {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-1);
 	font-size: var(--text-sm);
 	color: var(--color-success, oklch(0.78 0.16 155));
 }
-.inq-answer-text {
+.ai-inquire-answer-text {
 	color: var(--text-main);
 	overflow-wrap: anywhere;
 }

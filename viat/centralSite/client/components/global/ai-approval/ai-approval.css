@@ -6,7 +6,7 @@
 [hidden] {
 	display: none !important;
 }
-.apv {
+.ai-approval {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-2);
@@ -16,47 +16,47 @@
 	padding-block: var(--space-3);
 	padding-inline: var(--space-3);
 }
-.apv[data-decided='rejected'] {
+.ai-approval[data-decided='rejected'] {
 	border-color: color-mix(in oklab, var(--color-danger, oklch(0.68 0.2 25)) 40%, transparent);
 	background: color-mix(in oklab, var(--color-danger, oklch(0.68 0.2 25)) 7%, var(--bg-panel, rgba(255, 255, 255, 0.02)));
 }
-.apv[data-decided='approved'] {
+.ai-approval[data-decided='approved'] {
 	border-color: color-mix(in oklab, var(--color-success, oklch(0.78 0.16 155)) 40%, transparent);
 	background: color-mix(in oklab, var(--color-success, oklch(0.78 0.16 155)) 7%, var(--bg-panel, rgba(255, 255, 255, 0.02)));
 }
-.apv-head {
+.ai-approval-head {
 	display: flex;
 	align-items: center;
 	gap: var(--space-2);
 }
-.apv-icon {
+.ai-approval-icon {
 	flex: none;
 	color: var(--color-warning, oklch(0.8 0.16 80));
 }
-.apv-title {
+.ai-approval-title {
 	font-size: var(--text-xs);
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	color: var(--text-main);
 }
-.apv-name {
+.ai-approval-name {
 	margin-inline-start: auto;
 	font-family: var(--font-mono, ui-monospace, monospace);
 	font-size: var(--text-sm);
 	color: var(--text-muted, rgba(255, 255, 255, 0.6));
 	overflow-wrap: anywhere;
 }
-.apv-summary {
+.ai-approval-summary {
 	margin: 0;
 	font-size: var(--text-sm);
 	line-height: 1.5;
 	color: var(--text-main);
 }
-.apv-actions {
+.ai-approval-actions {
 	display: flex;
 	gap: var(--space-2);
 }
-.apv-outcome {
+.ai-approval-outcome {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-1);
@@ -64,9 +64,9 @@
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 }
-.apv-outcome[data-decided='approved'] {
+.ai-approval-outcome[data-decided='approved'] {
 	color: var(--color-success, oklch(0.78 0.16 155));
 }
-.apv-outcome[data-decided='rejected'] {
+.ai-approval-outcome[data-decided='rejected'] {
 	color: var(--color-danger, oklch(0.68 0.2 25));
 }

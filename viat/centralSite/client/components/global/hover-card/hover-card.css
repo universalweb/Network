@@ -1,0 +1,58 @@
+:host {
+	display: inline-block;
+	position: relative;
+}
+.hover-card {
+	position: relative;
+	display: inline-flex;
+}
+.hover-card-trigger {
+	display: inline-flex;
+}
+.hover-card-surface {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	z-index: var(--z-popover, 1400);
+	min-inline-size: 12rem;
+	max-inline-size: min(22rem, 90vw);
+	padding: 0.85rem 1rem;
+	border-radius: var(--radius-md, 0.5rem);
+	border: 1px solid color-mix(in oklch, var(--text-muted) 22%, transparent);
+	color: var(--text-main);
+	box-shadow: 0 12px 40px color-mix(in oklch, #000 35%, transparent);
+	font-size: var(--text-sm, 0.875rem);
+	line-height: 1.45;
+	opacity: 0;
+	transform: translate3d(0, 0.35rem, 0);
+	transition:
+		opacity var(--dur-fast, 0.18s) var(--ease-out, ease),
+		transform var(--dur-fast, 0.18s) var(--ease-out, ease),
+		overlay var(--dur-fast, 0.18s) var(--ease-out, ease) allow-discrete,
+		display var(--dur-fast, 0.18s) var(--ease-out, ease) allow-discrete;
+}
+.hover-card-surface:popover-open {
+	opacity: 1;
+	transform: none;
+}
+@starting-style {
+	.hover-card-surface:popover-open {
+		opacity: 0;
+		transform: translate3d(0, 0.35rem, 0);
+	}
+}
+.hover-card-surface:not(:popover-open) {
+	opacity: 0;
+	transform: translate3d(0, 0.35rem, 0);
+}
+@media (prefers-reduced-motion: reduce) {
+	.hover-card-surface,
+	.hover-card-surface:popover-open,
+	.hover-card-surface:not(:popover-open) {
+		transform: none;
+		transition: none;
+	}
+	.hover-card-surface:popover-open {
+		opacity: 1;
+	}
+}

@@ -5,10 +5,28 @@
 	display: inline-flex;
 	flex: 0 0 auto;
 	box-sizing: border-box;
+	/* Nested solid buttons: glyph tracks button text, never standalone hover white. */
+	--icon-color-hover: currentColor;
+	--icon-color-active: currentColor;
+	/* Tap floor inherits into the inner ui-button. `--btn-face` keeps the
+	   painted disc at the pre-floor size; `--btn-face-clip` paints only that disc. */
+	--btn-hit: var(--hit-min, max(2.75rem, 44px));
+	/* Pre-floor painted disc (~31.5px at the 14px root). */
+	--btn-face: 2.25rem;
+	--btn-face-clip: content-box;
 }
 :host(:hover) {
 	--ui-icon-anim-state: ;
 }
 ui-icon {
 	pointer-events: none;
+	color: currentColor;
+	/* Split / speed-dial open spin — same --ui-btn-icon-rotate token as ui-button. */
+	transform: rotate(var(--ui-btn-icon-rotate, 0deg));
+	transition: transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1), color 0.15s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+	ui-icon {
+		transition: none;
+	}
 }

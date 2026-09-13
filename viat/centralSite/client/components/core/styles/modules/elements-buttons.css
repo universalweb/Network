@@ -1,6 +1,6 @@
 /* uwc.base — themeable button variant/tone/size system, keyed off data-* ATTRIBUTES.
-   Decorates the <button> TAG directly (no `.btn` class), so any bare <button> — or a
-   component's inner <button> — opts in with data-variant / data-tone / data-size and
+   Decorates the <button> / <a> TAG directly (no `.btn` class), so any bare control —
+   or a component's inner control — opts in with data-variant / data-tone / data-size and
    gets the full polished treatment for free.
 
    Attribute-keyed ON PURPOSE: a `tone-*` CLASS on the button collides with the
@@ -13,7 +13,7 @@
    Lives in uwc.base so a bespoke component class (uwc.components) still wins. */
 @layer uwc.base {
 	/* Base — layout + motion shared by every variant. */
-	button[data-variant] {
+	:is(button, a)[data-variant] {
 		align-items: center;
 		appearance: none;
 		background: transparent;
@@ -26,218 +26,378 @@
 		justify-content: center;
 		margin: 0;
 		min-inline-size: 0;
-		transform: scale(1);
-		transform-origin: center;
+		/*
+		 * MD3 press: state-layer (::after) + expanding ripple (::before) in
+		 * currentColor — not a squash. Overlays paint ON TOP of the label
+		 * (8–10% opacity); z-index:-1 would hide them behind a solid fill.
+		 * Overflow clips the ripple to the control shape.
+		 */
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		-webkit-tap-highlight-color: transparent;
 		transition:
 			background 0.18s ease,
 			border-color 0.18s ease,
 			color 0.18s ease,
-			box-shadow 0.18s ease,
-			transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+			box-shadow 0.18s ease;
 		white-space: nowrap;
+		text-transform: var(--ui-btn-text-transform, uppercase);
+		letter-spacing: var(--ui-btn-letter-spacing, 0.04em);
 	}
-	button[data-variant]:focus-visible {
+	:is(button, a)[data-variant]::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: currentColor;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1);
+	}
+	:is(button, a)[data-variant]::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: radial-gradient(circle at center, currentColor 0%, transparent 68%);
+		opacity: 0;
+		pointer-events: none;
+		transform: scale(0.35);
+		transition:
+			transform 0s linear 0.28s,
+			opacity 0.28s cubic-bezier(0.2, 0, 0, 1);
+	}
+	:is(button, a)[data-variant]:hover:not(:disabled):not([aria-disabled='true'])::after {
+		opacity: var(--ui-btn-hover-opacity, 0.08);
+	}
+	:is(button, a)[data-variant]:active:not(:disabled):not([aria-disabled='true'])::after {
+		opacity: var(--ui-btn-pressed-opacity, 0.1);
+		transition-duration: 0.08s;
+	}
+	:is(button, a)[data-variant]:active:not(:disabled):not([aria-disabled='true'])::before {
+		opacity: var(--ui-btn-ripple-opacity, 0.16);
+		transform: scale(2.4);
+		transition:
+			transform 0.32s cubic-bezier(0.2, 0, 0, 1),
+			opacity 0.08s linear;
+	}
+	:is(button, a)[data-variant]:focus-visible {
 		outline: 1px solid var(--focus-ring-color, var(--teal));
 		outline-offset: 2px;
 	}
-	/* The variant model uses an active-scale, not a hover-lift. Neutralize the
-	   generic uwc.base `button:hover` translateY (elements-forms.css) — same layer,
-	   so this higher-specificity rule wins and the button stays put on hover. */
-	button[data-variant]:hover:not(:disabled) {
-		transform: scale(1);
-	}
-	button[data-variant]:active:not(:disabled) {
-		transform: scale(0.92);
-		transition-duration: 0.07s;
-		transition-timing-function: cubic-bezier(0.55, 0, 0.85, 0.5);
+	/* Anchors with data-variant (split-button primary href, etc.) — no underline. */
+	a[data-variant] {
+		text-decoration: none;
+		box-sizing: border-box;
 	}
 
 	/* Sizes — font-size drives both text and the inherited icon glyph. */
-	button[data-size='xs'] {
+	:is(button, a)[data-size='xs'] {
 		font-size: var(--text-sm);
 		padding: 0.25rem 0.55rem;
 		border-radius: var(--ui-btn-radius, var(--radius-md));
 		min-block-size: 1.375rem;
 	}
-	button[data-size='sm'] {
+	:is(button, a)[data-size='sm'] {
 		font-size: var(--text-md);
 		padding: 0.35rem 0.7rem;
 		border-radius: var(--ui-btn-radius, var(--radius-md));
 		min-block-size: 1.75rem;
 	}
-	button[data-size='md'] {
+	:is(button, a)[data-size='md'] {
 		font-size: var(--text-lg);
 		padding: 0.5rem 0.95rem;
 		border-radius: var(--ui-btn-radius, var(--radius-md));
 		min-block-size: 2.125rem;
 	}
-	button[data-size='lg'] {
+	:is(button, a)[data-size='lg'] {
 		font-size: var(--text-xl);
 		padding: 0.65rem 1.15rem;
 		border-radius: var(--ui-btn-radius, 9px);
 		min-block-size: 2.5rem;
 	}
 
-	/* SOLID — each tone is a fill + contrasting-text PAIR (NOT --tone-fill, which is a
-	   single color with no text pair and no primary/subtle). Token-hooked so a theme
-	   recasts the accent button without editing this sheet. */
-	button[data-variant='solid'][data-tone='neutral'] {
+	/* SOLID — each tone is a fill + contrasting-text PAIR (NOT --tone-fill).
+	   Hover keeps the SAME contrast-text family so nested icons (currentColor)
+	   never flash light-on-light / white-on-fill. */
+	:is(button, a)[data-variant='solid'][data-tone='neutral'] {
 		background: var(--btn-neutral, rgba(255, 255, 255, 0.08));
 		border-color: var(--btn-neutral-border, rgba(255, 255, 255, 0.14));
 		color: var(--text-main);
 	}
-	button[data-variant='solid'][data-tone='neutral']:hover:not(:disabled) {
+	:is(button, a)[data-variant='solid'][data-tone='neutral']:hover:not(:disabled):not([aria-disabled='true']) {
 		background: rgba(255, 255, 255, 0.13);
+		color: var(--text-main);
 	}
-	button[data-variant='solid'][data-tone='primary'] {
-		background: var(--btn-primary-bg, var(--teal));
-		border-color: var(--btn-primary-border, var(--teal));
-		color: var(--btn-primary-color, #06151a);
+	/* Primary solid: achromatic pill. A theme that declares nothing inverts
+	   by polarity (--text-light fill / --bg-body ink). Border tracks fill;
+	   hover recedes by mixing page ground into the pill; text holds across
+	   rest/hover so nested icons never flash. */
+	:is(button, a)[data-variant='solid'][data-tone='primary'] {
+		background: var(--btn-primary-bg, var(--text-light, #fff));
+		border-color: var(--btn-primary-border, var(--btn-primary-bg, var(--text-light, #fff)));
+		color: var(--btn-primary-color, var(--bg-body, #000));
 	}
-	button[data-variant='solid'][data-tone='primary']:hover:not(:disabled) {
-		background: var(--btn-primary-hover-bg, #7cf2dd);
-		border-color: var(--btn-primary-hover-border, var(--btn-primary-hover-bg, #7cf2dd));
-		color: var(--btn-primary-hover-color, var(--btn-primary-color, #06151a));
+	:is(button, a)[data-variant='solid'][data-tone='primary']:hover:not(:disabled):not([aria-disabled='true']) {
+		background: var(--btn-primary-hover-bg, color-mix(in oklab, var(--btn-primary-bg, var(--text-light, #fff)) 90%, var(--bg-body, #000)));
+		border-color: var(--btn-primary-hover-border, var(--btn-primary-hover-bg, color-mix(in oklab, var(--btn-primary-bg, var(--text-light, #fff)) 90%, var(--bg-body, #000))));
+		color: var(--btn-primary-color, var(--bg-body, #000));
 	}
-	button[data-variant='solid'][data-tone='success'] {
-		background: var(--color-success);
-		border-color: var(--color-success);
-		color: #04231a;
+	:is(button, a)[data-variant='solid'][data-tone='success'] {
+		background: var(--btn-success-bg, var(--color-success));
+		border-color: var(--btn-success-border, var(--color-success));
+		color: var(--btn-success-color, #04231a);
 	}
-	button[data-variant='solid'][data-tone='danger'] {
-		background: var(--color-danger);
-		border-color: var(--color-danger);
-		color: var(--text-light);
+	:is(button, a)[data-variant='solid'][data-tone='success']:hover:not(:disabled):not([aria-disabled='true']) {
+		background: var(--btn-success-hover-bg, color-mix(in oklab, var(--color-success) 88%, white));
+		border-color: var(--btn-success-hover-border, var(--btn-success-hover-bg, color-mix(in oklab, var(--color-success) 88%, white)));
+		color: var(--btn-success-hover-color, var(--btn-success-color, #04231a));
 	}
-	button[data-variant='solid'][data-tone='warning'] {
-		background: var(--color-warning);
-		border-color: var(--color-warning);
-		color: #261604;
+	:is(button, a)[data-variant='solid'][data-tone='danger'] {
+		background: var(--btn-danger-bg, var(--color-danger));
+		border-color: var(--btn-danger-border, var(--color-danger));
+		color: var(--btn-danger-color, var(--text-light));
 	}
-	button[data-variant='solid'][data-tone='subtle'] {
+	:is(button, a)[data-variant='solid'][data-tone='danger']:hover:not(:disabled):not([aria-disabled='true']) {
+		background: var(--btn-danger-hover-bg, color-mix(in oklab, var(--color-danger) 88%, white));
+		border-color: var(--btn-danger-hover-border, var(--btn-danger-hover-bg, color-mix(in oklab, var(--color-danger) 88%, white)));
+		color: var(--btn-danger-hover-color, var(--btn-danger-color, var(--text-light)));
+	}
+	:is(button, a)[data-variant='solid'][data-tone='warning'] {
+		background: var(--btn-warning-bg, var(--color-warning));
+		border-color: var(--btn-warning-border, var(--color-warning));
+		color: var(--btn-warning-color, #261604);
+	}
+	:is(button, a)[data-variant='solid'][data-tone='warning']:hover:not(:disabled):not([aria-disabled='true']) {
+		background: var(--btn-warning-hover-bg, color-mix(in oklab, var(--color-warning) 88%, white));
+		border-color: var(--btn-warning-hover-border, var(--btn-warning-hover-bg, color-mix(in oklab, var(--color-warning) 88%, white)));
+		color: var(--btn-warning-hover-color, var(--btn-warning-color, #261604));
+	}
+	:is(button, a)[data-variant='solid'][data-tone='subtle'] {
 		background: rgba(255, 255, 255, 0.04);
 		border-color: rgba(255, 255, 255, 0.08);
 		color: var(--text-main);
 	}
-	button[data-variant='solid'][data-tone='subtle']:hover:not(:disabled) {
+	:is(button, a)[data-variant='solid'][data-tone='subtle']:hover:not(:disabled):not([aria-disabled='true']) {
 		background: rgba(255, 255, 255, 0.09);
+		color: var(--text-main);
 	}
 
 	/* OUTLINE — tone tints border + text; shared faint wash on hover. */
-	button[data-variant='outline'][data-tone='neutral'] {
+	:is(button, a)[data-variant='outline'][data-tone='neutral'] {
 		border-color: rgba(255, 255, 255, 0.18);
 		color: var(--text-main);
 	}
-	button[data-variant='outline'][data-tone='primary'] {
+	:is(button, a)[data-variant='outline'][data-tone='primary'] {
 		border-color: var(--teal);
 		color: var(--teal);
 	}
-	button[data-variant='outline'][data-tone='success'] {
+	:is(button, a)[data-variant='outline'][data-tone='success'] {
 		border-color: var(--color-success);
 		color: var(--color-success);
 	}
-	button[data-variant='outline'][data-tone='danger'] {
+	:is(button, a)[data-variant='outline'][data-tone='danger'] {
 		border-color: var(--color-danger);
 		color: var(--color-danger);
 	}
-	button[data-variant='outline'][data-tone='warning'] {
+	:is(button, a)[data-variant='outline'][data-tone='warning'] {
 		border-color: var(--color-warning);
 		color: var(--color-warning);
 	}
-	button[data-variant='outline']:hover:not(:disabled) {
+	:is(button, a)[data-variant='outline']:hover:not(:disabled):not([aria-disabled='true']) {
 		background: rgba(255, 255, 255, 0.06);
 	}
 
 	/* GHOST — tone text only; wash on hover. */
-	button[data-variant='ghost'][data-tone='neutral'] {
+	:is(button, a)[data-variant='ghost'][data-tone='neutral'] {
 		color: var(--text-main);
 	}
-	button[data-variant='ghost'][data-tone='primary'] {
+	:is(button, a)[data-variant='ghost'][data-tone='primary'] {
 		color: var(--teal);
 	}
-	button[data-variant='ghost'][data-tone='success'] {
+	:is(button, a)[data-variant='ghost'][data-tone='success'] {
 		color: var(--color-success);
 	}
-	button[data-variant='ghost'][data-tone='danger'] {
+	:is(button, a)[data-variant='ghost'][data-tone='danger'] {
 		color: var(--color-danger);
 	}
-	button[data-variant='ghost'][data-tone='warning'] {
+	:is(button, a)[data-variant='ghost'][data-tone='warning'] {
 		color: var(--color-warning);
 	}
-	button[data-variant='ghost']:hover:not(:disabled) {
+	:is(button, a)[data-variant='ghost']:hover:not(:disabled):not([aria-disabled='true']) {
 		background: rgba(255, 255, 255, 0.08);
 	}
 
-	/* LINK — inline text-link affordance. */
-	button[data-variant='link'] {
-		padding-inline: 0;
+	/* LINK — pure text-link affordance (not a padded button with underline). */
+	:is(button, a)[data-variant='link'] {
+		padding: 0;
 		min-block-size: auto;
+		min-inline-size: 0;
+		border: 0;
+		border-radius: 0;
+		background: transparent;
+		box-shadow: none;
+		font-size: inherit;
+		line-height: inherit;
+		letter-spacing: normal;
 		text-decoration: underline;
-		text-underline-offset: 3px;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 0.18em;
+		color: var(--link-color, var(--teal));
+		overflow: visible;
+		isolation: auto;
 	}
-	button[data-variant='link'][data-tone='primary'] {
-		color: var(--teal);
+	:is(button, a)[data-variant='link']::before,
+	:is(button, a)[data-variant='link']::after {
+		content: none;
 	}
-	button[data-variant='link'][data-tone='neutral'] {
+	:is(button, a)[data-variant='link'][data-size] {
+		/* Size attrs must not re-inflate padding/min-height on links. */
+		padding: 0;
+		min-block-size: auto;
+		border-radius: 0;
+		font-size: inherit;
+	}
+	:is(button, a)[data-variant='link'][data-tone='primary'] {
+		color: var(--link-color, var(--teal));
+	}
+	:is(button, a)[data-variant='link'][data-tone='neutral'] {
 		color: var(--text-main);
 	}
-	button[data-variant='link']:hover:not(:disabled) {
+	:is(button, a)[data-variant='link'][data-tone='success'] {
+		color: var(--color-success);
+	}
+	:is(button, a)[data-variant='link'][data-tone='danger'] {
+		color: var(--color-danger);
+	}
+	:is(button, a)[data-variant='link'][data-tone='warning'] {
+		color: var(--color-warning);
+	}
+	:is(button, a)[data-variant='link']:hover:not(:disabled):not([aria-disabled='true']) {
+		background: transparent;
+		color: var(--link-hover-color, var(--cyan, var(--teal)));
 		text-decoration-thickness: 2px;
+		transform: none;
+	}
+	:is(button, a)[data-variant='link'][data-tone='neutral']:hover:not(:disabled):not([aria-disabled='true']) {
+		color: var(--text-main);
+	}
+	:is(button, a)[data-variant='link']:active:not(:disabled):not([aria-disabled='true']) {
+		opacity: 0.72;
 	}
 
 	/* ICON — square chrome-light button. */
-	button[data-variant='icon'] {
+	:is(button, a)[data-variant='icon'] {
 		padding: 0.4rem;
 		min-block-size: auto;
 		border-radius: var(--ui-btn-radius, var(--radius-md));
 		color: inherit;
 	}
-	button[data-variant='icon']:hover:not(:disabled) {
-		background: rgba(255, 255, 255, 0.08);
+	:is(button, a)[data-variant='icon']:hover:not(:disabled):not([aria-disabled='true']) {
+		background: var(--btn-icon-hover-bg, rgba(255, 255, 255, 0.08));
 	}
 
-	/* Icon-only — guarantee a square hit area regardless of glyph metrics. `--btn-hit`
-	   (inherits across the shadow boundary) lets a host raise the floor — e.g. a dock
-	   sets a WCAG ≥44px touch target on mobile. */
-	button[data-variant].is-icon-only {
-		padding: 0.5rem;
-		min-inline-size: var(--btn-hit, 2rem);
-		min-block-size: var(--btn-hit, 2rem);
+	/* Icon-only — square hit floor. `--btn-hit` (inherits) is the tap target;
+	   `--btn-face` (optional) keeps the painted disc at the old size so a 44px
+	   floor does not grow ink. Dock sets `--btn-hit` and leaves `--btn-face`
+	   unset so paint fills the floor. `--btn-face-clip: content-box` on a
+	   host that sets `--btn-face`. */
+	:is(button, a)[data-variant].is-icon-only {
+		--_hit: var(--btn-hit, var(--hit-min, max(2.75rem, 44px)));
+		--_face: var(--btn-face, var(--_hit));
+		--_pad: 0.5rem;
+		padding: max(var(--_pad), calc((var(--_hit) - var(--_face)) / 2));
+		min-inline-size: var(--_hit);
+		min-block-size: var(--_hit);
+		background-origin: var(--btn-face-clip, border-box);
+		background-clip: var(--btn-face-clip, border-box);
 	}
-	button[data-variant].is-icon-only[data-size='xs'] {
-		padding: 0.3rem;
-		min-inline-size: var(--btn-hit, 1.6rem);
-		min-block-size: var(--btn-hit, 1.6rem);
+	:is(button, a)[data-variant].is-icon-only[data-size='xs'] {
+		--_pad: 0.3rem;
+		--_step: 1.75rem;
 	}
-	button[data-variant].is-icon-only[data-size='sm'] {
-		padding: 0.4rem;
-		min-inline-size: var(--btn-hit, 1.8rem);
-		min-block-size: var(--btn-hit, 1.8rem);
+	:is(button, a)[data-variant].is-icon-only[data-size='sm'] {
+		--_pad: 0.4rem;
+		--_step: 2rem;
 	}
-	button[data-variant].is-icon-only[data-size='lg'] {
-		padding: 0.6rem;
-		min-inline-size: var(--btn-hit, 2.4rem);
-		min-block-size: var(--btn-hit, 2.4rem);
+	:is(button, a)[data-variant].is-icon-only[data-size='lg'] {
+		--_pad: 0.6rem;
+		--_step: 3rem;
 	}
 
-	/* States. */
-	button[data-variant].is-disabled,
-	button[data-variant]:disabled {
+	/*
+	 * `data-size` used to move ONLY the padding, so every icon-only button was
+	 * pinned at the 44px tap floor and `sm` looked identical to `md` — ui-tracker's
+	 * detail header rendered a 49.5px close beside a 17.9px title, 2.8x taller than
+	 * the text it sat next to.
+	 *
+	 * The 44px floor is a TOUCH requirement, so it is kept wherever the pointer is
+	 * coarse. On a fine pointer (mouse / trackpad) it is not required, and density
+	 * is the better trade — so there the size step drives the box. An explicit
+	 * `--btn-hit` from a consumer still wins in both cases.
+	 */
+	@media (pointer: fine) {
+		:is(button, a)[data-variant].is-icon-only[data-size],
+		:is(button, a)[data-variant].is-circle[data-size] {
+			--_hit: var(--btn-hit, var(--_step, var(--hit-min, max(2.75rem, 44px))));
+		}
+	}
+
+	/* Circle — true disc for single-icon controls. Opt-in via ui-button `circle`
+	   state → class `is-circle`. Size padding alone is asymmetric (0.5rem 0.95rem);
+	   radius-only hacks (`--ui-btn-radius: 999px`) then paint a pill, not a circle.
+	   Equal pad + equal mins + aspect-ratio locks the disc. */
+	:is(button, a)[data-variant].is-circle {
+		--_hit: var(--btn-hit, var(--hit-min, max(2.75rem, 44px)));
+		--_face: var(--btn-face, var(--_hit));
+		--_pad: 0.5rem;
+		aspect-ratio: 1;
+		border-radius: 999px;
+		padding: max(var(--_pad), calc((var(--_hit) - var(--_face)) / 2));
+		min-inline-size: var(--_hit);
+		min-block-size: var(--_hit);
+		inline-size: var(--_hit);
+		block-size: var(--_hit);
+		background-origin: var(--btn-face-clip, border-box);
+		background-clip: var(--btn-face-clip, border-box);
+	}
+	:is(button, a)[data-variant].is-circle[data-size='xs'] {
+		--_pad: 0.3rem;
+		--_step: 1.75rem;
+	}
+	:is(button, a)[data-variant].is-circle[data-size='sm'] {
+		--_pad: 0.4rem;
+		--_step: 2rem;
+	}
+	:is(button, a)[data-variant].is-circle[data-size='lg'] {
+		--_pad: 0.6rem;
+	}
+
+	/* States. No pointer-events:none — the inner control carries tooltip= and
+	   must still receive hover when disabled so the tip can explain why. */
+	:is(button, a)[data-variant].is-disabled,
+	:is(button, a)[data-variant]:disabled,
+	a[data-variant][aria-disabled='true'] {
 		cursor: not-allowed;
 		opacity: 0.5;
 	}
-	button[data-variant].is-full {
+	:is(button, a)[data-variant].is-full {
 		inline-size: 100%;
 	}
-	button[data-variant].is-loading {
+	:is(button, a)[data-variant].is-loading {
 		cursor: progress;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		button[data-variant],
-		button[data-variant]:active:not(:disabled) {
-			transform: none;
+		:is(button, a)[data-variant],
+		:is(button, a)[data-variant]::before,
+		:is(button, a)[data-variant]::after {
 			transition: none;
+		}
+		:is(button, a)[data-variant]::before {
+			transform: none;
+			opacity: 0;
 		}
 	}
 }

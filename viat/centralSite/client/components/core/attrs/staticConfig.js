@@ -4,6 +4,7 @@ import {
 	getProto,
 	hasOwn,
 	isFunction,
+	isObject,
 	isPlainObject,
 } from '../utilities.js';
 import { inferStateSchema } from './inferTypes.js';
@@ -154,11 +155,83 @@ export function ensureMergedState(ComponentClass) {
 	});
 	return merged;
 }
+/**
+ * Per-class fold plan for `foldStaticStateTemplate`. Precomputes the data-only
+ * key/value arrays (accessor descriptors filtered out once) plus a parallel
+ * clone-flag array, so per-instance state materialization is a flat indexed
+ * loop instead of a fresh `getOwnPropertyDescriptors` bag + accessor scan on
+ * every construct. Cached on the class like `mergedState`; the merged template
+ * is stable, so the derived plan is too. `values` holds references into the
+ * shared template — always `smartClone`d before entering instance STATE, so the
+ * template is never mutated.
+ * @param {typeof WebComponent} ComponentClass - The class to plan for.
+ * @returns {{keys: string[], values: unknown[], clone: boolean[]}} The fold plan.
+ */
+export function ensureStateFoldPlan(ComponentClass) {
+	if (hasOwn(ComponentClass, 'stateFoldPlan')) {
+		return ComponentClass.stateFoldPlan;
+	}
+	const mergedState = ensureMergedState(ComponentClass);
+	const descriptors = Object.getOwnPropertyDescriptors(mergedState);
+	const allKeys = Object.getOwnPropertyNames(descriptors);
+	const keys = [];
+	const values = [];
+	const clone = [];
+	const allKeysLength = allKeys.length;
+	for (let index = 0; index < allKeysLength; index++) {
+		const key = allKeys[index];
+		const descriptor = descriptors[key];
+		if (descriptor.get || descriptor.set) {
+			continue;
+		}
+		const value = descriptor.value;
+		keys.push(key);
+		values.push(value);
+		clone.push(isObject(value));
+	}
+	const plan = {
+		keys,
+		values,
+		clone,
+	};
+	Object.defineProperty(ComponentClass, 'stateFoldPlan', {
+		value: plan,
+		configurable: true,
+		writable: true,
+	});
+	return plan;
+}
 export function ensureMergedAttrs(ComponentClass) {
 	return ensureMerged(ComponentClass, 'attrs', 'mergedAttrs');
 }
 export function ensureMergedConfig(ComponentClass) {
 	return ensureMerged(ComponentClass, 'config', 'mergedConfig');
+}
+/*
+ * The fully RESOLVED per-class config: the framework knob defaults with the
+ * chain-merged `static config` folded over them — frozen, and shared by every
+ * instance constructed without a ctor-arg config (the dominant list-row case),
+ * so construction allocates no per-instance config object. The freeze turns a
+ * future post-construct `this.config.x =` write into a loud TypeError instead
+ * of silent cross-instance bleed; nothing writes instance config after
+ * construction today (grep-verified).
+ */
+const CONFIG_KNOB_DEFAULTS = {
+	mergeObjects: false,
+	mergeState: true,
+	skipStaticState: false,
+};
+export function ensureResolvedConfig(ComponentClass) {
+	if (hasOwn(ComponentClass, 'resolvedConfig')) {
+		return ComponentClass.resolvedConfig;
+	}
+	const resolved = Object.freeze(assign({}, CONFIG_KNOB_DEFAULTS, ensureMergedConfig(ComponentClass)));
+	Object.defineProperty(ComponentClass, 'resolvedConfig', {
+		value: resolved,
+		configurable: true,
+		writable: true,
+	});
+	return resolved;
 }
 /**
  * `static properties` — the per-path state schema. Shallow chain-merge (it is

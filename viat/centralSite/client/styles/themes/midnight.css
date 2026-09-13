@@ -26,6 +26,7 @@
   --text-muted: #6971a0;
   --text-light: #ffffff;
   --text-offwhite: #adb4cc;
+  --text-subtle: rgba(255, 255, 255, 0.4);
 
   /* ── Fonts ───────────────────────────────────────── */
   --font-mono: 'JetBrains Mono', monospace;
@@ -78,6 +79,11 @@
   /* ── Teal/Violet Accent Scale ────────────────────── */
   --teal-glow: rgba(109, 74, 255, 0.34);
   --teal-glow-soft: rgba(109, 74, 255, 0.22);
+  --teal-glow-faint: rgba(0, 255, 255, 0.2);
+
+  /* ── Scrollbar colours ───────────────────────────── */
+  --scrollbar-thumb: var(--cyan-glow-faint);
+  --scrollbar-thumb-hover: var(--cyan-glow-soft);
 
   /* ── Status Colors ───────────────────────────────── */
   --color-success: #34d399;
@@ -138,6 +144,12 @@
   --focus-ring-color: rgba(109, 74, 255, 0.72);
   --green-hover: #34d399;
 
+  /* ── Icon chrome ─────────────────────────────────── */
+  --icon-color: var(--text-offwhite);
+  --icon-color-hover: var(--text-light);
+  --icon-color-active: var(--text-light);
+  --icon-color-disabled: var(--dark-text-faint);
+
   /* ── Flyout ──────────────────────────────────────── */
   --flyout-bg: rgba(10, 11, 18, 0.97);
   --flyout-border: rgba(109, 74, 255, 0.18);
@@ -159,7 +171,7 @@
   --topbar-border: rgba(255, 255, 255, 0.08);
   --topbar-accent: var(--teal);
   --topbar-bottom-border: 1px solid rgba(109, 74, 255, 0.14);
-  --tb-badge-radius: 20px;
+  --theme-select-chip-radius: 20px;
   --logo-mark-pattern: repeating-linear-gradient(
     45deg,
     var(--teal),
@@ -171,6 +183,7 @@
   /* ── Popups (tooltip + notification) ─────────────── */
   --popup-bg: rgba(7, 8, 12, 0.95);
   --popup-bg-hover: rgba(10, 11, 18, 0.98);
+  --popup-glass-color: rgb(7, 8, 12);
   --popup-border: rgba(109, 74, 255, 0.22);
   --popup-border-hover: rgba(109, 74, 255, 0.40);
   --popup-accent: var(--teal);

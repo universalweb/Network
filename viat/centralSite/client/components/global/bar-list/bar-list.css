@@ -1,7 +1,7 @@
 :host {
 	display: block;
 }
-.bl {
+.bar-list {
 	list-style: none;
 	margin: 0;
 	padding: 0;
@@ -13,12 +13,12 @@
 	   is just the local alias the bar + its end-cap border read. */
 	--viz: var(--tone-fill, var(--cyan));
 }
-.bl-row {
+.bar-list-row {
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
 }
-.bl-track {
+.bar-list-track {
 	position: relative;
 	flex: 1 1 auto;
 	min-inline-size: 0;
@@ -26,7 +26,7 @@
 	align-items: center;
 	block-size: 1.6rem;
 }
-.bl-bar {
+.bar-list-bar {
 	position: absolute;
 	inset-block: 0;
 	inset-inline-start: 0;
@@ -35,7 +35,7 @@
 	border-inline-end: 2px solid var(--viz);
 	transition: inline-size 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.bl-label {
+.bar-list-label {
 	position: relative;
 	z-index: 1;
 	padding-inline: 0.5rem;
@@ -45,20 +45,20 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-.bl-link {
+.bar-list-link {
 	text-decoration: none;
 }
-.bl-link:hover {
+.bar-list-link:hover {
 	color: var(--cyan);
 }
-.bl-value {
+.bar-list-value {
 	flex: 0 0 auto;
 	font-size: var(--text-sm);
 	font-variant-numeric: tabular-nums;
 	color: var(--text-muted);
 }
 @media (prefers-reduced-motion: reduce) {
-	.bl-bar {
+	.bar-list-bar {
 		transition: none;
 	}
 }

@@ -1,0 +1,116 @@
+:host {
+	display: block;
+	overflow: hidden;
+	min-inline-size: 0;
+}
+.gt {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	cursor: zoom-in;
+	inline-size: 100%;
+	min-inline-size: 0;
+	overflow: hidden;
+	text-align: start;
+	outline: none;
+	user-select: none;
+}
+.gt:focus {
+	outline: none;
+}
+.gt:focus-visible {
+	outline: var(--border-width-thick, 2px) solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 2px;
+}
+.gt-img {
+	display: block;
+	inline-size: 100%;
+	aspect-ratio: 1;
+	object-fit: cover;
+	border-radius: var(--gallery-radius, var(--radius-md, 0.5rem));
+	opacity: 0.78;
+	transition: opacity var(--dur-fast, 0.2s) var(--ease-out, ease);
+	user-select: none;
+}
+.gt[data-active] .gt-img,
+.gt:hover .gt-img,
+.gt:focus-visible .gt-img {
+	opacity: 1;
+}
+.gallery-thumb-copy {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	min-inline-size: 0;
+}
+.gallery-thumb-copy[data-align='center'] {
+	text-align: center;
+}
+.gallery-thumb-copy[data-align='start'] {
+	text-align: start;
+}
+.gallery-thumb-copy[data-align='end'] {
+	text-align: end;
+}
+.gallery-thumb-copy:not(:has(> :not([hidden]))) {
+	display: none;
+}
+.gallery-thumb-heading,
+.gallery-thumb-caption,
+.gallery-thumb-subtitle,
+.gallery-thumb-description {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.gallery-thumb-heading[hidden],
+.gallery-thumb-caption[hidden],
+.gallery-thumb-subtitle[hidden],
+.gallery-thumb-description[hidden] {
+	display: none;
+}
+.gallery-thumb-heading {
+	color: currentColor;
+	font-size: 0.75rem;
+	font-weight: 600;
+	user-select: text;
+}
+.gallery-thumb-caption,
+.gallery-thumb-subtitle,
+.gallery-thumb-description {
+	color: var(--text-muted);
+	font-size: 0.7rem;
+	user-select: none;
+}
+/*
+ * Lightbox stagger: --thumb-index is set on the host. Delay is computed
+ * here so JS never writes animation-delay. Lead on open so the shell
+ * moves first; on close the delay drops the lead so thumbs leave first.
+ */
+:host-context(.media-lb) {
+	opacity: 0;
+	transform: translate3d(0, 0.4rem, 0);
+	transition: opacity 0.2s ease, transform 0.2s ease;
+	transition-delay: calc(var(--thumb-index, 0) * 0.04s);
+}
+:host-context(.media-lb[open]) {
+	opacity: 1;
+	transform: none;
+	transition-delay: calc(0.16s + var(--thumb-index, 0) * 0.04s);
+}
+@media (prefers-reduced-motion: reduce) {
+	.gt-img {
+		transition: none;
+	}
+	:host-context(.media-lb),
+	:host-context(.media-lb[open]) {
+		opacity: 1;
+		transform: none;
+		transition: none;
+	}
+}

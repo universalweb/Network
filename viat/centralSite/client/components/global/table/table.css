@@ -1,0 +1,90 @@
+:host {
+	display: block;
+	inline-size: 100%;
+}
+.table-frame {
+	position: relative;
+	inline-size: 100%;
+	max-inline-size: 100%;
+	overflow-x: auto;
+	overflow-y: visible;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: color-mix(in oklch, var(--bg-panel, transparent) 40%, transparent);
+	/* Density pad inherited into row shadow roots via custom property. */
+	--table-cell-pad-block: 0.65rem;
+	--table-cell-pad-inline: 0.85rem;
+}
+.table-caption {
+	padding: 0.75rem 1rem;
+	font-weight: 600;
+	font-size: var(--text-sm);
+	border-block-end: 1px solid color-mix(in oklch, var(--text-muted) 14%, transparent);
+}
+.table {
+	inline-size: 100%;
+	border-collapse: collapse;
+	font-size: var(--text-sm, 0.875rem);
+}
+.table-header-cell,
+.table-cell {
+	padding: 0.65rem 0.85rem;
+	text-align: start;
+	border-block-end: 1px solid color-mix(in oklch, var(--text-muted) 12%, transparent);
+}
+.table-header-cell {
+	font-weight: 550;
+	color: var(--text-muted);
+	font-size: 0.78em;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	background: color-mix(in oklch, var(--bg-panel) 50%, transparent);
+}
+.table-cell {
+	color: var(--text-main);
+}
+.table-header-cell[data-align='end'],
+.table-cell[data-align='end'] {
+	text-align: end;
+}
+.table-header-cell[data-align='center'],
+.table-cell[data-align='center'] {
+	text-align: center;
+}
+.table-header-row {
+	cursor: default;
+}
+.table-body .table-header-row:hover {
+	background: color-mix(in oklch, var(--bg-panel) 55%, transparent);
+}
+.table-frame[data-density='sm'] {
+	--table-cell-pad-block: 0.4rem;
+	--table-cell-pad-inline: 0.65rem;
+}
+.table-frame[data-density='lg'] {
+	--table-cell-pad-block: 0.9rem;
+	--table-cell-pad-inline: 1.1rem;
+}
+.table-frame[data-density='sm'] .table-header-cell,
+.table-frame[data-density='sm'] .table-cell,
+.table-frame[data-density='lg'] .table-header-cell,
+.table-frame[data-density='lg'] .table-cell {
+	padding-block: var(--table-cell-pad-block);
+	padding-inline: var(--table-cell-pad-inline);
+}
+/* Ensure custom-element rows participate in the table layout box. */
+.table-body {
+	display: table-row-group;
+}
+.table-body ui-table-row {
+	display: table-row;
+}
+.table-empty {
+	padding: 1.25rem;
+	text-align: center;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+}
+.table-empty[hidden] {
+	display: none;
+}

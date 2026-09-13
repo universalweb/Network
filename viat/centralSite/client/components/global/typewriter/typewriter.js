@@ -107,8 +107,8 @@ export class UITypewriter extends WebComponent {
 		this.typeStep();
 	}
 	render() {
-		this.html `
-			<span class="tw-text">${this.state.displayed}</span><span class="tw-cursor" aria-hidden="true" ?hidden=${!this.state.cursor}></span>
+		this.html`
+			<span class="typewriter-text">${this.state.displayed}</span><span class="typewriter-cursor" aria-hidden="true" ?hidden=${!this.state.cursor}></span>
 		`;
 	}
 }

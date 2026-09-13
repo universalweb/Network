@@ -1,0 +1,20 @@
+/*
+ * Noir — open floor. No fill, no elevation. Hairlines optional via tokens.
+ * Header matches Dark (sans, no underglow).
+ */
+:host {
+	background: transparent;
+	box-shadow: none;
+}
+.panel-header {
+	font-family: var(--font-display);
+	font-weight: 500;
+	box-shadow: none;
+}
+.panel-header::after {
+	display: none;
+}
+.panel-header .panel-header-id {
+	font-family: var(--font-mono);
+	font-weight: 400;
+}
